@@ -212,7 +212,7 @@ version: '3'
 
 services:
   app:
-    image: kerwin1202/chatgpt-web # always use latest, pull the tag image again when updating
+    image: alleni2023/chat_long # always use latest, pull the tag image again when updating
     container_name: chatgptweb
     restart: unless-stopped
     ports:
