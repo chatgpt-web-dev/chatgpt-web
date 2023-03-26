@@ -211,14 +211,14 @@ http://localhost:3002/
 
 #### Docker compose
 
-[Hub 地址](https://hub.docker.com/repository/docker/alleni2023/chat_long/general)
+[Hub 地址](https://hub.docker.com/repository/docker/alleni2023/chatgpt-web/general)
 
 ```yml
 version: '3'
 
 services:
   app:
-    image: alleni2023/chat_long # 总是使用latest,更新时重新pull该tag镜像即可
+    image: alleni2023/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
     container_name: chatgptweb
     restart: unless-stopped
     ports:
