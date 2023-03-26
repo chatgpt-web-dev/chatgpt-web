@@ -124,4 +124,18 @@ export default {
     Capabilities: '能力',
     Limitations: '限制',
   },
+  home: {
+    Examples1: '用簡單的語言解釋量子計算',
+    Examples2: '你有任何適合十歲生日的創意點子嗎？',
+    Examples3: '如何在 JavaScript 中進行 HTTP 請求？',
+    Capabilities1: '把之前對話中用戶說過的話記住',
+    Capabilities2: '允許用戶提供後續更正',
+    Capabilities3: '受過訓練的模型可以拒絕不適當的請求',
+    Limitations1: '偶爾可能會生成錯誤的信息',
+    Limitations2: '偶爾可能會產生有害的指令或帶有偏見的內容',
+    Limitations3: '由於知識截止時間是2021年，因此對2021年之後的世界和事件的了解是有限的',
+    Examples: '例子',
+    Capabilities: '能力',
+    Limitations: '限制',
+  },
 }
