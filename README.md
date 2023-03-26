@@ -211,7 +211,7 @@ http://localhost:3002/
 
 #### Docker compose
 
-[Hub 地址](https://hub.docker.com/repository/docker/kerwin1202/chatgpt-web/general)
+[Hub 地址](https://hub.docker.com/repository/docker/alleni2023/chat_long/general)
 
 ```yml
 version: '3'
