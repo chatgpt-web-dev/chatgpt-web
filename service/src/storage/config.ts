@@ -41,7 +41,7 @@ export async function getOriginConfig() {
         process.env.REGISTER_MAILS,
         process.env.SITE_DOMAIN,
         process.env.DAILY_CHAT_LIMIT ? parseInt(process.env.DAILY_CHAT_LIMIT) : null,
-        process.env.DAILY_CHAT_LIMIT ? parseInt(process.env.DAILY_CHAT_LIMIT) : null),
+        process.env.TOTAL_CHAT_LIMIT ? parseInt(process.env.TOTAL_CHAT_LIMIT) : null),
       new MailConfig(process.env.SMTP_HOST,
         !isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
         process.env.SMTP_TSL === 'true',

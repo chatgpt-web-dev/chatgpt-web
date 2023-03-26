@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import { ChatInfo, ChatRoom, Status, UserInfo } from './model'
 import type { ChatOptions, Config } from './model'
 
-const url = process.env.MONGO_URL
+const url = process.env.MONGODB_URL
 const client = new MongoClient(url)
 const chatCol = client.db('chatgpt').collection('chat')
 const roomCol = client.db('chatgpt').collection('chat_room')
