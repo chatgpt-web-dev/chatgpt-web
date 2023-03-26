@@ -218,7 +218,7 @@ version: '3'
 
 services:
   app:
-    image: kerwin1202/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
+    image: alleni2023/chat_long # 总是使用latest,更新时重新pull该tag镜像即可
     container_name: chatgptweb
     restart: unless-stopped
     ports:
