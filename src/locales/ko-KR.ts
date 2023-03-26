@@ -103,4 +103,18 @@ export default {
     onlineImportWarning: '참고: JSON 파일의 소스를 확인하세요!',
     downloadError: '네트워크 상태와 JSON 파일 유효성을 확인하세요',
   },
+  home: {
+    Examples1: '간단한 언어로 양자 컴퓨팅을 설명해주세요',
+    Examples2: '10살 생일에 적합한 창의적인 아이디어가 있나요?',
+    Examples3: '자바스크립트에서 HTTP 요청을 하는 방법은 무엇인가요?',
+    Capabilities1: '이전 대화에서 사용자가 말한 내용을 기억합니다',
+    Capabilities2: '사용자가 후속 수정을 제공할 수 있도록 허용합니다',
+    Capabilities3: '훈련된 모델은 부적절한 요청을 거부할 수 있습니다',
+    Limitations1: '가끔 오류가 발생할 수 있습니다',
+    Limitations2: '가끔 해로운 명령이 생성되거나 편견이 있는 내용이 생성될 수 있습니다',
+    Limitations3: '지식 한계 시점이 2021년이기 때문에 2021년 이후의 세상과 사건에 대한 이해는 제한적입니다',
+    Examples: '예시',
+    Capabilities: '기능',
+    Limitations: '제한사항',
+  },
 }
