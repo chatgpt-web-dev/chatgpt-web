@@ -1,5 +1,6 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import cron from 'node-cron'
 import type { RequestProps } from './types'
 import type { ChatContext, ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel, initApi } from './chatgpt'
@@ -7,12 +8,22 @@ import { auth } from './middleware/auth'
 import { clearConfigCache, getCacheConfig, getOriginConfig } from './storage/config'
 import type { ChatOptions, Config, MailConfig, SiteConfig, UserInfo } from './storage/model'
 import { Status } from './storage/model'
-import { clearChat, createChatRoom, createUser, deleteAllChatRooms, deleteChat, deleteChatRoom, existsChatRoom, getChat, getChatRooms, getChats, getUser, getUserById, insertChat, renameChatRoom, updateChat, updateConfig, updateUserInfo, verifyUser } from './storage/mongo'
+import { clearChat, createChatRoom, createUser, deleteAllChatRooms, deleteChat, deleteChatRoom, existsChatRoom, getChat, getChatRooms, getChats, getUser, getUserById, insertChat, isOverLimit, renameChatRoom, resetDailyChatCount, updateChat, updateConfig, updateUserInfo, verifyUser } from './storage/mongo'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
 import { sendTestMail, sendVerifyMail } from './utils/mail'
 import { checkUserVerify, getUserVerifyUrl, md5 } from './utils/security'
 import { rootAuth } from './middleware/rootAuth'
+
+cron.schedule('* 4 * * *', () => {
+  try {
+    resetDailyChatCount()
+    globalThis.console.log('Reset daily chat count successfully')
+  }
+  catch (error) {
+    globalThis.console.error(error)
+  }
+})
 
 const app = express()
 const router = express.Router()
@@ -106,6 +117,7 @@ router.get('/chat-hisroty', auth, async (req, res) => {
     chats.forEach((c) => {
       if (c.status !== Status.InversionDeleted) {
         result.push({
+          uuid: c.uuid,
           dateTime: new Date(c.dateTime).toLocaleString(),
           text: c.prompt,
           inversion: true,
@@ -119,6 +131,7 @@ router.get('/chat-hisroty', auth, async (req, res) => {
       }
       if (c.status !== Status.ResponseDeleted) {
         result.push({
+          uuid: c.uuid,
           dateTime: new Date(c.dateTime).toLocaleString(),
           text: c.response,
           inversion: false,
@@ -191,11 +204,25 @@ router.post('/chat-clear', auth, async (req, res) => {
 
 router.post('/chat', auth, async (req, res) => {
   try {
+    const userId = req.headers.userId as string
     const { roomId, uuid, regenerate, prompt, options = {} } = req.body as
       { roomId: number; uuid: number; regenerate: boolean; prompt: string; options?: ChatContext }
+    const overLimit = await isOverLimit(userId)
+    if (overLimit.isOverDailyLimit) {
+      return res.send({
+        status: 'Error',
+        message: 'Daily chat limit exceeded | 超过每日限额',
+      })
+    }
+    if (overLimit.isOverTotalLimit) {
+      return res.send({
+        status: 'Error',
+        message: 'Total chat limit exceeded | 超过总限额',
+      })
+    }
     const message = regenerate
       ? await getChat(roomId, uuid)
-      : await insertChat(uuid, prompt, roomId, options as ChatOptions)
+      : await insertChat(uuid, prompt, roomId, userId, options as ChatOptions)
     const response = await chatReply(prompt, options)
     if (response.status === 'Success')
       await updateChat(message._id, response.data.text, response.data.id)
@@ -210,10 +237,24 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
 
   try {
+    const userId = req.headers.userId as string
     const { roomId, uuid, regenerate, prompt, options = {}, systemMessage } = req.body as RequestProps
+    const overLimit = await isOverLimit(userId)
+    if (overLimit.isOverDailyLimit) {
+      return res.send({
+        status: 'Error',
+        message: 'Daily chat limit exceeded | 超过每日限额',
+      })
+    }
+    if (overLimit.isOverTotalLimit) {
+      return res.send({
+        status: 'Error',
+        message: 'Total chat limit exceeded | 超过总限额',
+      })
+    }
     const message = regenerate
       ? await getChat(roomId, uuid)
-      : await insertChat(uuid, prompt, roomId, options as ChatOptions)
+      : await insertChat(uuid, prompt, roomId, userId, options as ChatOptions)
     let firstChunk = true
     const result = await chatReplyProcess({
       message: prompt,
@@ -264,7 +305,7 @@ router.post('/user-register', async (req, res) => {
       return
     }
     const newPassword = md5(password)
-    await createUser(username, newPassword)
+    await createUser(username, newPassword, config.siteConfig.dailyChatLimit, config.siteConfig.totalChatLimit)
 
     if (username.toLowerCase() === process.env.ROOT_USER) {
       res.send({ status: 'Success', message: '注册成功 | Register success', data: null })

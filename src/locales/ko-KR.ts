@@ -29,6 +29,9 @@ export default {
     notLoggedIn: '로그인/등록',
     logOut: '로그아웃',
     unauthorizedTips: '승인되지 않음, 로그인 해주세요.',
+    email: '이메일',
+    password: '비밀번호',
+    passwordConfirm: '비밀번호 확인',
   },
   chat: {
     placeholder: '질문해보세요... (Shift + Enter = 줄 바꿈)',
@@ -82,6 +85,8 @@ export default {
     loginEnabled: '등록 로그인',
     loginSalt: '로그인 혼돈 소금',
     loginSaltTip: '변경하면 모든 로그인이 무효화됩니다',
+    dailyChatLimit: '일일 채팅 제한',
+    totalChatLimit: '총 채팅 제한',
   },
   store: {
     local: 'local',

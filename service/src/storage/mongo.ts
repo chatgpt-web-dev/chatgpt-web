@@ -2,7 +2,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import { ChatInfo, ChatRoom, Status, UserInfo } from './model'
 import type { ChatOptions, Config } from './model'
 
-const url = process.env.MONGODB_URL
+const url = process.env.MONGO_URL
 const client = new MongoClient(url)
 const chatCol = client.db('chatgpt').collection('chat')
 const roomCol = client.db('chatgpt').collection('chat_room')
@@ -16,9 +16,18 @@ const configCol = client.db('chatgpt').collection('config')
  * @param options
  * @returns model
  */
-export async function insertChat(uuid: number, text: string, roomId: number, options?: ChatOptions) {
+export async function insertChat(uuid: number, text: string, roomId: number, userId: string, options?: ChatOptions) {
   const chatInfo = new ChatInfo(roomId, uuid, text, options)
   await chatCol.insertOne(chatInfo)
+  await userCol.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $inc: {
+        dailyChatCount: 1,
+        totalChatCount: 1,
+      },
+    },
+  )
   return chatInfo
 }
 
@@ -123,9 +132,9 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   chatCol.updateOne(query, update)
 }
 
-export async function createUser(email: string, password: string): Promise<UserInfo> {
+export async function createUser(email: string, password: string, dailyChatLimit: number, totalChatLimit: number): Promise<UserInfo> {
   email = email.toLowerCase()
-  const userInfo = new UserInfo(email, password)
+  const userInfo = new UserInfo(email, password, dailyChatLimit, totalChatLimit)
   if (email === process.env.ROOT_USER)
     userInfo.status = Status.Normal
 
@@ -162,4 +171,22 @@ export async function updateConfig(config: Config): Promise<Config> {
   if (result.modifiedCount > 0 || result.upsertedCount > 0)
     return config
   return null
+}
+
+export async function isOverLimit(userId: string): Promise< { isOverDailyLimit: boolean; isOverTotalLimit: boolean } > {
+  const result = await userCol.findOne(
+    { _id: new ObjectId(userId) },
+    { projection: { dailyChatCount: 1, totalChatCount: 1, dailyChatLimit: 1, totalChatLimit: 1 } },
+  )
+  const isOverDailyLimit = result.dailyChatLimit !== null && result.dailyChatCount >= result.dailyChatLimit
+  const isOverTotalLimit = result.totalChatLimit !== null && result.totalChatCount >= result.totalChatLimit
+  return { isOverDailyLimit, isOverTotalLimit }
+}
+
+export async function resetDailyChatCount() {
+  const result = await userCol.updateOne(
+    {},
+    { $set: { dailyChatCount: 0 } },
+  )
+  return result
 }

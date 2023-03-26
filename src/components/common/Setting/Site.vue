@@ -87,7 +87,7 @@ onMounted(() => {
             />
           </div>
           <p>
-            {{ $t('common.loginSaltTip') }}
+            {{ $t('setting.loginSaltTip') }}
           </p>
         </div>
         <div class="flex items-center space-x-4">
@@ -106,6 +106,24 @@ onMounted(() => {
             <NInput
               :value="config && config.registerMails" placeholder=""
               @input="(val) => { if (config) config.registerMails = val }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.dailyChatLimit') }}</span>
+          <div class="flex-1">
+            <NInput
+              :value="config && config.dailyChatLimit !== undefined ? String(config.dailyChatLimit) : undefined" placeholder=""
+              @input="(val) => { if (config) config.dailyChatLimit = typeof val === 'string' ? Number(val) : undefined }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.totalChatLimit') }}</span>
+          <div class="flex-1">
+            <NInput
+              :value="config && config.totalChatLimit !== undefined ? String(config.totalChatLimit) : undefined" placeholder=""
+              @input="(val) => { if (config) config.totalChatLimit = typeof val === 'string' ? Number(val) : undefined }"
             />
           </div>
         </div>

@@ -19,6 +19,8 @@ export class SiteConfig {
   registerEnabled?: boolean
   registerMails?: string
   siteDomain?: string
+  dailyChatLimit?: number
+  totalChatLimit?: number
 }
 
 export class MailConfig {

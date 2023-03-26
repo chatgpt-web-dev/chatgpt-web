@@ -30,6 +30,9 @@ export default {
     notLoggedIn: 'Login / Register',
     logOut: 'Login Out',
     unauthorizedTips: 'Unauthorized, please verify first.',
+    email: 'Email',
+    password: 'Password',
+    passwordConfirm: 'Confirm Password',
   },
   chat: {
     placeholder: 'Ask me anything...(Shift + Enter = line break)',
@@ -89,6 +92,8 @@ export default {
     loginEnabled: 'Login Enabled',
     loginSalt: 'Login Salt',
     loginSaltTip: 'Changes will invalidate all logged in',
+    dailyChatLimit: 'Daily Chat Limit',
+    totalChatLimit: 'Total Chat Limit',
   },
   store: {
     local: 'Local',

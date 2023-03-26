@@ -18,16 +18,23 @@ export class UserInfo {
   verifyTime?: string
   avatar?: string
   description?: string
-  constructor(email: string, password: string) {
+  dailyChatCount: number
+  totalChatCount: number
+  dailyChatLimit: number
+  totalChatLimit: number
+  constructor(email: string, password: string, dailyChatLimit: number, totalChatLimit: number) {
     this.name = email
     this.email = email
     this.password = password
     this.status = Status.PreVerify
     this.createTime = new Date().toLocaleString()
     this.verifyTime = null
+    this.dailyChatCount = 0
+    this.totalChatCount = 0
+    this.dailyChatLimit = dailyChatLimit
+    this.totalChatLimit = totalChatLimit
   }
 }
-
 export class ChatRoom {
   _id: ObjectId
   roomId: number
@@ -92,6 +99,8 @@ export class SiteConfig {
     public registerEnabled?: boolean,
     public registerMails?: string,
     public siteDomain?: string,
+    public dailyChatLimit?: number,
+    public totalChatLimit?: number,
   ) { }
 }
 

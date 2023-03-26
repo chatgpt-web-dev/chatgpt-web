@@ -30,6 +30,9 @@ export default {
     notLoggedIn: '登錄 / 註冊',
     logOut: '退出登錄',
     unauthorizedTips: '未經授權，請先進行驗證。',
+    email: '電子郵件',
+    password: '密碼',
+    passwordConfirm: '確認密碼',
   },
   chat: {
     placeholder: '來說點什麼...（Shift + Enter = 換行）',
@@ -89,6 +92,8 @@ export default {
     loginEnabled: '注册登录',
     loginSalt: '登录混淆盐',
     loginSaltTip: '变更会导致所有已登录失效',
+    dailyChatLimit: '每日聊天限额',
+    totalChatLimit: '总聊天限额',
   },
   store: {
     local: '本機',
