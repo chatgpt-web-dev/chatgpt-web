@@ -37,5 +37,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/chat_long:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/chat_long:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatgptweb:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatgptweb:latest
