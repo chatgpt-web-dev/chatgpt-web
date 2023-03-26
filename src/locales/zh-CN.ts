@@ -110,4 +110,18 @@ export default {
     onlineImportWarning: '注意：请检查 JSON 文件来源！',
     downloadError: '请检查网络状态与 JSON 文件有效性',
   },
+  home: {
+    Examples1: '用简单的语言解释量子计算',
+    Examples2: '你有任何适合十岁生日的创意点子吗？',
+    Examples3: '如何在 JavaScript 中进行 HTTP 请求？',
+    Capabilities1: '把之前对话中用户说过的话记住',
+    Capabilities2: '允许用户提供后续更正',
+    Capabilities3: '受过训练的模型可以拒绝不适当的请求',
+    Limitations1: '偶尔可能会生成错误的信息',
+    Limitations2: '偶尔可能会产生有害的指令或带有偏见的内容',
+    Limitations3: '由于知识截止时间是2021年，因此对2021年之后的世界和事件的了解是有限的',
+    Examples: '例子',
+    Capabilities: '能力',
+    Limitations: '限制',
+  },
 }
