@@ -53,6 +53,10 @@ services:
       SMTP_TSL: true
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
+      # 每日聊天次数限额
+      DAILY_CHAT_LIMIT: 999
+      # 总聊天次数限额
+      TOTAL_CHAT_LIMIT: 999
     links:
       - database
 
