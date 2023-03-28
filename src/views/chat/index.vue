@@ -512,9 +512,9 @@ onUnmounted(() => {
                     {{ $t('home.Examples') }}
                   </h2>
                   <ul class="flex flex-col gap-3.5 w-full sm:max-w-md m-auto">
-                    <button class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-900">{{ $t('home.Examples1') }}</button>
-                    <button class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-900">{{ $t('home.Examples2') }}</button>
-                    <button class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-900">{{ $t('home.Examples3') }}</button>
+                    <li class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md">{{ $t('home.Examples1') }}</li>
+                    <li class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md">{{ $t('home.Examples2') }}</li>
+                    <li class="w-full bg-gray-50 dark:bg-white/5 p-3 rounded-md">{{ $t('home.Examples3') }}</li>
                   </ul>
                 </div>
                 <div class="flex flex-col mb-8 md:mb-auto gap-3.5 flex-1">
