@@ -43,7 +43,7 @@ export async function initApi() {
     const options: ChatGPTAPIOptions = {
       apiKey: config.apiKey,
       completionParams: { model },
-      debug: !config.apiDisableDebug,
+      debug: true,
     }
     // increase max token limit if use gpt-4
     if (model.toLowerCase().includes('gpt-4')) {
@@ -70,7 +70,7 @@ export async function initApi() {
     const OPENAI_API_MODEL = process.env.OPENAI_API_MODEL
     const options: ChatGPTUnofficialProxyAPIOptions = {
       accessToken: config.accessToken,
-      debug: !config.apiDisableDebug,
+      debug: true,
     }
     if (isNotEmptyString(OPENAI_API_MODEL))
       options.model = OPENAI_API_MODEL
@@ -122,26 +122,66 @@ async function chatReplyProcess(options: RequestOptions) {
 }
 
 async function fetchBalance() {
-  const config = await getCacheConfig()
-  const OPENAI_API_KEY = config.apiKey
-  const OPENAI_API_BASE_URL = config.apiBaseUrl
+  // 计算起始日期和结束日期
+  const now = new Date();
+  const startDate = new Date(now - 90 * 24 * 60 * 60 * 1000);
+  const endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  if (!isNotEmptyString(OPENAI_API_KEY))
-    return Promise.resolve('-')
+  const config = await getCacheConfig();
+  const OPENAI_API_KEY = config.apiKey;
+  const OPENAI_API_BASE_URL = config.apiBaseUrl;
+
+  if (!isNotEmptyString(OPENAI_API_KEY)) {
+    return Promise.resolve('-');
+  }
 
   const API_BASE_URL = isNotEmptyString(OPENAI_API_BASE_URL)
     ? OPENAI_API_BASE_URL
     : 'https://api.openai.com'
 
+  // 设置API请求URL和请求头
+  const urlSubscription = `${API_BASE_URL}/v1/dashboard/billing/subscription`; // 查是否订阅
+  const urlBalance = `${API_BASE_URL}/dashboard/billing/credit_grants`; // 查普通账单
+  const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`; // 查使用量
+  const headers = {
+    "Authorization": "Bearer " + OPENAI_API_KEY,
+    "Content-Type": "application/json"
+  };
+
   try {
-    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` }
-    const response = await axios.get(`${API_BASE_URL}/dashboard/billing/credit_grants`, { headers })
-    const balance = response.data.total_available ?? 0
+    // 获取API限额
+    let response = await fetch(urlSubscription, {headers});
+    if (!response.ok) {
+      console.log("您的账户已被封禁，请登录OpenAI进行查看。");
+      return;
+    }
+    const subscriptionData = await response.json();
+    const totalAmount = subscriptionData.hard_limit_usd;
+
+    // 获取已使用量
+    response = await fetch(urlUsage, {headers});
+    const usageData = await response.json();
+    const totalUsage = usageData.total_usage / 100;
+
+    // 计算剩余额度
+    const balance = totalAmount - totalUsage;
+
+    // 输出余额信息
+    console.log(`balance: ${balance.toFixed(3)}`);
+
     return Promise.resolve(balance.toFixed(3))
-  }
+  } 
   catch {
     return Promise.resolve('-')
   }
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }
 
 async function chatConfig() {
@@ -155,20 +195,17 @@ async function chatConfig() {
 
 async function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPIOptions) {
   const config = await getCacheConfig()
-  if (isNotEmptyString(config.socksProxy)) {
+  if (config.socksProxy) {
     const agent = new SocksProxyAgent({
       hostname: config.socksProxy.split(':')[0],
       port: parseInt(config.socksProxy.split(':')[1]),
-      userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
-      password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
-
     })
     options.fetch = (url, options) => {
       return fetch(url, { agent, ...options })
     }
   }
   else {
-    if (isNotEmptyString(config.httpsProxy) || isNotEmptyString(process.env.ALL_PROXY)) {
+    if (config.httpsProxy || process.env.ALL_PROXY) {
       const httpsProxy = config.httpsProxy || process.env.ALL_PROXY
       if (httpsProxy) {
         const agent = new HttpsProxyAgent(httpsProxy)
