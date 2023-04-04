@@ -5,7 +5,6 @@ import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import axios from 'axios'
 import { getCacheConfig, getOriginConfig } from '../storage/config'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
@@ -165,9 +164,6 @@ async function fetchBalance() {
 
     // 计算剩余额度
     const balance = totalAmount - totalUsage;
-
-    // 输出余额信息
-    console.log(`balance: ${balance.toFixed(3)}`);
 
     return Promise.resolve(balance.toFixed(3))
   } 
