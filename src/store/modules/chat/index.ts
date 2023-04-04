@@ -29,7 +29,7 @@ export const useChatStore = defineStore('chat-store', {
       let uuid = this.active
       this.history = []
       this.chat = []
-      if (rooms.findIndex((item: { uuid: number | null }) => item.uuid === uuid) <= -1 && rooms.length > 0)
+      if (rooms.findIndex((item: { uuid: number | null }) => item.uuid === uuid) <= -1)
         uuid = null
 
       for (const r of rooms) {
@@ -37,22 +37,54 @@ export const useChatStore = defineStore('chat-store', {
         if (uuid == null)
           uuid = r.uuid
         this.chat.unshift({ uuid: r.uuid, data: [] })
-        if (uuid === r.uuid)
-          this.syncChat(r, callback)
       }
       if (uuid == null) {
-        uuid = Date.now()
-        this.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false })
+        await this.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false })
       }
-      this.active = uuid
-      this.reloadRoute(uuid)
+      else {
+        this.active = uuid
+        this.reloadRoute(uuid)
+      }
+      callback && callback()
     },
 
-    async syncChat(h: Chat.History, callback: () => void) {
-      const chatIndex = this.chat.findIndex(item => item.uuid === h.uuid)
-      if (chatIndex <= -1 || this.chat[chatIndex].data.length <= 0) {
-        const chatData = (await fetchGetChatHistory(h.uuid)).data
-        this.chat.unshift({ uuid: h.uuid, data: chatData })
+    async syncChat(h: Chat.History, lastId?: number, callback?: () => void,
+      callbackForStartRequest?: () => void,
+      callbackForEmptyMessage?: () => void) {
+      if (!h.uuid) {
+        callback && callback()
+        return
+      }
+      const hisroty = this.history.filter(item => item.uuid === h.uuid)[0]
+      if (hisroty === undefined || hisroty.loading || hisroty.all) {
+        if (lastId === undefined) {
+          // 加载更多不回调 避免加载概率消失
+          callback && callback()
+        }
+        if (hisroty?.all ?? false)
+          callbackForEmptyMessage && callbackForEmptyMessage()
+        return
+      }
+      try {
+        hisroty.loading = true
+        const chatIndex = this.chat.findIndex(item => item.uuid === h.uuid)
+        if (chatIndex <= -1 || this.chat[chatIndex].data.length <= 0 || lastId !== undefined) {
+          callbackForStartRequest && callbackForStartRequest()
+          const chatData = (await fetchGetChatHistory(h.uuid, lastId)).data
+          if (chatData.length <= 0)
+            hisroty.all = true
+
+          if (chatIndex <= -1)
+            this.chat.unshift({ uuid: h.uuid, data: chatData })
+          else
+            this.chat[chatIndex].data.unshift(...chatData)
+        }
+      }
+      finally {
+        hisroty.loading = false
+        if (hisroty.all)
+          callbackForEmptyMessage && callbackForEmptyMessage()
+        this.recordState()
         callback && callback()
       }
     },
@@ -62,8 +94,8 @@ export const useChatStore = defineStore('chat-store', {
       this.recordState()
     },
 
-    addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
-      fetchCreateChatRoom(history.title, history.uuid)
+    async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
+      await fetchCreateChatRoom(history.title, history.uuid)
       this.history.unshift(history)
       this.chat.unshift({ uuid: history.uuid, data: chatData })
       this.active = history.uuid
@@ -81,13 +113,12 @@ export const useChatStore = defineStore('chat-store', {
     },
 
     async deleteHistory(index: number) {
-      fetchDeleteChatRoom(this.history[index].uuid)
+      await fetchDeleteChatRoom(this.history[index].uuid)
       this.history.splice(index, 1)
       this.chat.splice(index, 1)
 
       if (this.history.length === 0) {
-        this.active = null
-        this.reloadRoute()
+        await this.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false })
         return
       }
 
@@ -233,11 +264,12 @@ export const useChatStore = defineStore('chat-store', {
       }
     },
 
-    clearLocalChat() {
+    async clearLocalChat() {
       this.chat = []
       this.history = []
       this.active = null
       this.recordState()
+      await router.push({ name: 'Chat' })
     },
 
     async reloadRoute(uuid?: number) {

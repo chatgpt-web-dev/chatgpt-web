@@ -1,5 +1,6 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import * as dotenv from 'dotenv'
 import type { RequestProps } from './types'
 import type { ChatContext, ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel, initApi } from './chatgpt'
@@ -13,6 +14,8 @@ import { isEmail, isNotEmptyString } from './utils/is'
 import { sendTestMail, sendVerifyMail } from './utils/mail'
 import { checkUserVerify, getUserVerifyUrl, md5 } from './utils/security'
 import { rootAuth } from './middleware/rootAuth'
+
+dotenv.config()
 
 const app = express()
 const router = express.Router()
@@ -93,14 +96,14 @@ router.post('/room-delete', auth, async (req, res) => {
 router.get('/chat-hisroty', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const roomId = +req.query.roomid
-    const lastTime = req.query.lasttime as string
+    const roomId = +req.query.roomId
+    const lastId = req.query.lastId as string
     if (!roomId || !await existsChatRoom(userId, roomId)) {
       res.send({ status: 'Success', message: null, data: [] })
       // res.send({ status: 'Fail', message: 'Unknow room', data: null })
       return
     }
-    const chats = await getChats(roomId, !lastTime ? null : parseInt(lastTime))
+    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId))
 
     const result = []
     chats.forEach((c) => {
@@ -374,7 +377,7 @@ router.post('/verify', async (req, res) => {
 
 router.post('/setting-base', rootAuth, async (req, res) => {
   try {
-    const { apiKey, apiModel, apiBaseUrl, accessToken, timeoutMs, socksProxy, httpsProxy } = req.body as Config
+    const { apiKey, apiModel, apiBaseUrl, accessToken, timeoutMs, socksProxy, socksAuth, httpsProxy } = req.body as Config
 
     if (apiKey == null && accessToken == null)
       throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable.')
@@ -386,6 +389,7 @@ router.post('/setting-base', rootAuth, async (req, res) => {
     thisConfig.accessToken = accessToken
     thisConfig.timeoutMs = timeoutMs
     thisConfig.socksProxy = socksProxy
+    thisConfig.socksAuth = socksAuth
     thisConfig.httpsProxy = httpsProxy
     await updateConfig(thisConfig)
     clearConfigCache()
