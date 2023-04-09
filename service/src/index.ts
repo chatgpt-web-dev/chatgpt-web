@@ -231,7 +231,8 @@ router.post('/chat', auth, async (req, res) => {
         const previousResponse = message.previousResponse || []
         previousResponse.push({ response: message.response, messageId: message.options.messageId })
         await updateChat(message._id, response.data.text, response.data.id, previousResponse)
-      } else {
+      }
+      else {
         await updateChat(message._id, response.data.text, response.data.id)
       }
     }
@@ -265,7 +266,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         const previousResponse = message.previousResponse || []
         previousResponse.push({ response: message.response, messageId: message.options.messageId })
         await updateChat(message._id, result.data.text, result.data.id, previousResponse)
-      } else {
+      }
+      else {
         await updateChat(message._id, result.data.text, result.data.id)
       }
     }
@@ -304,11 +306,15 @@ router.post('/user-register', async (req, res) => {
         return
       }
     }
-
     const user = await getUser(username)
     if (user != null) {
-      res.send({ status: 'Fail', message: '邮箱已存在 | The email exists', data: null })
-      return
+      if (user.status === Status.PreVerify) {
+        await sendVerifyMail(username, await getUserVerifyUrl(username))
+        throw new Error('请去邮箱中验证 | Please verify in the mailbox')
+      }
+      if (user.status === Status.AdminVerify)
+        throw new Error('请等待管理员开通 | Please wait for the admin to activate')
+      throw new Error('账号已存在 | The email exists')
     }
     const newPassword = md5(password)
     await createUser(username, newPassword)
@@ -436,8 +442,16 @@ router.post('/verifyadmin', async (req, res) => {
       throw new Error('Secret key is empty')
     const username = await checkUserVerifyAdmin(token)
     const user = await getUser(username)
-    if (user != null && user.status === Status.Normal) {
-      res.send({ status: 'Fail', message: '邮箱已开通 | The email has been opened.', data: null })
+    if (user == null) {
+      res.send({ status: 'Fail', message: '账号不存在 | The account does not exist..', data: null })
+      return
+    }
+    if (user.status === Status.Normal) {
+      res.send({ status: 'Fail', message: '账号已开通 | The email has been opened.', data: null })
+      return
+    }
+    if (user.status !== Status.AdminVerify) {
+      res.send({ status: 'Fail', message: '账号状态不正确 | The account status is incorrect..', data: null })
       return
     }
     await verifyUser(username, Status.Normal)
