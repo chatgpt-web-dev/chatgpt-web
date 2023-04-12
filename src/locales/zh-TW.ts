@@ -96,6 +96,7 @@ export default {
     loginSalt: '登录混淆盐',
     loginSaltTip: '变更会导致所有已登录失效',
     monthlyUsage: '本月使用量',
+    baiduCheckEnabled: '百度文本檢測',
   },
   store: {
     siderButton: '提示詞商店',
