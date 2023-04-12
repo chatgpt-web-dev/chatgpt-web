@@ -96,6 +96,7 @@ export default {
     loginSalt: '로그인 정보 암호화 Salt',
     loginSaltTip: '변경하면 모든사용자의 로그인이 풀립니다.',
     monthlyUsage: '월간 사용량',
+    baiduCheckEnabled: '바이두 텍스트 검사',
   },
   store: {
     siderButton: '프롬프트 스토어',
