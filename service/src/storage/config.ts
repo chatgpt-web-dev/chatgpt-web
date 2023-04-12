@@ -46,6 +46,7 @@ export async function getOriginConfig() {
         process.env.AUTH_SECRET_KEY,
         process.env.REGISTER_ENABLED === 'true',
         process.env.REGISTER_REVIEW === 'true',
+			  process.env.BAIDU_CHECK_ENABLED === 'true',
         process.env.REGISTER_MAILS,
         process.env.SITE_DOMAIN),
       new MailConfig(process.env.SMTP_HOST,
@@ -59,6 +60,8 @@ export async function getOriginConfig() {
       config.siteConfig.loginEnabled = isNotEmptyString(process.env.AUTH_SECRET_KEY)
     if (config.siteConfig.loginSalt === undefined)
       config.siteConfig.loginSalt = process.env.AUTH_SECRET_KEY
+		if (config.siteConfig.baiduCheckEnabled === undefined)
+      config.siteConfig.baiduCheckEnabled = process.env.BAIDU_CHECK_ENABLED  === 'true'
     if (config.apiDisableDebug === undefined)
       config.apiDisableDebug = process.env.OPENAI_API_DISABLE_DEBUG === 'true'
     if (config.socksAuth === undefined) {
