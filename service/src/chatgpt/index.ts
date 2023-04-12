@@ -4,6 +4,7 @@ import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt
 import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
+import rp from 'request-promise-native'
 import fetch from 'node-fetch'
 import { getCacheConfig, getOriginConfig } from '../storage/config'
 import { sendResponse } from '../utils'
@@ -88,6 +89,12 @@ export async function initApi() {
   }
 }
 
+const BAIDU_CHECK_ENABLED = process.env.BAIDU_CHECK_ENABLED === 'true';
+const BAIDU_API_KEY = process.env.BAIDU_API_KEY
+const BAIDU_SECRET_KEY = process.env.BAIDU_SECRET_KEY
+const BAIDU_CHECK_TIPS = process.env.BAIDU_CHECK_TIPS
+let BAIDU_ACCESS_TOKEN = process.env.BAIDU_ACCESS_TOKEN
+
 async function chatReplyProcess(options: RequestOptions) {
   const { message, lastContext, process, systemMessage } = options
   try {
@@ -105,7 +112,32 @@ async function chatReplyProcess(options: RequestOptions) {
       else
         options = { ...lastContext }
     }
+    if (BAIDU_API_KEY != null && BAIDU_SECRET_KEY != null && BAIDU_CHECK_ENABLED) {
+      // 获取百度 access token
+      if (BAIDU_ACCESS_TOKEN == null)
+        BAIDU_ACCESS_TOKEN = await getBaiduAccessToken()
 
+      // 审核文本
+      const url = `https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined?access_token=${BAIDU_ACCESS_TOKEN}`
+      const form = { text: message }
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+      }
+      const requestOptions = { method: 'POST', url, headers, form }
+      const body = await rp(requestOptions)
+      const data = JSON.parse(body)
+      if (data.conclusion !== '合规') {
+        const msg = data.data[0].msg
+        let tips = msg
+        if (BAIDU_CHECK_TIPS != null)
+          tips = `${BAIDU_CHECK_TIPS}\n原因：${msg}`
+
+        return sendResponse({ type: 'Fail', message: tips })
+      }
+    }
+
+    // 如果审核结果为合规，继续进行回复操作
     const response = await api.sendMessage(message, {
       ...options,
       onProgress: (partialResponse) => {
