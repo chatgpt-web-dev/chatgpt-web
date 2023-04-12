@@ -21,6 +21,7 @@ export class SiteConfig {
   registerReview?: boolean
   registerMails?: string
   siteDomain?: string
+  baiduCheckEnabled?: boolean
 }
 
 export class MailConfig {
