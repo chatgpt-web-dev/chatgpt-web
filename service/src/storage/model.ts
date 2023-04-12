@@ -139,6 +139,7 @@ export class SiteConfig {
     public registerReview?: boolean,
     public registerMails?: string,
     public siteDomain?: string,
+	  public baiduCheckEnabled?: boolean,
   ) { }
 }
 
