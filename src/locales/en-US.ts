@@ -96,6 +96,7 @@ export default {
     loginSalt: 'Login Salt',
     loginSaltTip: 'Changes will invalidate all logged in',
     monthlyUsage: 'Monthly Usage',
+		baiduCheckEnabled: 'Baidu text detection',
   },
   store: {
     siderButton: 'Prompt Store',
