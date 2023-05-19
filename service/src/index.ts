@@ -361,6 +361,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       if (result.data === undefined)
         // eslint-disable-next-line no-unsafe-finally
         return
+      // 增加画图返回
+      if (result.data.text === undefined)
+        result.data.text = result.data.message
 
       if (regenerate && message.options.messageId) {
         const previousResponse = message.previousResponse || []
