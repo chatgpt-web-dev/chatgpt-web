@@ -5,13 +5,15 @@ import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import type { AuditConfig } from 'src/storage/model'
+import type { AuditConfig, CHATMODEL } from 'src/storage/model'
+import jwt_decode from 'jwt-decode'
+import dayjs from 'dayjs'
 import type { TextAuditService } from '../utils/textAudit'
 import { textAuditServices } from '../utils/textAudit'
 import { getCacheConfig, getOriginConfig } from '../storage/config'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
-import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, ModelConfig } from '../types'
+import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
 import { getChatByMessageId } from '../storage/mongo'
 import type { RequestOptions } from './types'
 
@@ -34,19 +36,19 @@ const ErrorCodeMessage: Record<string, string> = {
   500: '[OpenAI] 服务器繁忙，请稍后再试 | Internal Server Error',
 }
 
-let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
 let auditService: TextAuditService
 
-export async function initApi() {
+export async function initApi(chatModel: CHATMODEL) {
   // More Info: https://github.com/transitive-bullshit/chatgpt-api
 
   const config = await getCacheConfig()
   if (!config.apiKey && !config.accessToken)
     throw new Error('Missing OPENAI_API_KEY or OPENAI_ACCESS_TOKEN environment variable')
 
+  const model = chatModel as string
+
   if (config.apiModel === 'ChatGPTAPI') {
     const OPENAI_API_BASE_URL = config.apiBaseUrl
-    const model = config.chatModel
 
     const options: ChatGPTAPIOptions = {
       apiKey: config.apiKey,
@@ -73,10 +75,9 @@ export async function initApi() {
 
     await setupProxy(options)
 
-    api = new ChatGPTAPI({ ...options })
+    return new ChatGPTAPI({ ...options })
   }
   else {
-    const model = config.chatModel
     const options: ChatGPTUnofficialProxyAPIOptions = {
       accessToken: config.accessToken,
       apiReverseProxyUrl: isNotEmptyString(config.reverseProxy) ? config.reverseProxy : 'https://ai.fakeopen.com/api/conversation',
@@ -86,7 +87,7 @@ export async function initApi() {
 
     await setupProxy(options)
 
-    api = new ChatGPTUnofficialProxyAPI({ ...options })
+    return new ChatGPTUnofficialProxyAPI({ ...options })
   }
 }
 
@@ -166,7 +167,7 @@ async function draw(message: string) {
 
 async function chatReplyProcess(options: RequestOptions) {
   const config = await getCacheConfig()
-  const model = config.chatModel
+  const model = options.chatModel
   const { message, lastContext, process, systemMessage, temperature, top_p } = options
 
   try {
@@ -196,7 +197,7 @@ async function chatReplyProcess(options: RequestOptions) {
       else
         options = { ...lastContext }
     }
-
+    const api = await initApi(model)
     const response = await api.sendMessage(message, {
       ...options,
       onProgress: (partialResponse) => {
@@ -236,6 +237,15 @@ async function containsSensitiveWords(audit: AuditConfig, text: string): Promise
   }
   return false
 }
+
+async function fetchAccessTokenExpiredTime() {
+  const config = await getCacheConfig()
+  const jwt = jwt_decode(config.accessToken) as JWT
+  if (jwt.exp)
+    return dayjs.unix(jwt.exp).format('YYYY-MM-DD HH:mm:ss')
+  return '-'
+}
+
 let cachedBalance: number | undefined
 let cacheExpiration = 0
 
@@ -321,7 +331,10 @@ function formatDate(date) {
 
 async function chatConfig() {
   const config = await getOriginConfig() as ModelConfig
-  config.balance = await fetchBalance()
+  if (config.apiModel === 'ChatGPTAPI')
+    config.balance = await fetchBalance()
+  else
+    config.accessTokenExpiredTime = await fetchAccessTokenExpiredTime()
   return sendResponse<ModelConfig>({
     type: 'Success',
     data: config,
@@ -381,8 +394,6 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
   }
   else { return undefined }
 }
-
-initApi()
 
 export type { ChatContext, ChatMessage }
 

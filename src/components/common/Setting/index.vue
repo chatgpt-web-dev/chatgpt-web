@@ -3,10 +3,12 @@ import { computed, ref } from 'vue'
 import { NModal, NTabPane, NTabs } from 'naive-ui'
 import General from './General.vue'
 import Advanced from './Advanced.vue'
+import Statistics from './Statistics.vue'
 import About from './About.vue'
 import Site from './Site.vue'
 import Mail from './Mail.vue'
 import Audit from './Audit.vue'
+import User from './User.vue'
 import { SvgIcon } from '@/components/common'
 import { useAuthStore, useUserStore } from '@/store'
 
@@ -40,7 +42,7 @@ const show = computed({
 </script>
 
 <template>
-  <NModal v-model:show="show" :auto-focus="false" preset="card" style="width: 95%; max-width: 1024px">
+  <NModal v-model:show="show" :auto-focus="false" preset="card" style="width: 80%;">
     <div>
       <NTabs v-model:value="active" type="line" animated>
         <NTabPane name="General" tab="General">
@@ -59,6 +61,15 @@ const show = computed({
           </template>
           <div class="min-h-[100px]">
             <Advanced />
+          </div>
+        </NTabPane>
+        <NTabPane name="Statistics" tab="Statistics">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri:bar-chart-box-line" />
+            <span class="ml-2">{{ $t('setting.statistics') }}</span>
+          </template>
+          <div class="min-h-[100px]">
+            <Statistics />
           </div>
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="Config" tab="Config">
@@ -88,6 +99,13 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.auditConfig') }}</span>
           </template>
           <Audit />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-user-5-line" />
+            <span class="ml-2">{{ $t('setting.userConfig') }}</span>
+          </template>
+          <User />
         </NTabPane>
       </NTabs>
     </div>

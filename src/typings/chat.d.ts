@@ -5,6 +5,7 @@ declare namespace Chat {
     dateTime: string
     text: string
     inversion?: boolean
+    responseCount?: number
     error?: boolean
     loading?: boolean
     conversationOptions?: ConversationRequest | null
@@ -24,6 +25,7 @@ declare namespace Chat {
     loading?: boolean
     all?: boolean
     prompt?: string
+    usingContext: boolean
   }
 
   interface ChatState {

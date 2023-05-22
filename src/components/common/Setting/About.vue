@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref, watch } from 'vue'
-import { NButton, NInput, NSelect, NSpin, useMessage } from 'naive-ui'
+import { NButton, NInput, NSelect, NSpin, NTag, useMessage } from 'naive-ui'
 import { ConfigState } from './model'
 import { fetchChatConfig, fetchUpdateBaseSetting } from '@/api'
 import { t } from '@/locales'
@@ -13,21 +13,6 @@ const saving = ref(false)
 const config = ref(new ConfigState())
 
 const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {
-  return {
-    label: model,
-    key: model,
-    value: model,
-  }
-})
-
-const chatModelOptions = [
-  'gpt-3.5-turbo',
-  'gpt-3.5-turbo-0301',
-  'gpt-4',
-  'gpt-4-0314',
-  'gpt-4-32k',
-  'gpt-4-32k-0314',
-].map((model: string) => {
   return {
     label: model,
     key: model,
@@ -110,25 +95,23 @@ onMounted(() => {
           <div class="flex-1">
             <NInput :value="config.accessToken" placeholder="" @input="(val) => { config.accessToken = val }" />
           </div>
+        </div>
+        <div v-if="!isChatGPTAPI" class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.accessTokenExpiredTime') }}</span>
+          <div class="flex-1">
+            {{ config.accessTokenExpiredTime }}
+            <NTag v-if="config.accessTokenExpiredTime && config.accessTokenExpiredTime !== '-' && new Date(config.accessTokenExpiredTime as string) < new Date()" :bordered="false" type="warning">
+              {{ new Date(config.accessTokenExpiredTime as string) > new Date() ? '' : 'Expired' }}
+            </NTag>
+          </div>
           <p>
-            <a target="_blank" href="https://chat.openai.com/api/auth/session">Get Token</a>
+            <a target="_blank" href="https://chat.openai.com/api/auth/session">Goto Refresh Token</a>
           </p>
         </div>
         <div v-if="!isChatGPTAPI" class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.reverseProxy') }}</span>
           <div class="flex-1">
             <NInput :value="config.reverseProxy" placeholder="" @input="(val) => { config.reverseProxy = val }" />
-          </div>
-        </div>
-        <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.chatModel') }}</span>
-          <div class="flex-1">
-            <NSelect
-              style="width: 240px"
-              :value="config.chatModel"
-              :options="chatModelOptions"
-              @update-value="(val) => { config.chatModel = val }"
-            />
           </div>
         </div>
         <div class="flex items-center space-x-4">
