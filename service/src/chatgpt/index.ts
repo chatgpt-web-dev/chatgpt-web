@@ -17,6 +17,12 @@ import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } 
 import { getChatByMessageId } from '../storage/mongo'
 import type { RequestOptions } from './types'
 
+// import { Request, Response } from 'express'
+// eslint-disable-next-line import/order
+import https from 'https'
+// import { RequestOptions } from 'https'
+// eslint-disable-next-line import/order
+import fs from 'fs'
 const { HttpsProxyAgent } = httpsProxyAgent
 
 dotenv.config()
@@ -82,6 +88,80 @@ export async function initApi(key: KeyConfig, chatModel: CHATMODEL) {
   }
 }
 
+async function draw(message: string) {
+  const config = (await getCacheConfig())
+  return new Promise<string>((resolve, reject) => {
+    try {
+      const dataReq = {
+        prompt: message,
+        n: 1,
+        size: '512x512',
+        response_format: 'b64_json',
+      }
+      const options: https.RequestOptions = {
+        hostname: 'api.openai.com',
+        port: 443,
+        path: '/v1/images/generations',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+      const request = https.request(options, (response) => {
+        let responseData = ''
+        response.on('data', (chunk) => {
+          responseData += chunk
+        })
+        response.on('end', () => {
+          try {
+            const jsonResponse = JSON.parse(responseData)
+            const datas = jsonResponse.data
+            // eslint-disable-next-line no-unreachable-loop
+            for (let i = 0; i < datas.length; i++) {
+              const data = datas[i]
+              const base64String = data.b64_json
+              const imageData = Buffer.from(base64String, 'base64')
+              const timestamp = Date.now()
+              const randomNum = Math.floor(Math.random() * 100000)
+              const randomStr = String(randomNum).padStart(5, '0')
+              const fileNmae = `${timestamp}${randomStr}.png`
+              const filePath = process.env.FILE_PATH
+              const filepathSave = `${filePath}/${fileNmae}`
+              fs.writeFile(filepathSave, imageData, (err) => {
+                if (err)
+                  console.error(err)
+                else
+                  console.log(`Image saved successfully!，path==${filepathSave}`)
+              })
+              const url = `${config.siteConfig.siteDomain}/sysfiles/${fileNmae}`
+              const imgMarkdown = `![我的图片](${url})`
+              console.log(`图片加载完成${imgMarkdown}`)
+              // console.log(url)
+              resolve(imgMarkdown)
+              return
+            }
+          }
+          catch (error01) {
+            // console.error("发生错误1" + error01)
+            resolve('发生未知错误')
+          }
+        })
+      })
+      request.on('error', (error) => {
+        console.error(`发生错误1${error}`)
+        reject(error)
+      })
+      request.write(JSON.stringify(dataReq))
+      request.end()
+    }
+    catch (error) {
+      console.error(`发生错误2${error}`)
+      reject(error)
+    }
+  })
+}
+
 async function chatReplyProcess(options: RequestOptions) {
   const model = options.chatModel
   const key = options.key
@@ -91,6 +171,17 @@ async function chatReplyProcess(options: RequestOptions) {
   const { message, lastContext, process, systemMessage, temperature, top_p } = options
 
   try {
+    const startsWithSlash = message.startsWith('/')// 判断是否以斜杠开头
+    if (startsWithSlash) {
+      console.log(`开启画图：${message}`)
+      const imgMarkdown = await draw(message)
+      const dataRes = {
+        status: 'Fail',
+        message: imgMarkdown,
+        data: null,
+      }
+      return sendResponse({ type: 'Success', data: dataRes })
+    }
     const timeoutMs = (await getCacheConfig()).timeoutMs
     let options: SendMessageOptions = { timeoutMs }
 
