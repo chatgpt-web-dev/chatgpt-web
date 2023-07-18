@@ -8,29 +8,30 @@
 			text-align: center;
 		"
 	>
-		<div class="main-wrapper">
+		<div
+			class="main-wrapper"
+			style="display: flex; flex-flow: column nowrap; justify-content: center"
+		>
 			<!-- top area start -->
-			<div
-				class="header-wrapper"
-				style="height: 10em; background: #fcc; justify-content: center"
-			></div>
-			<div
-				class="avatar"
-				style="
-					background-color: #eee;
-					background-image: url('https://ghproxy.com/https://raw.githubusercontent.com/Chanzhaoyu/chatgpt-web/main/src/assets/avatar.jpg');
-					width: 10em;
-					height: 10em;
-					margin: -5em auto 1em;
-					background-size: cover;
-					border-radius: 50%;
-					border: 0.25em solid white;
-				"
-			></div>
+			<div class="header-wrapper" style="height: 10em; background: #fcc">
+				<div
+					class="avatar"
+					style="
+						background-color: #eee;
+						background-image: url('https://ghproxy.com/https://raw.githubusercontent.com/Chanzhaoyu/chatgpt-web/main/src/assets/avatar.jpg');
+						width: 10em;
+						height: 10em;
+						margin: 5em auto 0;
+						background-size: cover;
+						border-radius: 50%;
+						border: 0.25em solid white;
+					"
+				></div>
+			</div>
 			<div
 				class="article-title"
 				style="
-					margin: 0 auto;
+					margin: 6em auto 0;
 					font-weight: bold;
 					line-height: 2;
 					text-align: center;
@@ -75,21 +76,17 @@
 							style="
 								display: inline-block;
 								height: 3em;
+								line-height: 3em;
 								min-width: 8em;
 								background: #fcc;
+								color: #c33;
 								border-radius: 3em;
 								margin: 2em auto;
 							"
 						>
 							<a
 								target="_blank"
-								style="
-									height: 3em;
-									line-height: 3em;
-									color: #c33;
-									text-decoration: none;
-									padding: 0 1.5em;
-								"
+								style="color: #c33; text-decoration: none; padding: 0 1.5em"
 								href="${SITE_DOMAIN}"
 							>
 								点我登陆
@@ -99,11 +96,19 @@
 
 					<hr style="border: 1px dashed #fcc; margin: 2em 0" />
 
-					<div style="color: #888; font-family: monospace; font-size: 0.8em">
+					<div style="color: #888; font-size: 0.8em">
 						<div>或者复制链接，并去浏览器打开</div>
-						<a href="${SITE_DOMAIN}" style="text-decoration: none; color: #888"
-							>${SITE_DOMAIN}</a
-						>
+						<div style="font-family: monospace">
+							<a
+								href="${SITE_DOMAIN}"
+								style="
+									text-decoration: none;
+									color: #888;
+									font-family: monospace;
+								"
+								>${SITE_DOMAIN}</a
+							>
+						</div>
 					</div>
 				</div>
 			</div>
