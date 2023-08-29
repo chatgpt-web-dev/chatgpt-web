@@ -221,11 +221,34 @@ router.get('/chat-history', auth, async (req, res) => {
     const roomId = +req.query.roomId
     const lastId = req.query.lastId as string
     const all = req.query.all as string
-    if (!roomId || !await existsChatRoom(userId, roomId)) {
+    if ((!roomId || !await existsChatRoom(userId, roomId)) && (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)) {
       res.send({ status: 'Success', message: null, data: [] })
       // res.send({ status: 'Fail', message: 'Unknow room', data: null })
       return
     }
+
+    if (all !== null && all !== 'undefined' && all !== undefined && all.trim().length !== 0) {
+      const config = await getCacheConfig()
+      if (config.siteConfig.loginEnabled) {
+        try {
+          const token = req.header('Authorization').replace('Bearer ', '')
+          const info = jwt.verify(token, config.siteConfig.loginSalt.trim())
+          req.headers.userId = info.userId
+          const user = await getUserById(info.userId)
+          if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin)) {
+            res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+            return
+          }
+        }
+        catch (error) {
+          res.send({ status: 'Unauthorized', message: error.message ?? 'Please authenticate.', data: null })
+        }
+      }
+      else {
+        res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+      }
+    }
+
     const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId), all)
     const result = []
     chats.forEach((c) => {

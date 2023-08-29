@@ -37,6 +37,9 @@ const columns = [{
   title: 'Title',
   key: 'title',
   width: 50,
+  ellipsis: {
+    tooltip: true,
+  },
 },
 {
   title: 'Chat Count',

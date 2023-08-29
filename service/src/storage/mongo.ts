@@ -143,7 +143,7 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
   const skip = (page - 1) * size
   const limit = size
   const agg = []
-  if (userId !== null && userId !== undefined && userId.trim().length !== 0) {
+  if (userId !== null && userId !== 'undefined' && userId !== undefined && userId.trim().length !== 0) {
     agg.push({
       $match: {
         userId,
@@ -221,7 +221,7 @@ export async function getChats(roomId: number, lastId?: number, all?: string) {
   if (!lastId)
     lastId = new Date().getTime()
   let query = {}
-  if (all === null || all === undefined || all.trim().length === 0)
+  if (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)
     query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
   else
     query = { roomId, uuid: { $lt: lastId } }
