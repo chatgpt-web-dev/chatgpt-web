@@ -77,6 +77,7 @@ export default {
     advanced: 'Advanced',
     statistics: 'Statistics',
     config: 'Base Config',
+    chatRecord: 'Chat History',
     siteConfig: 'Site Config',
     mailConfig: 'Mail Config',
     auditConfig: 'Audit Config',

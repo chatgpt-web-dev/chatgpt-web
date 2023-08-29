@@ -138,6 +138,71 @@ export async function getChatRooms(userId: string) {
   return rooms
 }
 
+export async function getChatRoomsCount(userId: string, page: number, size: number) {
+  let total = 0
+  const skip = (page - 1) * size
+  const limit = size
+  const agg = []
+  if (userId !== null && userId !== undefined && userId.trim().length !== 0) {
+    agg.push({
+      $match: {
+        userId,
+      },
+    })
+    total = await roomCol.countDocuments({ userId })
+  }
+  else {
+    total = await roomCol.countDocuments()
+  }
+  const agg2 = [
+    {
+      $lookup: {
+        from: 'chat',
+        localField: 'roomId',
+        foreignField: 'roomId',
+        as: 'chat',
+      },
+    }, {
+      $unwind: {
+        path: '$chat',
+        preserveNullAndEmptyArrays: true,
+      },
+    }, {
+      $group: {
+        _id: '$_id',
+        userId: {
+          $first: '$userId',
+        },
+        title: {
+          $first: '$title',
+        },
+        roomId: {
+          $first: '$roomId',
+        },
+        dateTime: {
+          $last: '$chat.dateTime',
+        },
+        chatCount: {
+          $sum: 1,
+        },
+      },
+    }, {
+      $sort: {
+        dateTime: -1,
+      },
+    }, {
+      $skip: skip,
+    }, {
+      $limit: limit,
+    },
+  ]
+  Array.prototype.push.apply(agg, agg2)
+
+  const cursor = roomCol.aggregate(agg)
+  const data = await cursor.toArray()
+  return { total, data }
+}
+
 export async function getChatRoom(userId: string, roomId: number) {
   return await roomCol.findOne({ userId, roomId, status: { $ne: Status.Deleted } }) as ChatRoom
 }
@@ -152,10 +217,15 @@ export async function deleteAllChatRooms(userId: string) {
   await chatCol.updateMany({ userId, status: Status.Normal }, { $set: { status: Status.Deleted } })
 }
 
-export async function getChats(roomId: number, lastId?: number) {
+export async function getChats(roomId: number, lastId?: number, all?: string) {
   if (!lastId)
     lastId = new Date().getTime()
-  const query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  let query = {}
+  if (all === null || all === undefined || all.trim().length === 0)
+    query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  else
+    query = { roomId, uuid: { $lt: lastId } }
+
   const limit = 20
   const cursor = await chatCol.find(query).sort({ dateTime: -1 }).limit(limit)
   const chats = []
