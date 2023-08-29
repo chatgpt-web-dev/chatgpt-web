@@ -5,7 +5,7 @@ import Message from './Message/index.vue'
 import { fetchGetChatHistory, fetchGetChatRoomsCount, fetchGetUsers } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 
-interface historyChat {
+interface HistoryChat {
   uuid?: number
   dateTime: string
   text: string
@@ -23,7 +23,7 @@ interface historyChat {
 
 const show = ref(false)
 const { isMobile } = useBasicLayout()
-const dataSources = ref([])
+const dataSources = ref<HistoryChat[]>([])
 const selectUserId = ref('')
 const userOptions = ref([{ label: 'all', value: '' }])
 const loading = ref(false)
@@ -61,7 +61,7 @@ const columns = [{
           show.value = true
           dataSources.value.length = 0
           fetchGetChatHistory(row.uuid, undefined, 'all').then((res: any) => {
-            dataSources.value = res.data as historyChat[]
+            dataSources.value = res.data as HistoryChat[]
           })
         },
       },
