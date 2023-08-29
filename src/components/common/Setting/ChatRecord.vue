@@ -45,7 +45,7 @@ const columns = [{
           show.value = true
           dataSources.value.length = 0
           fetchGetChatHistory(row.uuid, undefined, 'all').then((res: any) => {
-            dataSources.value = res.data
+            dataSources.value = res.data as Chat.Chat[]
           })
         },
       },
@@ -75,7 +75,7 @@ const pagination = reactive ({
   },
 })
 
-async function handleSelectUser(value: string) {
+async function handleSelectUser() {
   await handleGetChatRoomsCount(pagination.page)
 }
 
