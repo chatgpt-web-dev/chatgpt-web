@@ -61,12 +61,12 @@ const modalMode = ref('')
 const tempModifiedItem = ref<any>({})
 
 // 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
-const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected: DataProps) => {
+const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected?: DataProps) => {
   if (mode === 'add') {
     tempPromptKey.value = ''
     tempPromptValue.value = ''
   }
-  else if (mode === 'modify') {
+  else if (mode === 'modify' && selected !== undefined) {
     tempModifiedItem.value = { ...selected }
     tempPromptKey.value = selected.title
     tempPromptValue.value = selected.value
