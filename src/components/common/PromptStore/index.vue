@@ -61,7 +61,7 @@ const modalMode = ref('')
 const tempModifiedItem = ref<any>({})
 
 // 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
-const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected = { title: '', value: '' }) => {
+const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected: DataProps) => {
   if (mode === 'add') {
     tempPromptKey.value = ''
     tempPromptValue.value = ''
@@ -139,7 +139,10 @@ const modifyPromptTemplate = async () => {
   changeShowModal('modify')
 }
 
-async function deletePromptTemplate(row: { _id: string; title: string; value: string }) {
+async function deletePromptTemplate(row: DataProps) {
+  if (row._id === undefined)
+    return
+
   loading.value = true
   await fetchDeleteUserPrompt(row._id)
   loading.value = false
