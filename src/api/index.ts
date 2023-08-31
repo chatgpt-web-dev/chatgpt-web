@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AuditConfig, CHATMODEL, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo } from '@/components/common/Setting/model'
+import type { AuditConfig, CHATMODEL, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useSettingStore } from '@/store'
 
 export function fetchChatConfig<T = any>() {
@@ -286,5 +286,26 @@ export function fetchUpsertApiKey<T = any>(keyConfig: KeyConfig) {
   return post<T>({
     url: '/setting-key-upsert',
     data: keyConfig,
+  })
+}
+
+export function fetchUserPromptList<T = any>(page: number, size: number) {
+  return get<T>({
+    url: '/prompt-list',
+    data: { page, size },
+  })
+}
+
+export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
+  return post<T>({
+    url: '/prompt-upsert',
+    data: userPrompt,
+  })
+}
+
+export function fetchDeleteUserPrompt<T = any>(id: string) {
+  return post<T>({
+    url: '/prompt-delete',
+    data: { id },
   })
 }

@@ -244,4 +244,16 @@ export class KeyConfig {
   }
 }
 
+export class UserPrompt {
+  _id: ObjectId
+  userId: string
+  title: string
+  value: string
+  constructor(userId: string, title: string, value: string) {
+    this.userId = userId
+    this.title = title
+    this.value = value
+  }
+}
+
 export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI'

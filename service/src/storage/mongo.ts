@@ -1,9 +1,9 @@
-import { MongoClient, ObjectId } from 'mongodb'
-import * as dotenv from 'dotenv'
 import dayjs from 'dayjs'
+import * as dotenv from 'dotenv'
+import { MongoClient, ObjectId } from 'mongodb'
 import { md5 } from '../utils/security'
+import type { CHATMODEL, ChatOptions, Config, KeyConfig, UsageResponse, UserPrompt } from './model'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
-import type { CHATMODEL, ChatOptions, Config, KeyConfig, UsageResponse } from './model'
 
 dotenv.config()
 
@@ -17,6 +17,7 @@ const userCol = client.db(dbName).collection('user')
 const configCol = client.db(dbName).collection('config')
 const usageCol = client.db(dbName).collection('chat_usage')
 const keyCol = client.db(dbName).collection('key_config')
+const userPromptCol = client.db(dbName).collection('user_prompt')
 
 /**
  * 插入聊天信息
@@ -486,4 +487,28 @@ export async function upsertKey(key: KeyConfig): Promise<KeyConfig> {
 
 export async function updateApiKeyStatus(id: string, status: Status) {
   return await keyCol.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
+}
+
+export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
+  if (userPrompt._id === undefined)
+    await userPromptCol.insertOne(userPrompt)
+  else
+    await userPromptCol.replaceOne({ _id: userPrompt._id }, userPrompt, { upsert: true })
+  return userPrompt
+}
+export async function getUserPromptList(userId: string, page: number, size: number): Promise<{ data: UserPrompt[]; total: number }> {
+  const query = { userId }
+  const total = await userPromptCol.countDocuments(query)
+  const cursor = userPromptCol.find(query).sort({ _id: -1 })
+  const data = []
+  const skip = (page - 1) * size
+  const pagedCursor = cursor.skip(skip).limit(size)
+
+  await pagedCursor.forEach(doc => data.push(doc))
+  return { data, total }
+}
+
+export async function deleteUserPrompt(id: string) {
+  const query = { _id: new ObjectId(id) }
+  await userPromptCol.deleteOne(query)
 }

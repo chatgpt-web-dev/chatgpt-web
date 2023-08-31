@@ -1,17 +1,19 @@
 <script setup lang='ts'>
 import type { DataTableColumns } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { NButton, NCard, NDataTable, NDivider, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
 import PromptRecommend from '../../../assets/recommend.json'
 import { SvgIcon } from '..'
-import { usePromptStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
+import { UserPrompt } from '@/components/common/Setting/model'
+import { fetchDeleteUserPrompt, fetchUpsertUserPrompt, fetchUserPromptList } from '@/api'
 
 interface DataProps {
+  _id?: string
   renderKey: string
   renderValue: string
-  key: string
+  title: string
   value: string
 }
 
@@ -33,7 +35,7 @@ const show = computed({
   get: () => props.visible,
   set: (visible: boolean) => emit('update:visible', visible),
 })
-
+const loading = ref(false)
 const showModal = ref(false)
 
 const importLoading = ref(false)
@@ -44,11 +46,9 @@ const searchValue = ref<string>('')
 // 移动端自适应相关
 const { isMobile } = useBasicLayout()
 
-const promptStore = usePromptStore()
-
 // Prompt在线导入推荐List,根据部署者喜好进行修改(assets/recommend.json)
 const promptRecommendList = PromptRecommend
-const promptList = ref<any>(promptStore.promptList)
+const promptList = ref<UserPrompt[]>([])
 
 // 用于添加修改的临时prompt参数
 const tempPromptKey = ref('')
@@ -61,14 +61,14 @@ const modalMode = ref('')
 const tempModifiedItem = ref<any>({})
 
 // 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
-const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected = { key: '', value: '' }) => {
+const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected = { title: '', value: '' }) => {
   if (mode === 'add') {
     tempPromptKey.value = ''
     tempPromptValue.value = ''
   }
   else if (mode === 'modify') {
     tempModifiedItem.value = { ...selected }
-    tempPromptKey.value = selected.key
+    tempPromptKey.value = selected.title
     tempPromptValue.value = selected.value
   }
   else if (mode === 'local_import') {
@@ -90,9 +90,9 @@ const setDownloadURL = (url: string) => {
 const inputStatus = computed (() => tempPromptKey.value.trim().length < 1 || tempPromptValue.value.trim().length < 1)
 
 // Prompt模板相关操作
-const addPromptTemplate = () => {
+async function addPromptTemplate() {
   for (const i of promptList.value) {
-    if (i.key === tempPromptKey.value) {
+    if (i.title === tempPromptKey.value) {
       message.error(t('store.addRepeatTitleTips'))
       return
     }
@@ -101,17 +101,19 @@ const addPromptTemplate = () => {
       return
     }
   }
-  promptList.value.unshift({ key: tempPromptKey.value, value: tempPromptValue.value } as never)
+  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+  await fetchUpsertUserPrompt(userPrompt)
+  promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value } as never)
   message.success(t('common.addSuccess'))
   changeShowModal('add')
 }
 
-const modifyPromptTemplate = () => {
+const modifyPromptTemplate = async () => {
   let index = 0
 
   // 通过临时索引把待修改项摘出来
   for (const i of promptList.value) {
-    if (i.key === tempModifiedItem.value.key && i.value === tempModifiedItem.value.value)
+    if (i.title === tempModifiedItem.value.title && i.value === tempModifiedItem.value.value)
       break
     index = index + 1
   }
@@ -120,24 +122,29 @@ const modifyPromptTemplate = () => {
 
   // 搜索有冲突的部分
   for (const i of tempList) {
-    if (i.key === tempPromptKey.value) {
+    if (i.title === tempPromptKey.value) {
       message.error(t('store.editRepeatTitleTips'))
       return
     }
     if (i.value === tempPromptValue.value) {
-      message.error(t('store.editRepeatContentTips', { msg: i.key }))
+      message.error(t('store.editRepeatContentTips', { msg: i.title }))
       return
     }
   }
-
-  promptList.value = [{ key: tempPromptKey.value, value: tempPromptValue.value }, ...tempList] as never
+  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+  userPrompt._id = tempModifiedItem.value._id
+  await fetchUpsertUserPrompt(userPrompt)
+  promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value }, ...tempList] as never
   message.success(t('common.editSuccess'))
   changeShowModal('modify')
 }
 
-const deletePromptTemplate = (row: { key: string; value: string }) => {
+async function deletePromptTemplate(row: { _id: string; title: string; value: string }) {
+  loading.value = true
+  await fetchDeleteUserPrompt(row._id)
+  loading.value = false
   promptList.value = [
-    ...promptList.value.filter((item: { key: string; value: string }) => item.key !== row.key),
+    ...promptList.value.filter((item: UserPrompt) => item._id !== row._id),
   ] as never
   message.success(t('common.deleteSuccess'))
 }
@@ -172,7 +179,7 @@ const importPromptTemplate = (from = 'online') => {
         throw new Error(t('store.importError'))
       let safe = true
       for (const j of promptList.value) {
-        if (j.key === i[key]) {
+        if (j.title === i[key]) {
           message.warning(t('store.importRepeatTitle', { msg: i[key] }))
           safe = false
           break
@@ -241,22 +248,43 @@ const downloadPromptTemplate = async () => {
 // 移动端自适应相关
 const renderTemplate = () => {
   const [keyLimit, valueLimit] = isMobile.value ? [10, 30] : [15, 50]
-
-  return promptList.value.map((item: { key: string; value: string }) => {
+  return promptList.value.map((item: UserPrompt) => {
     return {
-      renderKey: item.key.length <= keyLimit ? item.key : `${item.key.substring(0, keyLimit)}...`,
+      renderKey: item.title.length <= keyLimit ? item.title : `${item.title.substring(0, keyLimit)}...`,
       renderValue: item.value.length <= valueLimit ? item.value : `${item.value.substring(0, valueLimit)}...`,
-      key: item.key,
+      title: item.title,
       value: item.value,
+      _id: item._id,
     }
   })
 }
 
-const pagination = computed(() => {
-  const [pageSize, pageSlot] = isMobile.value ? [6, 5] : [7, 15]
-  return {
-    pageSize, pageSlot,
-  }
+// const pagination = computed(() => {
+//   const [pageSize, pageSlot] = isMobile.value ? [6, 5] : [7, 15]
+//   return {
+//     pageSize, pageSlot,
+//   }
+// })
+
+const pagination = reactive ({
+  page: 1,
+  pageSize: 25,
+  pageCount: 1,
+  itemCount: 1,
+  prefix({ itemCount }: { itemCount: number | undefined }) {
+    return `Total is ${itemCount}.`
+  },
+  showSizePicker: true,
+  pageSizes: [25, 50, 100],
+  onChange: (page: number) => {
+    pagination.page = page
+    handleGetUserPromptList(pagination.page)
+  },
+  onUpdatePageSize: (pageSize: number) => {
+    pagination.pageSize = pageSize
+    pagination.page = 1
+    handleGetUserPromptList(pagination.page)
+  },
 })
 
 // table相关
@@ -309,10 +337,29 @@ const columns = createColumns()
 watch(
   () => promptList,
   () => {
-    promptStore.updatePromptList(promptList.value)
   },
   { deep: true },
 )
+
+async function handleGetUserPromptList(page: number) {
+  if (loading.value)
+    return
+  promptList.value.length = 0
+  loading.value = true
+  const size = pagination.pageSize
+  const data = (await fetchUserPromptList(page, size)).data
+  data.data.forEach((d: UserPrompt) => {
+    promptList.value.push(d)
+  })
+  pagination.page = page
+  pagination.pageCount = data.total / size + (data.total % size === 0 ? 0 : 1)
+  pagination.itemCount = data.total
+  loading.value = false
+}
+
+onMounted(async () => {
+  await handleGetUserPromptList(pagination.page)
+})
 
 const dataSource = computed(() => {
   const data = renderTemplate()
@@ -376,6 +423,7 @@ const dataSource = computed(() => {
             :data="dataSource"
             :pagination="pagination"
             :bordered="false"
+            :loading="loading"
           />
           <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
             <NListItem v-for="(item, index) of dataSource" :key="index">
@@ -413,7 +461,7 @@ const dataSource = computed(() => {
           <div class="max-h-[360px] overflow-y-auto space-y-4">
             <NCard
               v-for="info in promptRecommendList"
-              :key="info.key" :title="info.key"
+              :key="info.title" :title="info.title"
               :bordered="true"
               embedded
             >

@@ -8,7 +8,7 @@ import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo, UserPrompt } from './storage/model'
 import { Status, UsageResponse, UserRole, chatModelOptions } from './storage/model'
 import {
   clearChat,
@@ -17,6 +17,7 @@ import {
   deleteAllChatRooms,
   deleteChat,
   deleteChatRoom,
+  deleteUserPrompt,
   existsChatRoom,
   getChat,
   getChatRoom,
@@ -25,6 +26,7 @@ import {
   getChats,
   getUser,
   getUserById,
+  getUserPromptList,
   getUserStatisticsByDay,
   getUsers,
   insertChat,
@@ -42,6 +44,7 @@ import {
   updateUserPassword,
   updateUserStatus,
   upsertKey,
+  upsertUserPrompt,
   verifyUser,
 } from './storage/mongo'
 import { authLimiter, limiter } from './middleware/limiter'
@@ -1042,6 +1045,53 @@ router.post('/statistics/by-day', auth, async (req, res) => {
   }
   catch (error) {
     res.send(error)
+  }
+})
+
+router.get('/prompt-list', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const page = +req.query.page
+    const size = +req.query.size
+    const prompts = await getUserPromptList(userId, page, size)
+    const result = []
+    prompts.data.forEach((p) => {
+      result.push({
+        _id: p._id,
+        title: p.title,
+        value: p.value,
+      })
+    })
+    res.send({ status: 'Success', message: null, data: { data: result, total: prompts.total } })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-upsert', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt
+    if (userPrompt._id !== undefined)
+      userPrompt._id = new ObjectId(userPrompt._id)
+    userPrompt.userId = userId
+    await upsertUserPrompt(userPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-delete', auth, async (req, res) => {
+  try {
+    const { id } = req.body as { id: string }
+    await deleteUserPrompt(id)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
 
