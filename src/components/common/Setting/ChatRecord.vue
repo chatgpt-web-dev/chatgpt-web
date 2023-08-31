@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NButton, NDataTable, NModal, NScrollbar, NSelect, NSpace } from 'naive-ui'
+import { NButton, NDataTable, NModal, NScrollbar, NSelect, NSpace, NSpin } from 'naive-ui'
 import { h, onMounted, reactive, ref } from 'vue'
 import Message from './Message/index.vue'
 import { fetchGetChatHistory, fetchGetChatRoomsCount, fetchGetUsers } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { SvgIcon } from '@/components/common'
 
 interface HistoryChat {
   uuid?: number
@@ -27,6 +28,7 @@ const dataSources = ref<HistoryChat[]>([])
 const selectUserId = ref('')
 const userOptions = ref([{ label: 'all', value: '' }])
 const loading = ref(false)
+const chatLoading = ref(false)
 const chatRooms = ref([])
 const columns = [{
   title: 'Last Time',
@@ -71,8 +73,10 @@ const columns = [{
         onClick: () => {
           show.value = true
           dataSources.value.length = 0
+          chatLoading.value = true
           fetchGetChatHistory(row.uuid, undefined, 'all').then((res: any) => {
             dataSources.value = res.data as HistoryChat[]
+            chatLoading.value = false
           })
         },
       },
@@ -163,19 +167,31 @@ onMounted(async () => {
       </NSpace>
     </div>
     <NModal v-model:show="show" preset="card" :style="{ width: !isMobile ? '80%' : '100%' }">
-      <NScrollbar style="max-height: 80vh;padding: 0 15px;">
-        <Message
-          v-for="(item, index) of dataSources"
-          :key="index"
-          :date-time="item.dateTime"
-          :text="item.text"
-          :inversion="item.inversion"
-          :response-count="item.responseCount"
-          :usage="item && item.usage || undefined"
-          :error="item.error"
-          :loading="item.loading"
-        />
-      </NScrollbar>
+      <NSpin :show="chatLoading">
+        <template v-if="!dataSources.length">
+          <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
+            <SvgIcon icon="ri:bubble-chart-fill" class="mr-2 text-3xl" />
+            <span>Aha~</span>
+          </div>
+        </template>
+        <template v-else>
+          <div>
+            <NScrollbar style="max-height: 80vh;padding: 0 15px;">
+              <Message
+                v-for="(item, index) of dataSources"
+                :key="index"
+                :date-time="item.dateTime"
+                :text="item.text"
+                :inversion="item.inversion"
+                :response-count="item.responseCount"
+                :usage="item && item.usage || undefined"
+                :error="item.error"
+                :loading="item.loading"
+              />
+            </NScrollbar>
+          </div>
+        </template>
+      </NSpin>
     </NModal>
   </div>
 </template>

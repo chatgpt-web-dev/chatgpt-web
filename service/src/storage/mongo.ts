@@ -187,6 +187,10 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
         preserveNullAndEmptyArrays: false,
       },
     }, {
+      $sort: {
+        'chat.dateTime': -1,
+      },
+    }, {
       $group: {
         _id: '$_id',
         userId: {
