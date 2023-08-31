@@ -31,12 +31,20 @@ const chatRooms = ref([])
 const columns = [{
   title: 'Last Time',
   key: 'lastTime',
-  width: 50,
+  width: 35,
+},
+{
+  title: 'username',
+  key: 'name',
+  width: 30,
+  ellipsis: {
+    tooltip: true,
+  },
 },
 {
   title: 'Title',
   key: 'title',
-  width: 50,
+  width: 100,
   ellipsis: {
     tooltip: true,
   },
@@ -44,12 +52,12 @@ const columns = [{
 {
   title: 'Chat Count',
   key: 'chatCount',
-  width: 50,
+  width: 20,
 },
 {
   title: 'Action',
   key: 'uuid',
-  width: 50,
+  width: 20,
   render(row: any) {
     const actions: any[] = []
     actions.push(h(

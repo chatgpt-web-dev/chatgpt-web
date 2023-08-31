@@ -165,7 +165,26 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
     }, {
       $unwind: {
         path: '$chat',
-        preserveNullAndEmptyArrays: true,
+        preserveNullAndEmptyArrays: false,
+      },
+    }, {
+      $addFields: {
+        title: '$chat.prompt',
+        user_ObjectId: {
+          $toObjectId: '$userId',
+        },
+      },
+    }, {
+      $lookup: {
+        from: 'user',
+        localField: 'user_ObjectId',
+        foreignField: '_id',
+        as: 'user',
+      },
+    }, {
+      $unwind: {
+        path: '$user',
+        preserveNullAndEmptyArrays: false,
       },
     }, {
       $group: {
@@ -178,6 +197,9 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
         },
         roomId: {
           $first: '$roomId',
+        },
+        username: {
+          $first: '$user.name',
         },
         dateTime: {
           $last: '$chat.dateTime',

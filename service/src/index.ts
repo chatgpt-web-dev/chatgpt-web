@@ -112,6 +112,7 @@ router.get('/chatrooms-count', auth, async (req, res) => {
         uuid: r.roomId,
         title: r.title,
         userId: r.userId,
+        name: r.username,
         lastTime: formatTimestamp(r.dateTime),
         chatCount: r.chatCount,
       })
