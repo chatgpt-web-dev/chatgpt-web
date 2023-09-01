@@ -12,6 +12,7 @@ import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, 
 import { Status, UsageResponse, UserRole, chatModelOptions } from './storage/model'
 import {
   clearChat,
+  clearUserPrompt,
   createChatRoom,
   createUser,
   deleteAllChatRooms,
@@ -29,6 +30,7 @@ import {
   getUserPromptList,
   getUserStatisticsByDay,
   getUsers,
+  importUserPrompt,
   insertChat,
   insertChatUsage,
   renameChatRoom,
@@ -1051,9 +1053,7 @@ router.post('/statistics/by-day', auth, async (req, res) => {
 router.get('/prompt-list', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const page = +req.query.page
-    const size = +req.query.size
-    const prompts = await getUserPromptList(userId, page, size)
+    const prompts = await getUserPromptList(userId)
     const result = []
     prompts.data.forEach((p) => {
       result.push({
@@ -1088,6 +1088,35 @@ router.post('/prompt-delete', auth, async (req, res) => {
   try {
     const { id } = req.body as { id: string }
     await deleteUserPrompt(id)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-clear', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    await clearUserPrompt(userId)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-import', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt[]
+    const updatedUserPrompt = userPrompt.map((prompt) => {
+      return {
+        ...prompt,
+        userId,
+      }
+    })
+    await importUserPrompt(updatedUserPrompt)
     res.send({ status: 'Success', message: '成功 | Successfully' })
   }
   catch (error) {

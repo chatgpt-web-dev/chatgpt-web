@@ -289,10 +289,9 @@ export function fetchUpsertApiKey<T = any>(keyConfig: KeyConfig) {
   })
 }
 
-export function fetchUserPromptList<T = any>(page: number, size: number) {
+export function fetchUserPromptList<T = any>() {
   return get<T>({
     url: '/prompt-list',
-    data: { page, size },
   })
 }
 
@@ -307,5 +306,18 @@ export function fetchDeleteUserPrompt<T = any>(id: string) {
   return post<T>({
     url: '/prompt-delete',
     data: { id },
+  })
+}
+
+export function fetchClearUserPrompt<T = any>() {
+  return post<T>({
+    url: '/prompt-clear',
+  })
+}
+
+export function fetchImportUserPrompt<T = any>(dataProps: never[]) {
+  return post<T>({
+    url: '/prompt-import',
+    data: dataProps,
   })
 }

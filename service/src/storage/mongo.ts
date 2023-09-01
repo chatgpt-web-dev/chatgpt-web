@@ -164,11 +164,6 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
         as: 'chat',
       },
     }, {
-      $unwind: {
-        path: '$chat',
-        preserveNullAndEmptyArrays: false,
-      },
-    }, {
       $addFields: {
         title: '$chat.prompt',
         user_ObjectId: {
@@ -192,26 +187,28 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
         'chat.dateTime': -1,
       },
     }, {
-      $group: {
-        _id: '$_id',
-        userId: {
-          $first: '$userId',
-        },
-        title: {
-          $first: '$title',
-        },
-        roomId: {
-          $first: '$roomId',
-        },
-        username: {
-          $first: '$user.name',
-        },
-        dateTime: {
-          $last: '$chat.dateTime',
-        },
+      $addFields: {
         chatCount: {
-          $sum: 1,
+          $size: '$chat',
         },
+        chat: {
+          $arrayElemAt: [
+            {
+              $slice: [
+                '$chat', -1,
+              ],
+            }, 0,
+          ],
+        },
+      },
+    }, {
+      $project: {
+        userId: 1,
+        title: '$chat.prompt',
+        username: '$user.name',
+        roomId: 1,
+        chatCount: 1,
+        dateTime: '$chat.dateTime',
       },
     }, {
       $sort: {
@@ -496,19 +493,25 @@ export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserProm
     await userPromptCol.replaceOne({ _id: userPrompt._id }, userPrompt, { upsert: true })
   return userPrompt
 }
-export async function getUserPromptList(userId: string, page: number, size: number): Promise<{ data: UserPrompt[]; total: number }> {
+export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[]; total: number }> {
   const query = { userId }
   const total = await userPromptCol.countDocuments(query)
   const cursor = userPromptCol.find(query).sort({ _id: -1 })
   const data = []
-  const skip = (page - 1) * size
-  const pagedCursor = cursor.skip(skip).limit(size)
-
-  await pagedCursor.forEach(doc => data.push(doc))
+  await cursor.forEach(doc => data.push(doc))
   return { data, total }
 }
 
 export async function deleteUserPrompt(id: string) {
   const query = { _id: new ObjectId(id) }
   await userPromptCol.deleteOne(query)
+}
+
+export async function clearUserPrompt(userId: string) {
+  const query = { userId }
+  await userPromptCol.deleteMany(query)
+}
+
+export async function importUserPrompt(userPromptList: UserPrompt[]) {
+  await userPromptCol.insertMany(userPromptList)
 }
