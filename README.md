@@ -4,7 +4,7 @@
   <a href="./README.md">中文</a> |
   <a href="./README.en.md">English</a>
   
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY&env=MONGODB_URL&env=PASSWORD_MD5_SALT=v&env=PORT=3002&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY&env=MONGODB_URL&env=PASSWORD_MD5_SALT&env=PORT&project-name=chatgpt-web&repository-name=ChatGPT-Web)
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/NB112211/chatgpt-web)
 </div>
