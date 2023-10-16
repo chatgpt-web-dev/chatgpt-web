@@ -3,10 +3,22 @@
 <div style="font-size: 1.5rem;">
   <a href="./README.md">中文</a> |
   <a href="./README.en.md">English</a>
+  
+### 步骤 1: 创建 MongoDB 数据库
+[![使用铁路部署MongoDB](https://railway.app/button.svg)](https://railway.app/new?template=https://github.com/your-mongodb-template-repo)
+
+### 步骤 2: 部署到 Vercel
+[![使用Vercel部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nb112211/chatgpt-web&env=AUTH_SECRET_KEY,MONGODB_URL,OPENAI_API_KEY,PASSWORD_MD5_SALT,PORT,REGISTER_ENABLED,ROOT_USER,SITE_TITLE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY&env=MONGODB_URL&env=PASSWORD_MD5_SALT&env=PORT&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/NB112211/chatgpt-web)
 </div>
+
 </br>
 
 ## 说明
+
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), 新增了部分特色功能:**
 
 [✓] 注册&登录&重置密码
