@@ -3,7 +3,7 @@
 <div style="font-size: 1.5rem;">
   <a href="./README.md">中文</a> |
   <a href="./README.en.md">English</a>
-  ### 步骤 1: 创建 MongoDB 数据库
+### 步骤 1: 创建 MongoDB 数据库
 [![Deploy MongoDB with Railway](https://railway.app/button.svg)](https://railway.app/new?template=https://github.com/your-mongodb-template-repo)
 
 ### 步骤 2: 部署到 Vercel
