@@ -6,8 +6,8 @@
 </div>
 </br>
 
-### 步骤 2: 部署到 Vercel
-[![使用Vercel部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nb112211/chatgpt-web&env=AUTH_SECRET_KEY,MONGODB_URL,OPENAI_API_KEY,PASSWORD_MD5_SALT,PORT,REGISTER_ENABLED,ROOT_USER,SITE_TITLE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY,MONGODB_URL,OPENAI_API_KEY,PASSWORD_MD5_SALT,PORT,REGISTER_ENABLED,ROOT_USER,SITE_TITLE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+
 
 
 ## 说明
