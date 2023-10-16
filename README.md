@@ -4,9 +4,9 @@
   <a href="./README.md">中文</a> |
   <a href="./README.en.md">English</a>
   
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYidadaa%2FChatGPT-Next-Web&env=OPENAI_API_KEY&env=CODE&project-name=chatgpt-next-web&repository-name=ChatGPT-Next-Web)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=OPENAI_API_KEY&env=CODE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/Yidadaa/ChatGPT-Next-Web)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/NB112211/chatgpt-web)
 </div>
 </br>
 ## 说明
