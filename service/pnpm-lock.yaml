@@ -39,8 +39,8 @@ dependencies:
     specifier: ^3.1.2
     version: 3.1.2
   mongodb:
-    specifier: ^5.1.0
-    version: 5.1.0
+    specifier: ^5.8.0
+    version: 5.8.0
   node-fetch:
     specifier: ^3.3.0
     version: 3.3.0
@@ -452,6 +452,13 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
+  /@mongodb-js/saslprep@1.1.0:
+    resolution: {integrity: sha512-Xfijy7HvfzzqiOAhAepF4SGN5e9leLkMvg/OPOF97XemjfVCYN/oWa75wnkc6mltMSTwY+XlbhWgUOJmkFspSw==}
+    requiresBuild: true
+    dependencies:
+      sparse-bitfield: 3.0.3
+    optional: true
+
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -525,9 +532,11 @@ packages:
     resolution: {integrity: sha512-lPUYPpzA43baXqnd36cZ9xxorprybxXDzteVKCPAdp14ppHtFJHnXYvNpmBvtMUTb5fKXVv6sVbzo1LHkWhJlw==}
     deprecated: mongodb provides its own types. @types/mongodb is no longer needed.
     dependencies:
-      mongodb: 5.1.0
+      mongodb: 5.8.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - kerberos
       - mongodb-client-encryption
       - snappy
     dev: true
@@ -917,8 +926,8 @@ packages:
       fill-range: 7.0.1
     dev: true
 
-  /bson@5.1.0:
-    resolution: {integrity: sha512-FEecNHkhYRBe7X9KDkdG12xNuz5VHGeH6mCE0B5sBmYtiR/Ux/9vUH/v4NUoBCDr6NuEhvahjoLiiRogptVW0A==}
+  /bson@5.5.0:
+    resolution: {integrity: sha512-B+QB4YmDx9RStKv8LLSl/aVIEV3nYJc3cJNNTK2Cd1TL+7P+cNpw9mAPeCgc5K+j01Dv6sxUzcITXDx7ZU3F0w==}
     engines: {node: '>=14.20.1'}
 
   /buffer-equal-constant-time@1.0.1:
@@ -2778,26 +2787,32 @@ packages:
       '@types/whatwg-url': 8.2.2
       whatwg-url: 11.0.0
 
-  /mongodb@5.1.0:
-    resolution: {integrity: sha512-qgKb7y+EI90y4weY3z5+lIgm8wmexbonz0GalHkSElQXVKtRuwqXuhXKccyvIjXCJVy9qPV82zsinY0W1FBnJw==}
+  /mongodb@5.8.0:
+    resolution: {integrity: sha512-xx4CXmxcj3bNe7iGBlhntVrUqrNARYhUZteXaz4epEESv4oXD/FONAovcyoCaEffdYlw25Yz284OxMfpnPLlgQ==}
     engines: {node: '>=14.20.1'}
     peerDependencies:
-      '@aws-sdk/credential-providers': ^3.201.0
-      mongodb-client-encryption: ^2.3.0
+      '@aws-sdk/credential-providers': ^3.188.0
+      '@mongodb-js/zstd': ^1.0.0
+      kerberos: ^1.0.0 || ^2.0.0
+      mongodb-client-encryption: '>=2.3.0 <3'
       snappy: ^7.2.2
     peerDependenciesMeta:
       '@aws-sdk/credential-providers':
+        optional: true
+      '@mongodb-js/zstd':
+        optional: true
+      kerberos:
         optional: true
       mongodb-client-encryption:
         optional: true
       snappy:
         optional: true
     dependencies:
-      bson: 5.1.0
+      bson: 5.5.0
       mongodb-connection-string-url: 2.6.0
       socks: 2.7.1
     optionalDependencies:
-      saslprep: 1.0.3
+      '@mongodb-js/saslprep': 1.1.0
 
   /ms@2.0.0:
     resolution: {integrity: sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==}
@@ -3327,14 +3342,6 @@ packages:
   /safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
     dev: false
-
-  /saslprep@1.0.3:
-    resolution: {integrity: sha512-/MY/PEMbk2SuY5sScONwhUDsV2p77Znkb/q3nSVstq/yQzYJOH/Azh29p9oJLsl3LnQwSvZDKagDGBsBwSooag==}
-    engines: {node: '>=6'}
-    requiresBuild: true
-    dependencies:
-      sparse-bitfield: 3.0.3
-    optional: true
 
   /semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
