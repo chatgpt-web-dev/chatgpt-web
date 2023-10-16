@@ -5,13 +5,13 @@
   <a href="./README.en.md">English</a>
   
 ### 步骤 1: 创建 MongoDB 数据库
-[![Deploy MongoDB with Railway](https://railway.app/button.svg)](https://railway.app/new?template=https://github.com/your-mongodb-template-repo)
+[![使用铁路部署MongoDB](https://railway.app/button.svg)](https://railway.app/new?template=https://github.com/your-mongodb-template-repo)
 
 ### 步骤 2: 部署到 Vercel
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY,MONGODB_URL,OPENAI_API_KEY,PASSWORD_MD5_SALT,PORT,REGISTER_ENABLED,ROOT_USER,SITE_TITLE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
+[![使用Vercel部署](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY,MONGODB_URL,OPENAI_API_KEY,PASSWORD_MD5_SALT,PORT,REGISTER_ENABLED,ROOT_USER,SITE_TITLE&project-name=chatgpt-web&repository-name=ChatGPT-Web)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NB112211/chatgpt-web&env=AUTH_SECRET_KEY&env=MONGODB_URL&env=PASSWORD_MD5_SALT&env=PORT&project-name=chatgpt-web&repository-name=ChatGPT-Web)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/mongodb-starter&project-name=mongodb-nextjs&repository-name=mongodb-nextjs&demo-title=MongoDB%20Developer%20Directory&demo-description=Log%20in%20with%20GitHub%20to%20create%20a%20directory%20of%20contacts.&demo-url=https://mongodb.vercel.app%2F&demo-image=https%3A%2F%2Fmongodb.vercel.app%2Fog.png&integration-ids=oac_jnzmjqM10gllKmSrG0SGrHOH&env=GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,NEXTAUTH_SECRET&envDescription=Instructions%20on%20how%20to%20configure%20these%20env%20vars:&envLink=https://github.com/vercel/mongodb-starter/blob/main/.env.example)
+
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/NB112211/chatgpt-web)
 </div>
 </br>
