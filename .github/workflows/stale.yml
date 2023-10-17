@@ -21,7 +21,7 @@ jobs:
     - uses: actions/stale@v5
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: 'Stale issue message'
-        stale-pr-message: 'Stale pull request message'
-        stale-issue-label: 'no-issue-activity'
+        stale-issue-message: '过时的问题消息'
+        stale-pr-message: '过时的拉取请求消息'
+        stale-issue-label: '无问题活动'
         stale-pr-label: 'no-pr-activity'
