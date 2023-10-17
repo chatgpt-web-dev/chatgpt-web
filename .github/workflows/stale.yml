@@ -1,0 +1,27 @@
+# 此工作流程警告，然后关闭在指定时间内没有活动的问题和PR。
+#
+# 您可以通过修改此文件来调整行为。
+# 获取更多信息, see:
+# https://github.com/actions/stale
+name: 标记陈旧问题和拉取请求
+
+on:
+  schedule:
+  - cron: '25 18 * * *'
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/stale@v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: 'Stale issue message'
+        stale-pr-message: 'Stale pull request message'
+        stale-issue-label: 'no-issue-activity'
+        stale-pr-label: 'no-pr-activity'
