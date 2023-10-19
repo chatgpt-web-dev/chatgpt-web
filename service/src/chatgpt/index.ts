@@ -352,7 +352,9 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
       : `prompt_${id}` // parent message is the prompt
 
     if (chatInfo.status !== Status.Normal) { // jumps over deleted messages
-      return getMessageById(parentMessageId)
+      return parentMessageId
+        ? getMessageById(parentMessageId)
+        : undefined
     } else {
       if (isPrompt) { // prompt
         return {
