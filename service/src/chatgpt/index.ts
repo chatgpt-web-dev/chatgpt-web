@@ -5,7 +5,8 @@ import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import type { AuditConfig, CHATMODEL, KeyConfig, UserInfo } from 'src/storage/model'
+import type { AuditConfig, CHATMODEL, KeyConfig, UserInfo } from '../storage/model'
+import { Status } from '../storage/model'
 import jwt_decode from 'jwt-decode'
 import dayjs from 'dayjs'
 import type { TextAuditService } from '../utils/textAudit'
@@ -346,22 +347,32 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
   const chatInfo = await getChatByMessageId(isPrompt ? id.substring(7) : id)
 
   if (chatInfo) {
-    if (isPrompt) { // prompt
-      return {
-        id,
-        conversationId: chatInfo.options.conversationId,
-        parentMessageId: chatInfo.options.parentMessageId,
-        role: 'user',
-        text: chatInfo.prompt,
+    const parentMessageId = isPrompt
+      ? chatInfo.options.parentMessageId
+      : `prompt_${id}` // parent message is the prompt
+
+    if (chatInfo.status !== Status.Normal) { // jumps over deleted messages
+      return parentMessageId
+        ? getMessageById(parentMessageId)
+        : undefined
+    } else {
+      if (isPrompt) { // prompt
+        return {
+          id,
+          conversationId: chatInfo.options.conversationId,
+          parentMessageId: parentMessageId,
+          role: 'user',
+          text: chatInfo.prompt,
+        }
       }
-    }
-    else {
-      return { // completion
-        id,
-        conversationId: chatInfo.options.conversationId,
-        parentMessageId: `prompt_${id}`, // parent message is the prompt
-        role: 'assistant',
-        text: chatInfo.response,
+      else {
+        return { // completion
+          id,
+          conversationId: chatInfo.options.conversationId,
+          parentMessageId: parentMessageId,
+          role: 'assistant',
+          text: chatInfo.response,
+        }
       }
     }
   }
