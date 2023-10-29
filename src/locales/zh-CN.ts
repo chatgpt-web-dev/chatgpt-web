@@ -36,6 +36,7 @@ export default {
     resetPassword: '重置密码',
     resetPasswordMail: '发送重置密码邮件',
     auditTip: '敏感词对管理员不生效',
+    twoFA: '两步验证',
   },
   chat: {
     newChatButton: '新建聊天',
@@ -141,6 +142,13 @@ export default {
     remark: '备注',
     email: '电子邮箱',
     password: '密码',
+    passwordConfig: '密码',
+    oldPassword: '旧密码',
+    newPassword: '新密码',
+    confirmNewPassword: '确认密码',
+    twoFAConfig: '两步验证',
+    disable2FA: '禁用 2FA',
+    enable2FA: '开启 2FA',
   },
   store: {
     siderButton: '提示词商店',

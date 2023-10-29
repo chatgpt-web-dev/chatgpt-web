@@ -130,3 +130,24 @@ export class UserInfo {
     this.roles = roles
   }
 }
+
+export class UserPassword {
+  oldPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+}
+
+export class TwoFAConfig {
+  enaled: boolean
+  userName: string
+  secretKey: string
+  otpauthUrl: string
+  testCode: string
+  constructor() {
+    this.enaled = false
+    this.userName = ''
+    this.secretKey = ''
+    this.otpauthUrl = ''
+    this.testCode = ''
+  }
+}

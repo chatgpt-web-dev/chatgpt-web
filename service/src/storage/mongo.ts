@@ -222,9 +222,24 @@ export async function updateUserChatModel(userId: string, chatModel: CHATMODEL) 
     , { $set: { 'config.chatModel': chatModel } })
 }
 
+export async function updateUser2FA(userId: string, secretKey: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $set: { secretKey, updateTime: new Date().toLocaleString() } })
+}
+
+export async function disableUser2FA(userId: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $set: { secretKey: null, updateTime: new Date().toLocaleString() } })
+}
+
 export async function updateUserPassword(userId: string, password: string) {
   return userCol.updateOne({ _id: new ObjectId(userId) }
     , { $set: { password, updateTime: new Date().toLocaleString() } })
+}
+
+export async function updateUserPasswordWithVerifyOld(userId: string, oldPassword: string, newPassword: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId), password: oldPassword }
+    , { $set: { password: newPassword, updateTime: new Date().toLocaleString() } })
 }
 
 export async function getUser(email: string): Promise<UserInfo> {

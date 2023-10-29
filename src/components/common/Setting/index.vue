@@ -10,6 +10,8 @@ import Mail from './Mail.vue'
 import Audit from './Audit.vue'
 import User from './User.vue'
 import Key from './Keys.vue'
+import Password from './Password.vue'
+import TwoFA from './TwoFA.vue'
 import { SvgIcon } from '@/components/common'
 import { useAuthStore, useUserStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
@@ -56,6 +58,20 @@ const show = computed({
           <div class="min-h-[100px]">
             <General />
           </div>
+        </NTabPane>
+        <NTabPane name="PasswordConfig" tab="PasswordConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <span class="ml-2">{{ $t('setting.passwordConfig') }}</span>
+          </template>
+          <Password />
+        </NTabPane>
+        <NTabPane name="TwoFAConfig" tab="TwoFAConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <span class="ml-2">{{ $t('setting.twoFAConfig') }}</span>
+          </template>
+          <TwoFA />
         </NTabPane>
         <NTabPane v-if="isChatGPTAPI" name="Advanced" tab="Advanced">
           <template #tab>

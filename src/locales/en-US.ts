@@ -36,6 +36,7 @@ export default {
     resetPassword: 'Reset Password',
     resetPasswordMail: 'Send Reset Password Mail',
     auditTip: 'Sensitive words do not take effect on Admin.',
+    twoFA: 'Two-step verification',
   },
   chat: {
     newChatButton: 'New Chat',
@@ -141,6 +142,13 @@ export default {
     remark: 'Remark',
     email: 'Email',
     password: 'Password',
+    passwordConfig: 'Password',
+    oldPassword: 'Old Password',
+    newPassword: 'New Password',
+    confirmNewPassword: 'Confirm Password',
+    twoFAConfig: '2FA',
+    disable2FA: 'Disable 2FA',
+    enable2FA: 'Enable 2FA',
   },
   store: {
     siderButton: 'Prompt Store',

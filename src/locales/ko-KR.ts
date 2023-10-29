@@ -36,6 +36,7 @@ export default {
     resetPassword: '암호를 재설정',
     resetPasswordMail: '비밀번호 재설정 메일 보내기',
     auditTip: 'Sensitive words do not take effect on Admin.',
+    twoFA: 'Two-step verification',
   },
   chat: {
     newChatButton: '새 채팅',
@@ -139,6 +140,13 @@ export default {
     remark: 'Remark',
     email: 'Email',
     password: 'Password',
+    passwordConfig: 'Password',
+    oldPassword: 'Old Password',
+    newPassword: 'New Password',
+    confirmNewPassword: 'Confirm Password',
+    twoFAConfig: '2FA',
+    disable2FA: 'Disable 2FA',
+    enable2FA: 'Enable 2FA',
   },
   store: {
     siderButton: '프롬프트 스토어',
