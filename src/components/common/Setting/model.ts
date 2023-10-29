@@ -125,6 +125,7 @@ export class UserInfo {
   email?: string
   password?: string
   roles: UserRole[]
+  remark?: string
   constructor(roles: UserRole[]) {
     this.roles = roles
   }

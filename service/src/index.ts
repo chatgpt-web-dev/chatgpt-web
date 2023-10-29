@@ -763,13 +763,13 @@ router.post('/user-status', rootAuth, async (req, res) => {
 
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
-    const { userId, email, password, roles } = req.body as { userId?: string; email: string; password: string; roles: UserRole[] }
+    const { userId, email, password, roles, remark } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string }
     if (userId) {
-      await updateUser(userId, roles, password)
+      await updateUser(userId, roles, password, remark)
     }
     else {
       const newPassword = md5(password)
-      const user = await createUser(email, newPassword, roles)
+      const user = await createUser(email, newPassword, roles, remark)
       await updateUserStatus(user._id.toString(), Status.Normal)
     }
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })

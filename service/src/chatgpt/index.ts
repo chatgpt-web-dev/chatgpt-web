@@ -5,10 +5,10 @@ import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import type { AuditConfig, CHATMODEL, KeyConfig, UserInfo } from '../storage/model'
-import { Status } from '../storage/model'
 import jwt_decode from 'jwt-decode'
 import dayjs from 'dayjs'
+import type { AuditConfig, CHATMODEL, KeyConfig, UserInfo } from '../storage/model'
+import { Status } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import { textAuditServices } from '../utils/textAudit'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
@@ -355,12 +355,13 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
       return parentMessageId
         ? getMessageById(parentMessageId)
         : undefined
-    } else {
+    }
+    else {
       if (isPrompt) { // prompt
         return {
           id,
           conversationId: chatInfo.options.conversationId,
-          parentMessageId: parentMessageId,
+          parentMessageId,
           role: 'user',
           text: chatInfo.prompt,
         }
@@ -369,7 +370,7 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
         return { // completion
           id,
           conversationId: chatInfo.options.conversationId,
-          parentMessageId: parentMessageId,
+          parentMessageId,
           role: 'assistant',
           text: chatInfo.response,
         }

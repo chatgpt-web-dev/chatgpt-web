@@ -140,7 +140,7 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
-    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password },
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark },
   })
 }
 

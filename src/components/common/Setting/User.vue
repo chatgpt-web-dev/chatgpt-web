@@ -66,6 +66,11 @@ const columns = [
     },
   },
   {
+    title: 'Remark',
+    key: 'remark',
+    width: 220,
+  },
+  {
     title: 'Action',
     key: '_id',
     width: 220,
@@ -256,6 +261,15 @@ onMounted(async () => {
               :value="userRef.roles"
               :options="userRoleOptions"
               @update-value="value => userRef.roles = value"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.remark') }}</span>
+          <div class="flex-1">
+            <NInput
+              v-model:value="userRef.remark" type="textarea"
+              :autosize="{ minRows: 1, maxRows: 2 }" placeholder=""
             />
           </div>
         </div>
