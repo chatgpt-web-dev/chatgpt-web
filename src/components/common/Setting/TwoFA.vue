@@ -65,10 +65,10 @@ onMounted(() => {
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
           <div class="flex-1">
-            两步验证是一个额外的验证步骤，可让您的登录体验更加安全。开启两步验证后，每次您要登录到您的帐户时，系统均提示您输入动态验证码。
-            <br> 当前状态 ：
-            <span v-if="!config || !config.enaled" style="color: red;">关闭</span>
-            <span v-if="config && config.enaled" style="color: rgb(22, 183, 65);">已开启</span>
+            {{ $t('setting.info2FA') }}
+            <br> {{ $t('setting.status2FA') }} ：
+            <span v-if="!config || !config.enaled" style="color: red;">{{ $t('setting.status2FAClosed') }}</span>
+            <span v-if="config && config.enaled" style="color: rgb(22, 183, 65);">{{ $t('setting.status2FAOpened') }}</span>
           </div>
         </div>
         <div v-if="config && config.enaled" class="flex items-center space-x-4">
@@ -94,21 +94,21 @@ onMounted(() => {
           <div class="flex-1">
             <NSteps vertical>
               <NStep
-                title="安装身份验证器App"
-                description="安装身份验证器App，例如Google Authenticator、Microsoft Authenticator、Authy等"
+                :title="$t('setting.info2FAStep1')"
+                :description="$t('setting.info2FAStep1Desc')"
               />
               <NStep
-                title="配置生成验证码"
+                :title="$t('setting.info2FAStep2')"
               >
-                打开身份验证器 App，点击「扫描二维码」扫描二维码。
+                {{ $t('setting.info2FAStep2Desc') }}
                 <br><br>
                 <QrcodeVue :value="config?.otpauthUrl" :size="150" level="H" />
-                <br>注意： 身份验证器不能扫描验证码？ 手动添加以下账户：<br> 账户 ：{{ config?.userName }}<br> 密钥 ：{{ config?.secretKey }}
+                <br>{{ $t('setting.info2FAStep2Tip') }}：<br> {{ $t('setting.info2FAStep2TipAccount') }} ：{{ config?.userName }}<br> {{ $t('setting.info2FAStep2TipSecret') }} ：{{ config?.secretKey }}
               </NStep>
               <NStep
-                title="验证并开启"
+                :title="$t('setting.info2FAStep3')"
               >
-                请输入身份验证器 App 生成的 6 位动态验证码，开启两步验证。
+                {{ $t('setting.info2FAStep3Desc') }}
                 <br>
                 <div class="flex items-center space-x-4">
                   <div class="w-[200px]">
@@ -125,7 +125,9 @@ onMounted(() => {
                     </NButton>
                   </div>
                 </div>
-                <br>注意：如何关闭两步验证？<br>1. 登录后，在 两步验证 页面使用两步验证码关闭。<br>2. 联系管理员重置密码来关闭两步验证。
+                <br>{{ $t('setting.info2FAStep3Tip1') }}
+                <br>{{ $t('setting.info2FAStep3Tip2') }}
+                <br>{{ $t('setting.info2FAStep3Tip3') }}
               </NStep>
             </NSteps>
           </div>

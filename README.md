@@ -9,7 +9,7 @@
 ## 说明
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), 新增了部分特色功能:**
 
-[✓] 注册&登录&重置密码
+[✓] 注册 & 登录 & 重置密码 & 2FA
 
 [✓] 同步历史会话
 

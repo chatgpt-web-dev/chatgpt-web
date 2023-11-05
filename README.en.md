@@ -9,7 +9,7 @@
 ## Introduction
 > **This project is forked from [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), some unique features have been added:**
 
-[✓] Register & Login & Reset Password
+[✓] Register & Login & Reset Password & 2FA
 
 [✓] Sync chat history 
 

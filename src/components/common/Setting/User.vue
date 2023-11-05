@@ -27,12 +27,12 @@ const columns = [
   {
     title: 'Register Time',
     key: 'createTime',
-    width: 220,
+    width: 200,
   },
   {
     title: 'Verify Time',
     key: 'verifyTime',
-    width: 220,
+    width: 200,
   },
   {
     title: 'Roles',
@@ -60,7 +60,7 @@ const columns = [
   {
     title: 'Status',
     key: 'status',
-    width: 200,
+    width: 80,
     render(row: any) {
       return Status[row.status]
     },
@@ -188,8 +188,8 @@ async function handleUpdateUserStatus(userId: string, status: Status) {
 
 async function handleDisable2FA(userId: string) {
   dialog.warning({
-    title: t('chat.deleteUser'),
-    content: t('chat.deleteUserConfirm'),
+    title: t('chat.disable2FA'),
+    content: t('chat.disable2FAConfirm'),
     positiveText: t('common.yes'),
     negativeText: t('common.no'),
     onPositiveClick: async () => {
