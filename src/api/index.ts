@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AuditConfig, CHATMODEL, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPrompt } from '@/components/common/Setting/model'
+import type { AuditConfig, CHATMODEL, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useSettingStore } from '@/store'
 
 export function fetchChatConfig<T = any>() {
@@ -81,10 +81,10 @@ export function fetchVerifyAdmin<T>(token: string) {
   })
 }
 
-export function fetchLogin<T = any>(username: string, password: string) {
+export function fetchLogin<T = any>(username: string, password: string, token?: string) {
   return post<T>({
     url: '/user-login',
-    data: { username, password },
+    data: { username, password, token },
   })
 }
 
@@ -130,6 +130,33 @@ export function fetchGetUsers<T = any>(page: number, size: number) {
   })
 }
 
+export function fetchGetUser2FA<T = any>() {
+  return get<T>({
+    url: '/user-2fa',
+  })
+}
+
+export function fetchVerifyUser2FA<T = any>(secretKey: string, token: string) {
+  return post<T>({
+    url: '/user-2fa',
+    data: { secretKey, token },
+  })
+}
+
+export function fetchDisableUser2FA<T = any>(token: string) {
+  return post<T>({
+    url: '/user-disable-2fa',
+    data: { token },
+  })
+}
+
+export function fetchDisableUser2FAByAdmin<T = any>(userId: string) {
+  return post<T>({
+    url: '/user-disable-2fa-admin',
+    data: { userId },
+  })
+}
+
 export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   return post<T>({
     url: '/user-status',
@@ -140,7 +167,14 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
-    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password },
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark },
+  })
+}
+
+export function fetchUpdateUserPassword<T = any>(pwd: UserPassword) {
+  return post<T>({
+    url: '/user-password',
+    data: pwd,
   })
 }
 
