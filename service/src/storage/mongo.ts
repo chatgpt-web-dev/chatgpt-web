@@ -295,12 +295,13 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   await chatCol.updateOne(query, update)
 }
 
-export async function createUser(email: string, password: string, roles?: UserRole[]): Promise<UserInfo> {
+export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
   userInfo.roles = roles
+  userInfo.remark = remark
   await userCol.insertOne(userInfo)
   return userInfo
 }
@@ -315,9 +316,24 @@ export async function updateUserChatModel(userId: string, chatModel: CHATMODEL) 
     , { $set: { 'config.chatModel': chatModel } })
 }
 
+export async function updateUser2FA(userId: string, secretKey: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $set: { secretKey, updateTime: new Date().toLocaleString() } })
+}
+
+export async function disableUser2FA(userId: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $set: { secretKey: null, updateTime: new Date().toLocaleString() } })
+}
+
 export async function updateUserPassword(userId: string, password: string) {
   return userCol.updateOne({ _id: new ObjectId(userId) }
     , { $set: { password, updateTime: new Date().toLocaleString() } })
+}
+
+export async function updateUserPasswordWithVerifyOld(userId: string, oldPassword: string, newPassword: string) {
+  return userCol.updateOne({ _id: new ObjectId(userId), password: oldPassword }
+    , { $set: { password: newPassword, updateTime: new Date().toLocaleString() } })
 }
 
 export async function getUser(email: string): Promise<UserInfo> {
@@ -371,15 +387,15 @@ export async function updateUserStatus(userId: string, status: Status) {
   return await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
-export async function updateUser(userId: string, roles: UserRole[], password: string) {
+export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }
   if (user.password !== password && user.password) {
     const newPassword = md5(password)
-    return await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword } })
+    return await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark } })
   }
   else {
-    return await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString() } })
+    return await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark } })
   }
 }
 
