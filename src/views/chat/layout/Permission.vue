@@ -32,6 +32,8 @@ const loading = ref(false)
 const username = ref('')
 const password = ref('')
 const sign = ref('')
+const token = ref('')
+const need2FA = ref(false)
 
 const disabled = computed(() => !username.value.trim() || !password.value.trim() || loading.value)
 
@@ -112,16 +114,20 @@ function handlePress(event: KeyboardEvent) {
 async function handleLogin() {
   const name = username.value.trim()
   const pwd = password.value.trim()
-
   if (!name || !pwd)
     return
 
   try {
     loading.value = true
-    const result = await fetchLogin(name, pwd)
+    const result = await fetchLogin(name, pwd, token.value)
+    if (result.data.need2FA) {
+      need2FA.value = true
+      ms.warning(result.message as string)
+      return
+    }
     await authStore.setToken(result.data.token)
-    ms.success('success')
-    router.go(0)
+    ms.success(result.message as string)
+    window.location.reload()
   }
   catch (error: any) {
     ms.error(error.message ?? 'error')
@@ -199,7 +205,7 @@ async function handleResetPassword() {
 </script>
 
 <template>
-  <NModal :show="visible" style="width: 90%; max-width: 440px">
+  <NModal v-model:show="show" style="width: 90%; max-width: 440px">
     <div class="p-10 bg-white rounded dark:bg-slate-800">
       <div class="space-y-4">
         <header class="space-y-2">
@@ -213,7 +219,7 @@ async function handleResetPassword() {
           <NTabPane name="login" :tab="$t('common.login')">
             <NInput v-model:value="username" type="text" :placeholder="$t('common.email')" class="mb-2" />
             <NInput v-model:value="password" type="password" :placeholder="$t('common.password')" class="mb-2" @keypress="handlePress" />
-
+            <NInput v-if="need2FA" v-model:value="token" type="text" :placeholder="$t('common.twoFA')" class="mb-2" @keypress="handlePress" />
             <NButton block type="primary" :disabled="disabled" :loading="loading" @click="handleLogin">
               {{ $t('common.login') }}
             </NButton>

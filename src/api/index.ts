@@ -1,19 +1,7 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AuditConfig, CHATMODEL, ConfigState, MailConfig, SiteConfig, Status } from '@/components/common/Setting/model'
+import type { AuditConfig, CHATMODEL, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useSettingStore } from '@/store'
-
-export function fetchChatAPI<T = any>(
-  prompt: string,
-  options?: { conversationId?: string; parentMessageId?: string },
-  signal?: GenericAbortSignal,
-) {
-  return post<T>({
-    url: '/chat',
-    data: { prompt, options },
-    signal,
-  })
-}
 
 export function fetchChatConfig<T = any>() {
   return post<T>({
@@ -59,6 +47,13 @@ export function fetchChatAPIProcess<T = any>(
   })
 }
 
+export function fetchChatStopResponding<T = any>(text: string, messageId: string, conversationId: string) {
+  return post<T>({
+    url: '/chat-abort',
+    data: { text, messageId, conversationId },
+  })
+}
+
 export function fetchChatResponseoHistory<T = any>(roomId: number, uuid: number, index: number) {
   return get<T>({
     url: '/chat-response-history',
@@ -86,10 +81,10 @@ export function fetchVerifyAdmin<T>(token: string) {
   })
 }
 
-export function fetchLogin<T = any>(username: string, password: string) {
+export function fetchLogin<T = any>(username: string, password: string, token?: string) {
   return post<T>({
     url: '/user-login',
-    data: { username, password },
+    data: { username, password, token },
   })
 }
 
@@ -135,6 +130,33 @@ export function fetchGetUsers<T = any>(page: number, size: number) {
   })
 }
 
+export function fetchGetUser2FA<T = any>() {
+  return get<T>({
+    url: '/user-2fa',
+  })
+}
+
+export function fetchVerifyUser2FA<T = any>(secretKey: string, token: string) {
+  return post<T>({
+    url: '/user-2fa',
+    data: { secretKey, token },
+  })
+}
+
+export function fetchDisableUser2FA<T = any>(token: string) {
+  return post<T>({
+    url: '/user-disable-2fa',
+    data: { token },
+  })
+}
+
+export function fetchDisableUser2FAByAdmin<T = any>(userId: string) {
+  return post<T>({
+    url: '/user-disable-2fa-admin',
+    data: { userId },
+  })
+}
+
 export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   return post<T>({
     url: '/user-status',
@@ -142,9 +164,30 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   })
 }
 
+export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
+  return post<T>({
+    url: '/user-edit',
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark },
+  })
+}
+
+export function fetchUpdateUserPassword<T = any>(pwd: UserPassword) {
+  return post<T>({
+    url: '/user-password',
+    data: pwd,
+  })
+}
+
 export function fetchGetChatRooms<T = any>() {
   return get<T>({
     url: '/chatrooms',
+  })
+}
+
+export function fetchGetChatRoomsCount<T = any>(page: number, size: number, userId: string) {
+  return get<T>({
+    url: '/chatrooms-count',
+    data: { page, size, userId },
   })
 }
 
@@ -183,9 +226,9 @@ export function fetchDeleteChatRoom<T = any>(roomId: number) {
   })
 }
 
-export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number) {
+export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number, all?: string) {
   return get<T>({
-    url: `/chat-history?roomId=${roomId}&lastId=${lastId}`,
+    url: `/chat-history?roomId=${roomId}&lastId=${lastId}&all=${all}`,
   })
 }
 
@@ -256,5 +299,59 @@ export function fetchUserStatistics<T = any>(start: number, end: number) {
   return post<T>({
     url: '/statistics/by-day',
     data: { start, end },
+  })
+}
+
+export function fetchGetKeys<T = any>(page: number, size: number) {
+  return get<T>({
+    url: '/setting-keys',
+    data: { page, size },
+  })
+}
+
+export function fetchUpdateApiKeyStatus<T = any>(id: string, status: Status) {
+  return post<T>({
+    url: '/setting-key-status',
+    data: { id, status },
+  })
+}
+
+export function fetchUpsertApiKey<T = any>(keyConfig: KeyConfig) {
+  return post<T>({
+    url: '/setting-key-upsert',
+    data: keyConfig,
+  })
+}
+
+export function fetchUserPromptList<T = any>() {
+  return get<T>({
+    url: '/prompt-list',
+  })
+}
+
+export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
+  return post<T>({
+    url: '/prompt-upsert',
+    data: userPrompt,
+  })
+}
+
+export function fetchDeleteUserPrompt<T = any>(id: string) {
+  return post<T>({
+    url: '/prompt-delete',
+    data: { id },
+  })
+}
+
+export function fetchClearUserPrompt<T = any>() {
+  return post<T>({
+    url: '/prompt-clear',
+  })
+}
+
+export function fetchImportUserPrompt<T = any>(dataProps: never[]) {
+  return post<T>({
+    url: '/prompt-import',
+    data: dataProps,
   })
 }

@@ -26,7 +26,7 @@ export interface ChatGPTUnofficialProxyAPIOptions {
 }
 
 export interface ModelConfig {
-  apiModel?: ApiModel
+  apiModel?: APIMODEL
   reverseProxy?: string
   timeoutMs?: number
   socksProxy?: string
@@ -37,7 +37,7 @@ export interface ModelConfig {
   accessTokenExpiredTime?: string
 }
 
-export type ApiModel = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
+export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
 
 export interface JWT {
   'https://api.openai.com/profile': {
@@ -54,4 +54,17 @@ export interface JWT {
   'exp': number
   'azp': string
   'scope': string
+}
+
+export class TwoFAConfig {
+  enaled: boolean
+  userName: string
+  secretKey: string
+  otpauthUrl: string
+  constructor() {
+    this.enaled = false
+    this.userName = ''
+    this.secretKey = ''
+    this.otpauthUrl = ''
+  }
 }

@@ -8,6 +8,19 @@ export enum Status {
   ResponseDeleted = 3,
   PreVerify = 4,
   AdminVerify = 5,
+  Disabled = 6,
+}
+
+export enum UserRole {
+  Admin = 0,
+  User = 1,
+  Guest = 2,
+  Support = 3,
+  Viewer = 4,
+  Contributor = 5,
+  Developer = 6,
+  Tester = 7,
+  Partner = 8,
 }
 
 export class UserInfo {
@@ -22,7 +35,9 @@ export class UserInfo {
   description?: string
   updateTime?: string
   config?: UserConfig
-  root?: boolean
+  roles?: UserRole[]
+  remark?: string
+  secretKey?: string // 2fa
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -31,7 +46,8 @@ export class UserInfo {
     this.createTime = new Date().toLocaleString()
     this.verifyTime = null
     this.updateTime = new Date().toLocaleString()
-    this.root = false
+    this.roles = [UserRole.User]
+    this.remark = null
   }
 }
 
@@ -40,7 +56,25 @@ export class UserConfig {
 }
 
 // https://platform.openai.com/docs/models/overview
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'ext-davinci-002-render-sha-mobile' | 'gpt-4-mobile' | 'gpt-4-browsing'
+// 除此之外，gpt-4-0314、gpt-4-32k-0314、gpt-3.5-turbo-0301 模型将在 9 月 13 日被弃用。
+export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-1106-preview' | 'gpt-4-vision-preview'
+
+export const CHATMODELS: CHATMODEL[] = [
+  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-1106-preview', 'gpt-4-vision-preview',
+]
+
+export const chatModelOptions = [
+  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-1106-preview', 'gpt-4-vision-preview',
+].map((model: string) => {
+  let label = model
+  if (model === 'text-davinci-002-render-sha-mobile')
+    label = 'gpt-3.5-mobile'
+  return {
+    label,
+    key: model,
+    value: model,
+  }
+})
 
 export class ChatRoom {
   _id: ObjectId
@@ -50,12 +84,17 @@ export class ChatRoom {
   prompt: string
   usingContext: boolean
   status: Status = Status.Normal
+  // only access token used
+  accountId?: string
+  chatModel: CHATMODEL
   constructor(userId: string, title: string, roomId: number) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
     this.usingContext = true
+    this.accountId = null
+    this.chatModel = null
   }
 }
 
@@ -139,7 +178,7 @@ export class Config {
     public apiDisableDebug?: boolean,
     public accessToken?: string,
     public apiBaseUrl?: string,
-    public apiModel?: string,
+    public apiModel?: APIMODEL,
     public reverseProxy?: string,
     public socksProxy?: string,
     public socksAuth?: string,
@@ -189,3 +228,35 @@ export enum TextAudioType {
   Response = 1 << 1, // 二进制 10
   All = Request | Response, // 二进制 11
 }
+
+export class KeyConfig {
+  _id: ObjectId
+  key: string
+  keyModel: APIMODEL
+  chatModels: CHATMODEL[]
+  userRoles: UserRole[]
+  status: Status
+  remark: string
+  constructor(key: string, keyModel: APIMODEL, chatModels: CHATMODEL[], userRoles: UserRole[], remark: string) {
+    this.key = key
+    this.keyModel = keyModel
+    this.chatModels = chatModels
+    this.userRoles = userRoles
+    this.status = Status.Normal
+    this.remark = remark
+  }
+}
+
+export class UserPrompt {
+  _id: ObjectId
+  userId: string
+  title: string
+  value: string
+  constructor(userId: string, title: string, value: string) {
+    this.userId = userId
+    this.title = title
+    this.value = value
+  }
+}
+
+export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI'

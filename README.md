@@ -9,7 +9,7 @@
 ## 说明
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), 新增了部分特色功能:**
 
-[✓] 注册&登录&重置密码
+[✓] 注册 & 登录 & 重置密码 & 2FA
 
 [✓] 同步历史会话
 
@@ -20,6 +20,10 @@
 [✓] 每个会话设置独有 Prompt
 
 [✓] 用户管理
+
+[✓] 多 Key 随机
+
+[✓] 持久化提示词
 </br>
 
 ## 截图
@@ -31,6 +35,7 @@
 ![cover3](./docs/basesettings.jpg)
 ![cover3](./docs/prompt.jpg)
 ![cover3](./docs/user-manager.jpg)
+![cover3](./docs/key-manager.jpg)
 
 - [ChatGPT Web](#chatgpt-web)
 	- [介绍](#介绍)
@@ -225,14 +230,14 @@ http://localhost:3002/
 
 #### Docker compose
 
-[Hub 地址](https://hub.docker.com/repository/docker/kerwin1202/chatgpt-web/general)
+[Hub 地址](https://hub.docker.com/r/jmal/chatgpt-web)
 
 ```yml
 version: '3'
 
 services:
   app:
-    image: kerwin1202/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
+    image: jmal/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
     container_name: chatgptweb
     restart: unless-stopped
     ports:
@@ -241,55 +246,21 @@ services:
       - database
     environment:
       TZ: Asia/Shanghai
-      # 二选一
-      OPENAI_API_KEY: sk-xxx
-      # 二选一
-      OPENAI_ACCESS_TOKEN: xxx
-      # API接口地址，可选，设置 OPENAI_API_KEY 时可用
-      OPENAI_API_BASE_URL: xxx
-      # ChatGPTAPI ChatGPTUnofficialProxyAPI
-      OPENAI_API_MODEL: ChatGPTAPI
-      # 反向代理，可选
-      API_REVERSE_PROXY: xxx
       # 每小时最大请求次数，可选，默认无限
       MAX_REQUEST_PER_HOUR: 0
-      # 超时，单位毫秒，可选
-      TIMEOUT_MS: 600000
-      # Socks代理，可选，和 SOCKS_PROXY_PORT 一起时生效
-      SOCKS_PROXY_HOST: xxx
-      # Socks代理端口，可选，和 SOCKS_PROXY_HOST 一起时生效
-      SOCKS_PROXY_PORT: xxx
-      # HTTPS 代理，可选，支持 http，https，socks5
-      HTTPS_PROXY: http://xxx:7890
       # 访问jwt加密参数，可选 不为空则允许登录 同时需要设置 MONGODB_URL
       AUTH_SECRET_KEY: xxx
       # 网站名称
       SITE_TITLE: ChatGpt Web
       # mongodb 的连接字符串
       MONGODB_URL: 'mongodb://chatgpt:xxxx@database:27017'
-      # 网站是否开启注册
-      REGISTER_ENABLED: 'true'
-      # 开启注册之后 网站注册允许的邮箱后缀 如果空 则允许任意后缀
-      REGISTER_MAILS: '@qq.com,@sina.com,@163.com'
       # 开启注册之后 密码加密的盐
       PASSWORD_MD5_SALT: xxx
       # 开启注册之后 超级管理邮箱
       ROOT_USER: me@example.com
-      # 开启注册之后 网站域名 不含 / 注册的时候发送验证邮箱使用
-      SITE_DOMAIN: http://127.0.0.1:3002
-      # 开启注册之后 发送验证邮箱配置
-      SMTP_HOST: smtp.exmail.qq.com
-      SMTP_PORT: 465
-      SMTP_TSL: 'true'
-      SMTP_USERNAME: noreply@examile.com
-      SMTP_PASSWORD: xxx
-      # 是否开启敏感词审核, 因为响应结果是流式 所以暂时没审核
-      AUDIT_ENABLED: 'false'
-      # https://ai.baidu.com/ai-doc/ANTIPORN/Vk3h6xaga
-      AUDIT_PROVIDER: baidu
-      AUDIT_API_KEY: xxx
-      AUDIT_API_SECRET: xxx
-      AUDIT_TEXT_LABEL: xxx
+      # 网站是否开启注册 必须开启, 否则管理员都没法注册, 可后续关闭
+      REGISTER_ENABLED: true
+      # 更多配置, 在运行后, 注册管理员, 在管理员页面中设置
     links:
       - database
 
@@ -330,24 +301,7 @@ volumes:
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/yytmgc)
 
-#### Railway 环境变量
-
-| 环境变量名称          | 必填                   | 备注                                                                                               |
-| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
-| `PORT`                | 必填                   | 默认 `3002`
-| `AUTH_SECRET_KEY`          | 可选                   | 访问权限密钥                                        |
-| `MAX_REQUEST_PER_HOUR`          | 可选                   | 每小时最大请求次数，可选，默认无限                                        |
-| `TIMEOUT_MS`          | 可选                   | 超时时间，单位毫秒                                                                             |
-| `OPENAI_API_KEY`      | `OpenAI API` 二选一    | 使用 `OpenAI API` 所需的 `apiKey` [(获取 apiKey)](https://platform.openai.com/overview)            |
-| `OPENAI_ACCESS_TOKEN` | `Web API` 二选一       | 使用 `Web API` 所需的 `accessToken` [(获取 accessToken)](https://chat.openai.com/api/auth/session) |
-| `OPENAI_API_BASE_URL`   | 可选，`OpenAI API` 时可用 |  `API`接口地址  |
-| `OPENAI_API_MODEL`   | ChatGPTAPI OR ChatGPTUnofficialProxyAPI |  `API`模型  |
-| `API_REVERSE_PROXY`   | 可选，`Web API` 时可用 | `Web API` 反向代理地址 [详情](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)    |
-| `SOCKS_PROXY_HOST`   | 可选，和 `SOCKS_PROXY_PORT` 一起时生效 | Socks代理    |
-| `SOCKS_PROXY_PORT`   | 可选，和 `SOCKS_PROXY_HOST` 一起时生效 | Socks代理端口    |
-| `SOCKS_PROXY_USERNAME`   | 可选，和 `SOCKS_PROXY_HOST` 一起时生效 | Socks代理用户名    |
-| `SOCKS_PROXY_PASSWORD`   | 可选，和 `SOCKS_PROXY_HOST` 一起时生效 | Socks代理密码    |
-| `HTTPS_PROXY`   | 可选 | HTTPS 代理，支持 http，https, socks5    |
+> 参考这个 issue 详细教程  https://github.com/Kerwin1202/chatgpt-web/issues/266
 
 > 注意: `Railway` 修改环境变量会重新 `Deploy`
 
@@ -410,7 +364,18 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
 </a>
 
 ## 赞助
-如果你觉得这个项目对你有帮助，请给我点个Star。
+如果你觉得这个项目对你有帮助，请给我点个Star。并且情况允许的话，可以给我一点点支持，总之非常感谢支持～
+
+<div style="display: flex; gap: 20px;">
+	<div style="text-align: center">
+		<img style="width: 200px" src="./docs/wechat.png" alt="微信" />
+		<p>WeChat Pay</p>
+	</div>
+	<div style="text-align: center">
+		<img style="width: 200px" src="./docs/alipay.png" alt="支付宝" />
+		<p>Alipay</p>
+	</div>
+</div>
 
 ## License
 MIT © [Kerwin1202](./license)

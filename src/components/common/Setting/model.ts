@@ -4,7 +4,7 @@ export class ConfigState {
   accessToken?: string
   accessTokenExpiredTime?: string
   apiBaseUrl?: string
-  apiModel?: ApiModel
+  apiModel?: APIMODEL
   reverseProxy?: string
   socksProxy?: string
   socksAuth?: string
@@ -16,13 +16,11 @@ export class ConfigState {
 }
 
 // https://platform.openai.com/docs/models/overview
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'ext-davinci-002-render-sha-mobile' | 'gpt-4-mobile' | 'gpt-4-browsing'
+export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-1106-preview' | 'gpt-4-vision-preview'
 
 export class UserConfig {
   chatModel?: CHATMODEL
 }
-
-export type ApiModel = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
 
 export class SiteConfig {
   siteTitle?: string
@@ -71,4 +69,95 @@ export enum Status {
   ResponseDeleted = 3,
   PreVerify = 4,
   AdminVerify = 5,
+  Disabled = 6,
+}
+
+export enum UserRole {
+  Admin = 0,
+  User = 1,
+  Guest = 2,
+  Support = 3,
+  Viewer = 4,
+  Contributor = 5,
+  Developer = 6,
+  Tester = 7,
+  Partner = 8,
+}
+
+export class KeyConfig {
+  _id?: string
+  key: string
+  keyModel: APIMODEL
+  chatModels: CHATMODEL[]
+  userRoles: UserRole[]
+  status: Status
+  remark: string
+  constructor(key: string, keyModel: APIMODEL, chatModels: CHATMODEL[], userRoles: UserRole[], remark: string) {
+    this.key = key
+    this.keyModel = keyModel
+    this.chatModels = chatModels
+    this.userRoles = userRoles
+    this.status = Status.Normal
+    this.remark = remark
+  }
+}
+
+export class UserPrompt {
+  _id?: string
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
+export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
+
+export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {
+  return {
+    label: model,
+    key: model,
+    value: model,
+  }
+})
+
+export const userRoleOptions = Object.values(UserRole).filter(d => isNaN(Number(d))).map((role) => {
+  return {
+    label: role as string,
+    key: role as string,
+    value: UserRole[role as keyof typeof UserRole],
+  }
+})
+
+export class UserInfo {
+  _id?: string
+  email?: string
+  password?: string
+  roles: UserRole[]
+  remark?: string
+  constructor(roles: UserRole[]) {
+    this.roles = roles
+  }
+}
+
+export class UserPassword {
+  oldPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+}
+
+export class TwoFAConfig {
+  enaled: boolean
+  userName: string
+  secretKey: string
+  otpauthUrl: string
+  testCode: string
+  constructor() {
+    this.enaled = false
+    this.userName = ''
+    this.secretKey = ''
+    this.otpauthUrl = ''
+    this.testCode = ''
+  }
 }

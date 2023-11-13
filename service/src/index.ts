@@ -2,44 +2,59 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
-import type { RequestProps } from './types'
-import type { ChatContext, ChatMessage } from './chatgpt'
-import { chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
-import { auth } from './middleware/auth'
-import { clearConfigCache, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, MailConfig, SiteConfig, UsageResponse, UserInfo } from './storage/model'
-import { Status } from './storage/model'
+import { textTokens } from 'gpt-token'
+import speakeasy from 'speakeasy'
+import { type RequestProps, TwoFAConfig } from './types'
+import type { ChatMessage } from './chatgpt'
+import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
+import { auth, getUserId } from './middleware/auth'
+import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
+import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo, UserPrompt } from './storage/model'
+import { Status, UsageResponse, UserRole, chatModelOptions } from './storage/model'
 import {
   clearChat,
+  clearUserPrompt,
   createChatRoom,
   createUser,
   deleteAllChatRooms,
   deleteChat,
   deleteChatRoom,
+  deleteUserPrompt,
+  disableUser2FA,
   existsChatRoom,
   getChat,
   getChatRoom,
   getChatRooms,
+  getChatRoomsCount,
   getChats,
   getUser,
   getUserById,
+  getUserPromptList,
   getUserStatisticsByDay,
   getUsers,
+  importUserPrompt,
   insertChat,
   insertChatUsage,
   renameChatRoom,
+  updateApiKeyStatus,
   updateChat,
   updateConfig,
+  updateRoomChatModel,
   updateRoomPrompt,
   updateRoomUsingContext,
+  updateUser,
+  updateUser2FA,
   updateUserChatModel,
   updateUserInfo,
   updateUserPassword,
+  updateUserPasswordWithVerifyOld,
   updateUserStatus,
+  upsertKey,
+  upsertUserPrompt,
   verifyUser,
 } from './storage/mongo'
-import { limiter } from './middleware/limiter'
-import { isEmail, isNotEmptyString } from './utils/is'
+import { authLimiter, limiter } from './middleware/limiter'
+import { hasAnyRole, isEmail, isNotEmptyString } from './utils/is'
 import { sendNoticeMail, sendResetPasswordMail, sendTestMail, sendVerifyMail, sendVerifyMailAdmin } from './utils/mail'
 import { checkUserResetPassword, checkUserVerify, checkUserVerifyAdmin, getUserResetPasswordUrl, getUserVerifyUrl, getUserVerifyUrlAdmin, md5 } from './utils/security'
 import { rootAuth } from './middleware/rootAuth'
@@ -71,9 +86,47 @@ router.get('/chatrooms', auth, async (req, res) => {
         isEdit: false,
         prompt: r.prompt,
         usingContext: r.usingContext === undefined ? true : r.usingContext,
+        chatModel: r.chatModel,
       })
     })
     res.send({ status: 'Success', message: null, data: result })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Load error', data: [] })
+  }
+})
+
+function formatTimestamp(timestamp: number) {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+router.get('/chatrooms-count', auth, async (req, res) => {
+  try {
+    const userId = req.query.userId as string
+    const page = +req.query.page
+    const size = +req.query.size
+    const rooms = await getChatRoomsCount(userId, page, size)
+    const result = []
+    rooms.data.forEach((r) => {
+      result.push({
+        uuid: r.roomId,
+        title: r.title,
+        userId: r.userId,
+        name: r.username,
+        lastTime: formatTimestamp(r.dateTime),
+        chatCount: r.chatCount,
+      })
+    })
+    res.send({ status: 'Success', message: null, data: { data: result, total: rooms.total } })
   }
   catch (error) {
     console.error(error)
@@ -123,6 +176,22 @@ router.post('/room-prompt', auth, async (req, res) => {
   }
 })
 
+router.post('/room-chatmodel', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const { chatModel, roomId } = req.body as { chatModel: CHATMODEL; roomId: number }
+    const success = await updateRoomChatModel(userId, roomId, chatModel)
+    if (success)
+      res.send({ status: 'Success', message: 'Saved successfully', data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Rename error', data: null })
+  }
+})
+
 router.post('/room-context', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
@@ -161,13 +230,36 @@ router.get('/chat-history', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const roomId = +req.query.roomId
     const lastId = req.query.lastId as string
-    if (!roomId || !await existsChatRoom(userId, roomId)) {
+    const all = req.query.all as string
+    if ((!roomId || !await existsChatRoom(userId, roomId)) && (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)) {
       res.send({ status: 'Success', message: null, data: [] })
       // res.send({ status: 'Fail', message: 'Unknow room', data: null })
       return
     }
-    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId))
 
+    if (all !== null && all !== 'undefined' && all !== undefined && all.trim().length !== 0) {
+      const config = await getCacheConfig()
+      if (config.siteConfig.loginEnabled) {
+        try {
+          const token = req.header('Authorization').replace('Bearer ', '')
+          const info = jwt.verify(token, config.siteConfig.loginSalt.trim())
+          req.headers.userId = info.userId
+          const user = await getUserById(info.userId)
+          if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin)) {
+            res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+            return
+          }
+        }
+        catch (error) {
+          res.send({ status: 'Unauthorized', message: error.message ?? 'Please authenticate.', data: null })
+        }
+      }
+      else {
+        res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+      }
+    }
+
+    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId), all)
     const result = []
     chats.forEach((c) => {
       if (c.status !== Status.InversionDeleted) {
@@ -332,46 +424,6 @@ router.post('/chat-clear', auth, async (req, res) => {
   }
 })
 
-router.post('/chat', auth, async (req, res) => {
-  try {
-    const { roomId, uuid, regenerate, prompt, options = {} } = req.body as
-      { roomId: number; uuid: number; regenerate: boolean; prompt: string; options?: ChatContext }
-    const message = regenerate
-      ? await getChat(roomId, uuid)
-      : await insertChat(uuid, prompt, roomId, options as ChatOptions)
-    const response = await chatReply(prompt, options)
-    if (response.status === 'Success') {
-      if (regenerate && message.options.messageId) {
-        const previousResponse = message.previousResponse || []
-        previousResponse.push({ response: message.response, options: message.options })
-        await updateChat(message._id as unknown as string,
-          response.data.text,
-          response.data.id,
-          response.data.detail?.usage as UsageResponse,
-          previousResponse as [])
-      }
-      else {
-        await updateChat(message._id as unknown as string,
-          response.data.text,
-          response.data.id,
-          response.data.detail?.usage as UsageResponse)
-      }
-
-      if (response.data.usage) {
-        await insertChatUsage(new ObjectId(req.headers.userId as string),
-          roomId,
-          message._id,
-          response.data.id,
-          response.data.detail?.usage as UsageResponse)
-      }
-    }
-    res.send(response)
-  }
-  catch (error) {
-    res.send(error)
-  }
-})
-
 router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
 
@@ -390,7 +442,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     const userId = req.headers.userId.toString()
     const user = await getUserById(userId)
     if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
-      if (user.email.toLowerCase() !== process.env.ROOT_USER && await containsSensitiveWords(config.auditConfig, prompt)) {
+      if (!user.roles.includes(UserRole.Admin) && await containsSensitiveWords(config.auditConfig, prompt)) {
         res.send({ status: 'Fail', message: '含有敏感词 | Contains sensitive words', data: null })
         return
       }
@@ -426,13 +478,26 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       systemMessage,
       temperature,
       top_p,
-      chatModel: user.config.chatModel,
+      user,
+      messageId: message._id.toString(),
+      tryCount: 0,
+      room,
     })
     // return the whole response including usage
+    if (!result.data.detail?.usage) {
+      if (!result.data.detail)
+        result.data.detail = {}
+      result.data.detail.usage = new UsageResponse()
+      // 因为 token 本身不计算, 所以这里默认以 gpt 3.5 的算做一个伪统计
+      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo-0613')
+      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo-0613')
+      result.data.detail.usage.total_tokens = result.data.detail.usage.prompt_tokens + result.data.detail.usage.completion_tokens
+      result.data.detail.usage.estimated = true
+    }
     res.write(`\n${JSON.stringify(result.data)}`)
   }
   catch (error) {
-    res.write(JSON.stringify(error))
+    res.write(JSON.stringify({ message: error?.message }))
   }
   finally {
     res.end()
@@ -453,6 +518,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         await updateChat(message._id as unknown as string,
           result.data.text,
           result.data.id,
+          result.data.conversationId,
           result.data.detail?.usage as UsageResponse,
           previousResponse as [])
       }
@@ -460,6 +526,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         await updateChat(message._id as unknown as string,
           result.data.text,
           result.data.id,
+          result.data.conversationId,
           result.data.detail?.usage as UsageResponse)
       }
 
@@ -472,12 +539,29 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
     }
     catch (error) {
-      global.console.log(error)
+      global.console.error(error)
     }
   }
 })
 
-router.post('/user-register', async (req, res) => {
+router.post('/chat-abort', [auth, limiter], async (req, res) => {
+  try {
+    const userId = req.headers.userId.toString()
+    const { text, messageId, conversationId } = req.body as { text: string; messageId: string; conversationId: string }
+    const msgId = await abortChatProcess(userId)
+    await updateChat(msgId,
+      text,
+      messageId,
+      conversationId,
+      null)
+    res.send({ status: 'Success', message: 'OK', data: null })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: '重置邮件已发送 | Reset email has been sent', data: null })
+  }
+})
+
+router.post('/user-register', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body as { username: string; password: string }
     const config = await getCacheConfig()
@@ -516,9 +600,10 @@ router.post('/user-register', async (req, res) => {
       return
     }
     const newPassword = md5(password)
-    await createUser(username, newPassword)
+    const isRoot = username.toLowerCase() === process.env.ROOT_USER
+    await createUser(username, newPassword, isRoot ? [UserRole.Admin] : [UserRole.User])
 
-    if (username.toLowerCase() === process.env.ROOT_USER) {
+    if (isRoot) {
       res.send({ status: 'Success', message: '注册成功 | Register success', data: null })
     }
     else {
@@ -536,7 +621,7 @@ router.post('/config', rootAuth, async (req, res) => {
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)
-    if (user == null || user.status !== Status.Normal || user.email.toLowerCase() !== process.env.ROOT_USER)
+    if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin))
       throw new Error('无权限 | No permission.')
 
     const response = await chatConfig()
@@ -554,17 +639,74 @@ router.post('/session', async (req, res) => {
     const allowRegister = (await getCacheConfig()).siteConfig.registerEnabled
     if (config.apiModel !== 'ChatGPTAPI' && config.apiModel !== 'ChatGPTUnofficialProxyAPI')
       config.apiModel = 'ChatGPTAPI'
+    const userId = await getUserId(req)
+    const chatModels: {
+      label
+      key: string
+      value: string
+    }[] = []
+    let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig }
+    if (userId != null) {
+      const user = await getUserById(userId)
+      userInfo = {
+        name: user.name,
+        description: user.description,
+        avatar: user.avatar,
+        userId: user._id.toString(),
+        root: user.roles.includes(UserRole.Admin),
+        roles: user.roles,
+        config: user.config,
+      }
 
-    res.send({ status: 'Success', message: '', data: { auth: hasAuth, allowRegister, model: config.apiModel, title: config.siteConfig.siteTitle } })
+      const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+
+      const count: { key: string; count: number }[] = []
+      chatModelOptions.forEach((chatModel) => {
+        keys.forEach((key) => {
+          if (key.chatModels.includes(chatModel.value)) {
+            if (count.filter(d => d.key === chatModel.value).length <= 0) {
+              count.push({ key: chatModel.value, count: 1 })
+            }
+            else {
+              const thisCount = count.filter(d => d.key === chatModel.value)[0]
+              thisCount.count++
+            }
+          }
+        })
+      })
+      count.forEach((c) => {
+        const thisChatModel = chatModelOptions.filter(d => d.value === c.key)[0]
+        const suffix = c.count > 1 ? ` (${c.count})` : ''
+        chatModels.push({
+          label: `${thisChatModel.label}${suffix}`,
+          key: c.key,
+          value: c.key,
+        })
+      })
+    }
+
+    res.send({
+      status: 'Success',
+      message: '',
+      data: {
+        auth: hasAuth,
+        allowRegister,
+        model: config.apiModel,
+        title: config.siteConfig.siteTitle,
+        chatModels,
+        allChatModels: chatModelOptions,
+        userInfo,
+      },
+    })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
 
-router.post('/user-login', async (req, res) => {
+router.post('/user-login', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body as { username: string; password: string }
+    const { username, password, token } = req.body as { username: string; password: string; token?: string }
     if (!username || !password || !isEmail(username))
       throw new Error('用户名或密码为空 | Username or password is empty')
 
@@ -577,24 +719,39 @@ router.post('/user-login', async (req, res) => {
       throw new Error('请等待管理员开通 | Please wait for the admin to activate')
     if (user.status !== Status.Normal)
       throw new Error('账户状态异常 | Account status abnormal.')
+    if (user.secretKey) {
+      if (token) {
+        const verified = speakeasy.totp.verify({
+          secret: user.secretKey,
+          encoding: 'base32',
+          token,
+        })
+        if (!verified)
+          throw new Error('验证码错误 | Two-step verification code error')
+      }
+      else {
+        res.send({ status: 'Success', message: '需要两步验证 | Two-step verification required', data: { need2FA: true } })
+        return
+      }
+    }
 
     const config = await getCacheConfig()
-    const token = jwt.sign({
+    const jwtToken = jwt.sign({
       name: user.name ? user.name : user.email,
       avatar: user.avatar,
       description: user.description,
       userId: user._id,
-      root: username.toLowerCase() === process.env.ROOT_USER,
+      root: user.roles.includes(UserRole.Admin),
       config: user.config,
     }, config.siteConfig.loginSalt.trim())
-    res.send({ status: 'Success', message: '登录成功 | Login successfully', data: { token } })
+    res.send({ status: 'Success', message: '登录成功 | Login successfully', data: { token: jwtToken } })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
 
-router.post('/user-send-reset-mail', async (req, res) => {
+router.post('/user-send-reset-mail', authLimiter, async (req, res) => {
   try {
     const { username } = req.body as { username: string }
     if (!username || !isEmail(username))
@@ -611,7 +768,7 @@ router.post('/user-send-reset-mail', async (req, res) => {
   }
 })
 
-router.post('/user-reset-password', async (req, res) => {
+router.post('/user-reset-password', authLimiter, async (req, res) => {
   try {
     const { username, password, sign } = req.body as { username: string; password: string; sign: string }
     if (!username || !password || !isEmail(username))
@@ -678,7 +835,10 @@ router.get('/users', rootAuth, async (req, res) => {
 router.post('/user-status', rootAuth, async (req, res) => {
   try {
     const { userId, status } = req.body as { userId: string; status: Status }
+    const user = await getUserById(userId)
     await updateUserStatus(userId, status)
+    if ((user.status === Status.PreVerify || user.status === Status.AdminVerify) && status === Status.Normal)
+      await sendNoticeMail(user.email)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {
@@ -686,17 +846,145 @@ router.post('/user-status', rootAuth, async (req, res) => {
   }
 })
 
-router.post('/verify', async (req, res) => {
+router.post('/user-edit', rootAuth, async (req, res) => {
+  try {
+    const { userId, email, password, roles, remark } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string }
+    if (userId) {
+      await updateUser(userId, roles, password, remark)
+    }
+    else {
+      const newPassword = md5(password)
+      const user = await createUser(email, newPassword, roles, remark)
+      await updateUserStatus(user._id.toString(), Status.Normal)
+    }
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-password', auth, async (req, res) => {
+  try {
+    let { oldPassword, newPassword, confirmPassword } = req.body as { oldPassword: string; newPassword: string; confirmPassword: string }
+    if (!oldPassword || !newPassword || !confirmPassword)
+      throw new Error('密码不能为空 | Password cannot be empty')
+    if (newPassword !== confirmPassword)
+      throw new Error('两次密码不一致 | The two passwords are inconsistent')
+    if (newPassword === oldPassword)
+      throw new Error('新密码不能与旧密码相同 | The new password cannot be the same as the old password')
+    if (newPassword.length < 6)
+      throw new Error('密码长度不能小于6位 | The password length cannot be less than 6 digits')
+
+    const userId = req.headers.userId.toString()
+    oldPassword = md5(oldPassword)
+    newPassword = md5(newPassword)
+    const result = await updateUserPasswordWithVerifyOld(userId, oldPassword, newPassword)
+    if (result.matchedCount <= 0)
+      throw new Error('旧密码错误 | Old password error')
+    if (result.modifiedCount <= 0)
+      throw new Error('更新失败 | Update error')
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.get('/user-2fa', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId.toString()
+    const user = await getUserById(userId)
+
+    const data = new TwoFAConfig()
+    if (user.secretKey) {
+      data.enaled = true
+    }
+    else {
+      const secret = speakeasy.generateSecret({ length: 20, name: `CHATGPT-WEB:${user.email}` })
+      data.otpauthUrl = secret.otpauth_url
+      data.enaled = false
+      data.secretKey = secret.base32
+      data.userName = user.email
+    }
+    res.send({ status: 'Success', message: '获取成功 | Get successfully', data })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-2fa', auth, async (req, res) => {
+  try {
+    const { secretKey, token } = req.body as { secretKey: string; token: string }
+    const userId = req.headers.userId.toString()
+
+    const verified = speakeasy.totp.verify({
+      secret: secretKey,
+      encoding: 'base32',
+      token,
+    })
+    if (!verified)
+      throw new Error('验证失败 | Verification failed')
+    await updateUser2FA(userId, secretKey)
+    res.send({ status: 'Success', message: '开启成功 | Enable 2FA successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-disable-2fa', auth, async (req, res) => {
+  try {
+    const { token } = req.body as { token: string }
+    const userId = req.headers.userId.toString()
+    const user = await getUserById(userId)
+    if (!user || !user.secretKey)
+      throw new Error('未开启 2FA | 2FA not enabled')
+    const verified = speakeasy.totp.verify({
+      secret: user.secretKey,
+      encoding: 'base32',
+      token,
+    })
+    if (!verified)
+      throw new Error('验证失败 | Verification failed')
+    await disableUser2FA(userId)
+    res.send({ status: 'Success', message: '关闭 2FA 成功 | Disable 2FA successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-disable-2fa-admin', rootAuth, async (req, res) => {
+  try {
+    const { userId } = req.body as { userId: string }
+    await disableUser2FA(userId)
+    res.send({ status: 'Success', message: '关闭 2FA 成功 | Disable 2FA successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/verify', authLimiter, async (req, res) => {
   try {
     const { token } = req.body as { token: string }
     if (!token)
       throw new Error('Secret key is empty')
     const username = await checkUserVerify(token)
     const user = await getUser(username)
-    if (user != null && user.status === Status.Normal) {
-      res.send({ status: 'Fail', message: '账号已存在 | The email exists', data: null })
-      return
-    }
+    if (user == null)
+      throw new Error('账号不存在 | The email not exists')
+    if (user.status === Status.Deleted)
+      throw new Error('账号已禁用 | The email has been blocked')
+    if (user.status === Status.Normal)
+      throw new Error('账号已存在 | The email exists')
+    if (user.status === Status.AdminVerify)
+      throw new Error('请等待管理员开通 | Please wait for the admin to activate')
+    if (user.status !== Status.PreVerify)
+      throw new Error('账号异常 | Account abnormality')
+
     const config = await getCacheConfig()
     let message = '验证成功 | Verify successfully'
     if (config.siteConfig.registerReview) {
@@ -714,17 +1002,18 @@ router.post('/verify', async (req, res) => {
   }
 })
 
-router.post('/verifyadmin', async (req, res) => {
+router.post('/verifyadmin', authLimiter, async (req, res) => {
   try {
     const { token } = req.body as { token: string }
     if (!token)
       throw new Error('Secret key is empty')
     const username = await checkUserVerifyAdmin(token)
     const user = await getUser(username)
-    if (user != null && user.status === Status.Normal) {
-      res.send({ status: 'Fail', message: '账户已开通 | The email has been opened.', data: null })
-      return
-    }
+    if (user == null)
+      throw new Error('账号不存在 | The email not exists')
+    if (user.status !== Status.AdminVerify)
+      throw new Error(`账号异常 ${user.status} | Account abnormality ${user.status}`)
+
     await verifyUser(username, Status.Normal)
     await sendNoticeMail(username)
     res.send({ status: 'Success', message: '账户已激活 | Account has been activated.', data: null })
@@ -737,11 +1026,6 @@ router.post('/verifyadmin', async (req, res) => {
 router.post('/setting-base', rootAuth, async (req, res) => {
   try {
     const { apiKey, apiModel, apiBaseUrl, accessToken, timeoutMs, reverseProxy, socksProxy, socksAuth, httpsProxy } = req.body as Config
-
-    if (apiModel === 'ChatGPTAPI' && !isNotEmptyString(apiKey))
-      throw new Error('Missing OPENAI_API_KEY environment variable.')
-    else if (apiModel === 'ChatGPTUnofficialProxyAPI' && !isNotEmptyString(accessToken))
-      throw new Error('Missing OPENAI_ACCESS_TOKEN environment variable.')
 
     const thisConfig = await getOriginConfig()
     thisConfig.apiKey = apiKey
@@ -839,6 +1123,42 @@ router.post('/audit-test', rootAuth, async (req, res) => {
   }
 })
 
+router.get('/setting-keys', rootAuth, async (req, res) => {
+  try {
+    const result = await getApiKeys()
+    res.send({ status: 'Success', message: null, data: result })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/setting-key-status', rootAuth, async (req, res) => {
+  try {
+    const { id, status } = req.body as { id: string; status: Status }
+    await updateApiKeyStatus(id, status)
+    clearApiKeyCache()
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/setting-key-upsert', rootAuth, async (req, res) => {
+  try {
+    const keyConfig = req.body as KeyConfig
+    if (keyConfig._id !== undefined)
+      keyConfig._id = new ObjectId(keyConfig._id)
+    await upsertKey(keyConfig)
+    clearApiKeyCache()
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 router.post('/statistics/by-day', auth, async (req, res) => {
   try {
     const userId = req.headers.userId
@@ -852,8 +1172,81 @@ router.post('/statistics/by-day', auth, async (req, res) => {
   }
 })
 
+router.get('/prompt-list', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const prompts = await getUserPromptList(userId)
+    const result = []
+    prompts.data.forEach((p) => {
+      result.push({
+        _id: p._id,
+        title: p.title,
+        value: p.value,
+      })
+    })
+    res.send({ status: 'Success', message: null, data: { data: result, total: prompts.total } })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-upsert', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt
+    if (userPrompt._id !== undefined)
+      userPrompt._id = new ObjectId(userPrompt._id)
+    userPrompt.userId = userId
+    await upsertUserPrompt(userPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-delete', auth, async (req, res) => {
+  try {
+    const { id } = req.body as { id: string }
+    await deleteUserPrompt(id)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-clear', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    await clearUserPrompt(userId)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-import', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt[]
+    const updatedUserPrompt = userPrompt.map((prompt) => {
+      return {
+        ...prompt,
+        userId,
+      }
+    })
+    await importUserPrompt(updatedUserPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 app.use('', router)
 app.use('/api', router)
-app.set('trust proxy', 1)
 
 app.listen(3002, () => globalThis.console.log('Server is running on port 3002'))
