@@ -31,12 +31,14 @@
     "esno": "^0.16.3",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
+    "gpt-token": "^0.0.5",
     "https-proxy-agent": "^5.0.1",
     "isomorphic-fetch": "^3.0.0",
     "jwt-decode": "^3.1.2",
     "mongodb": "^5.1.0",
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.1",
+    "request-ip": "^3.3.0",
     "socks-proxy-agent": "^7.0.0"
   },
   "devDependencies": {

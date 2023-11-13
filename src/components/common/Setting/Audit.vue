@@ -1,8 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue'
 import { NButton, NInput, NSelect, NSpin, NSwitch, useMessage } from 'naive-ui'
-import type { AuditConfig, ConfigState } from './model'
-import { TextAuditServiceProvider } from './model'
+import type { AuditConfig, ConfigState, TextAuditServiceProvider } from './model'
 import { fetchChatConfig, fetchTestAudit, fetchUpdateAudit } from '@/api'
 import { t } from '@/locales'
 
@@ -156,6 +155,9 @@ onMounted(() => {
             <NButton :loading="testing" type="info" @click="testAudit()">
               {{ $t('common.test') }}
             </NButton>
+            <p class="text-xs text-[#b4bbc4] text-left">
+              {{ $t('common.auditTip') }}
+            </p>
           </div>
         </div>
       </div>

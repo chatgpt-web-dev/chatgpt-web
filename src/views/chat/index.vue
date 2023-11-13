@@ -13,7 +13,7 @@ import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
-import { fetchChatAPIProcess, fetchChatResponseoHistory, fetchUpdateUserChatModel } from '@/api'
+import { fetchChatAPIProcess, fetchChatResponseoHistory, fetchChatStopResponding, fetchUpdateUserChatModel } from '@/api'
 import { t } from '@/locales'
 import { debounce } from '@/utils/functions/debounce'
 import IconPrompt from '@/icons/Prompt.vue'
@@ -22,6 +22,7 @@ import type { CHATMODEL } from '@/components/common/Setting/model'
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
 let controller = new AbortController()
+let lastChatInfo: any = {}
 
 const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
@@ -48,6 +49,8 @@ const firstLoading = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 const showPrompt = ref(false)
+const nowSelectChatModel = ref<CHATMODEL | null>(null)
+const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatHistory.value?.chatModel ?? userStore.userInfo.config.chatModel)
 
 let loadingms: MessageReactive
 let allmsg: MessageReactive
@@ -77,6 +80,9 @@ async function onConversation() {
 
   if (!message || message.trim() === '')
     return
+
+  if (nowSelectChatModel.value && currentChatHistory.value)
+    currentChatHistory.value.chatModel = nowSelectChatModel.value
 
   controller = new AbortController()
 
@@ -138,6 +144,7 @@ async function onConversation() {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
+            lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
                   completion_tokens: data.detail.usage.completion_tokens || null,
@@ -284,6 +291,7 @@ async function onRegenerate(index: number) {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
+            lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
                   completion_tokens: data.detail.usage.completion_tokens || null,
@@ -464,10 +472,11 @@ function handleEnter(event: KeyboardEvent) {
   }
 }
 
-function handleStop() {
+async function handleStop() {
   if (loading.value) {
     controller.abort()
     loading.value = false
+    await fetchChatStopResponding(lastChatInfo.text, lastChatInfo.id, lastChatInfo.conversationId)
   }
 }
 
@@ -502,7 +511,9 @@ const handleSyncChat
     // 直接刷 极小概率不请求
     chatStore.syncChat({ uuid: Number(uuid) } as Chat.History, undefined, () => {
       firstLoading.value = false
-      scrollToBottom()
+      const scrollRef = document.querySelector('#scrollRef')
+      if (scrollRef)
+        nextTick(() => scrollRef.scrollTop = scrollRef.scrollHeight)
       if (inputRef.value && !isMobile.value)
         inputRef.value?.focus()
     })
@@ -532,7 +543,7 @@ async function handleToggleUsingContext() {
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
 const searchOptions = computed(() => {
   if (prompt.value.startsWith('/')) {
-    return promptTemplate.value.filter((item: { key: string }) => item.key.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
+    return promptTemplate.value.filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
       return {
         label: obj.value,
         value: obj.value,
@@ -548,31 +559,10 @@ const searchOptions = computed(() => {
 const renderOption = (option: { label: string }) => {
   for (const i of promptTemplate.value) {
     if (i.value === option.label)
-      return [i.key]
+      return [i.title]
   }
   return []
 }
-
-const chatModelOptions = [
-  'gpt-3.5-turbo',
-  'gpt-3.5-turbo-0301',
-  'gpt-4',
-  'gpt-4-0314',
-  'gpt-4-32k',
-  'gpt-4-32k-0314',
-  'text-davinci-002-render-sha-mobile',
-  'gpt-4-mobile',
-  'gpt-4-browsing',
-].map((model: string) => {
-  let label = model
-  if (model === 'text-davinci-002-render-sha-mobile')
-    label = 'gpt-3.5-mobile'
-  return {
-    label,
-    key: model,
-    value: model,
-  }
-})
 
 const placeholder = computed(() => {
   if (isMobile.value)
@@ -592,6 +582,7 @@ const footerClass = computed(() => {
 })
 
 async function handleSyncChatModel(chatModel: CHATMODEL) {
+  nowSelectChatModel.value = chatModel
   if (userStore.userInfo.config == null)
     userStore.userInfo.config = new UserConfig()
   userStore.userInfo.config.chatModel = chatModel
@@ -602,6 +593,12 @@ async function handleSyncChatModel(chatModel: CHATMODEL) {
 onMounted(() => {
   firstLoading.value = true
   handleSyncChat()
+
+  if (authStore.token) {
+    const chatModels = authStore.session?.chatModels
+    if (chatModels != null && chatModels.filter(d => d.value === userStore.userInfo.config.chatModel).length <= 0)
+      ms.error('你选择的模型已不存在，请重新选择 | The selected model not exists, please choose again.', { duration: 7000 })
+  }
 })
 
 watch(() => chatStore.active, (newVal, oldVal) => {
@@ -692,9 +689,10 @@ onUnmounted(() => {
               </span>
             </HoverButton>
             <NSelect
-              style="width: 200px"
-              :value="userStore.userInfo.config.chatModel"
-              :options="chatModelOptions"
+              style="width: 250px"
+              :value="currentChatModel"
+              :options="authStore.session?.chatModels"
+              :disabled="!!authStore.session?.auth && !authStore.token"
               @update-value="(val) => handleSyncChatModel(val)"
             />
           </div>

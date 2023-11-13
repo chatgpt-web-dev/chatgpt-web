@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import { computed, onMounted, ref } from 'vue'
-import { NAvatar, NButton } from 'naive-ui'
+import { NAvatar, NButton, NTag } from 'naive-ui'
 import { useRoute } from 'vue-router'
+import { UserRole } from '../Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import defaultAvatar from '@/assets/avatar.jpg'
 import { isString } from '@/utils/is'
@@ -41,9 +42,18 @@ onMounted(async () => {
       </template>
     </div>
     <div class="flex-1 min-w-0 ml-2">
-      <h2 v-if="userInfo.name" class="overflow-hidden font-bold text-md text-ellipsis whitespace-nowrap">
+      <h2 v-if="userInfo.name" class="">
         {{ userInfo.name }}
+        <NTag v-if="userInfo.roles.length > 0" size="small" :bordered="false" type="success">
+          {{ UserRole[userInfo.roles[0]] }}
+        </NTag>
       </h2>
+      <p v-if="userInfo.name" class="overflow-hidden text-xs text-gray-500 text-ellipsis whitespace-nowrap">
+        <span
+          v-if="isString(userInfo.description) && userInfo.description !== ''"
+          v-html="userInfo.description"
+        />
+      </p>
       <NButton
         v-else tag="a" text
         @click="showPermission = true"
@@ -56,6 +66,6 @@ onMounted(async () => {
         </span>
       </NButton>
     </div>
-    <Permission :visible="needPermission" />
+    <Permission :visible="needPermission" @update:visible="(newValue) => showPermission = newValue" />
   </div>
 </template>

@@ -1,13 +1,9 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { NButton, NButtonGroup, NDropdown, NPopover, NSpace, useMessage } from 'naive-ui'
+import { ref } from 'vue'
+import { NButton, NButtonGroup, NPopover, NSpace } from 'naive-ui'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
-import { SvgIcon } from '@/components/common'
-import { useIconRender } from '@/hooks/useIconRender'
 import { t } from '@/locales'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { copyToClip } from '@/utils/copy'
 
 interface Props {
   dateTime?: string
@@ -33,12 +29,6 @@ interface Emit {
   (ev: 'responseHistory', historyIndex: number): void
 }
 
-const { isMobile } = useBasicLayout()
-
-const { iconRender } = useIconRender()
-
-const message = useMessage()
-
 const textRef = ref<HTMLElement>()
 
 const asRawText = ref(props.inversion)
@@ -49,59 +39,6 @@ const indexRef = ref<number>(0)
 indexRef.value = props.responseCount ?? 0
 
 const url_openai_token = 'https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them'
-
-const options = computed(() => {
-  const common = [
-    {
-      label: t('chat.copy'),
-      key: 'copyText',
-      icon: iconRender({ icon: 'ri:file-copy-2-line' }),
-    },
-    {
-      label: t('common.delete'),
-      key: 'delete',
-      icon: iconRender({ icon: 'ri:delete-bin-line' }),
-    },
-  ]
-
-  if (!props.inversion) {
-    common.unshift({
-      label: asRawText.value ? t('chat.preview') : t('chat.showRawText'),
-      key: 'toggleRenderType',
-      icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
-    })
-  }
-
-  return common
-})
-
-function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
-  switch (key) {
-    case 'copyText':
-      handleCopy()
-      return
-    case 'toggleRenderType':
-      asRawText.value = !asRawText.value
-      return
-    case 'delete':
-      emit('delete')
-  }
-}
-
-function handleRegenerate() {
-  messageRef.value?.scrollIntoView()
-  emit('regenerate')
-}
-
-async function handleCopy() {
-  try {
-    await copyToClip(props.text || '')
-    message.success('复制成功')
-  }
-  catch {
-    message.error('复制失败')
-  }
-}
 
 async function handlePreviousResponse(next: number) {
   if (indexRef.value + next < 1 || indexRef.value + next > props.responseCount!)
@@ -182,25 +119,6 @@ async function handlePreviousResponse(next: number) {
           :loading="loading"
           :as-raw-text="asRawText"
         />
-        <div class="flex flex-col">
-          <button
-            v-if="!inversion"
-            class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
-            @click="handleRegenerate"
-          >
-            <SvgIcon icon="ri:restart-line" />
-          </button>
-          <NDropdown
-            :trigger="isMobile ? 'click' : 'hover'"
-            :placement="!inversion ? 'right' : 'left'"
-            :options="options"
-            @select="handleSelect"
-          >
-            <button class="transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-200">
-              <SvgIcon icon="ri:more-2-fill" />
-            </button>
-          </NDropdown>
-        </div>
       </div>
     </div>
   </div>

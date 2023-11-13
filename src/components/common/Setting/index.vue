@@ -13,6 +13,7 @@ import Key from './Keys.vue'
 import { SvgIcon } from '@/components/common'
 import { useAuthStore, useUserStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 
 const props = defineProps<Props>()
 
@@ -45,7 +46,7 @@ const show = computed({
 </script>
 
 <template>
-  <NModal v-model:show="show" :auto-focus="false" preset="card" :style="{ 'width': '80%', 'min-height': !isMobile ? '800px' : 'auto' }">
+  <NModal v-model:show="show" :auto-focus="false" preset="card" :style="{ 'width': !isMobile ? '80%' : '100%', 'min-height': !isMobile ? '800px' : 'auto' }">
     <div>
       <NTabs v-model:value="active" type="line" animated>
         <NTabPane name="General" tab="General">
@@ -82,6 +83,27 @@ const show = computed({
           </template>
           <About />
         </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="ChatRecord" tab="ChatRecord">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ic:outline-chat" />
+            <span class="ml-2">{{ $t('setting.chatRecord') }}</span>
+          </template>
+          <ChatRecord />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-user-5-line" />
+            <span class="ml-2">{{ $t('setting.userConfig') }}</span>
+          </template>
+          <User />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
+          </template>
+          <Key />
+        </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SiteConfig" tab="SiteConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:settings-line" />
@@ -102,20 +124,6 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.auditConfig') }}</span>
           </template>
           <Audit />
-        </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-user-5-line" />
-            <span class="ml-2">{{ $t('setting.userConfig') }}</span>
-          </template>
-          <User />
-        </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
-          </template>
-          <Key />
         </NTabPane>
       </NTabs>
     </div>

@@ -16,7 +16,7 @@ export class ConfigState {
 }
 
 // https://platform.openai.com/docs/models/overview
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'ext-davinci-002-render-sha-mobile' | 'gpt-4-mobile' | 'gpt-4-browsing'
+export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-dalle'
 
 export class UserConfig {
   chatModel?: CHATMODEL
@@ -76,6 +76,12 @@ export enum UserRole {
   Admin = 0,
   User = 1,
   Guest = 2,
+  Support = 3,
+  Viewer = 4,
+  Contributor = 5,
+  Developer = 6,
+  Tester = 7,
+  Partner = 8,
 }
 
 export class KeyConfig {
@@ -96,31 +102,21 @@ export class KeyConfig {
   }
 }
 
+export class UserPrompt {
+  _id?: string
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
 export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
 
 export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {
   return {
     label: model,
-    key: model,
-    value: model,
-  }
-})
-
-export const chatModelOptions = [
-  'gpt-3.5-turbo',
-  'gpt-3.5-turbo-0301',
-  'gpt-4',
-  'gpt-4-0314',
-  'gpt-4-32k',
-  'gpt-4-32k-0314',
-  'text-davinci-002-render-sha-mobile',
-  'gpt-4-mobile',
-].map((model: string) => {
-  let label = model
-  if (model === 'text-davinci-002-render-sha-mobile')
-    label = 'gpt-3.5-mobile'
-  return {
-    label,
     key: model,
     value: model,
   }
@@ -133,3 +129,13 @@ export const userRoleOptions = Object.values(UserRole).filter(d => isNaN(Number(
     value: UserRole[role as keyof typeof UserRole],
   }
 })
+
+export class UserInfo {
+  _id?: string
+  email?: string
+  password?: string
+  roles: UserRole[]
+  constructor(roles: UserRole[]) {
+    this.roles = roles
+  }
+}

@@ -2,12 +2,17 @@
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
 import type { CHATMODEL } from './model'
-import { KeyConfig, Status, UserRole, apiModelOptions, chatModelOptions, userRoleOptions } from './model'
+import { KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
 import { fetchGetKeys, fetchUpdateApiKeyStatus, fetchUpsertApiKey } from '@/api'
 import { t } from '@/locales'
+import { useAuthStore } from '@/store'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
 
 const ms = useMessage()
 const dialog = useDialog()
+const authStore = useAuthStore()
+const { isMobile } = useBasicLayout()
+
 const loading = ref(false)
 const show = ref(false)
 const handleSaving = ref(false)
@@ -76,19 +81,28 @@ const columns = [
     },
   },
   {
-    title: 'Status',
-    key: 'status',
-    width: 100,
-    render(row: any) {
-      return Status[row.status]
-    },
+    title: 'Remark',
+    key: 'remark',
+    width: 220,
   },
   {
     title: 'Action',
     key: '_id',
-    width: 200,
+    width: 220,
     render(row: KeyConfig) {
       const actions: any[] = []
+      actions.push(h(
+        NButton,
+        {
+          size: 'small',
+          style: {
+            marginRight: '6px',
+          },
+          type: 'error',
+          onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
+        },
+        { default: () => t('common.delete') },
+      ))
       if (row.status === Status.Normal) {
         actions.push(h(
           NButton,
@@ -100,19 +114,7 @@ const columns = [
             type: 'info',
             onClick: () => handleEditKey(row),
           },
-          { default: () => t('chat.editKeyButton') },
-        ))
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            style: {
-              marginRight: '6px',
-            },
-            type: 'error',
-            onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
-          },
-          { default: () => t('chat.deleteKey') },
+          { default: () => t('common.edit') },
         ))
       }
       return actions
@@ -213,27 +215,35 @@ onMounted(async () => {
           </NButton>
         </NSpace>
         <NDataTable
-          ref="table" remote :loading="loading" :row-key="(rowData) => rowData._id" :columns="columns"
-          :data="keys" :pagination="pagination" :max-height="444" striped @update:page="handleGetKeys"
+          ref="table"
+          remote
+          :loading="loading"
+          :row-key="(rowData) => rowData._id"
+          :columns="columns"
+          :data="keys"
+          :pagination="pagination"
+          :max-height="444"
+          :scroll-x="1300"
+          striped @update:page="handleGetKeys"
         />
       </NSpace>
     </div>
   </div>
 
-  <NModal v-model:show="show" :auto-focus="false" preset="card" style="width:50%;">
+  <NModal v-model:show="show" :auto-focus="false" preset="card" :style="{ width: !isMobile ? '50%' : '100%' }">
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.apiModel') }}</span>
-          <div>
+          <div class="flex-1">
             <NSelect
-              style="width: 240px"
+              style="width: 100%"
               :value="keyConfig.keyModel"
               :options="apiModelOptions"
               @update-value="value => keyConfig.keyModel = value"
             />
           </div>
-          <p>
+          <p v-if="!isMobile">
             <a v-if="keyConfig.keyModel === 'ChatGPTAPI'" target="_blank" href="https://platform.openai.com/account/api-keys">Get Api Key</a>
             <a v-else target="_blank" href="https://chat.openai.com/api/auth/session">Get Access Token</a>
           </p>
@@ -254,7 +264,7 @@ onMounted(async () => {
               style="width: 100%"
               multiple
               :value="keyConfig.chatModels"
-              :options="chatModelOptions"
+              :options="authStore.session?.allChatModels"
               @update-value="value => keyConfig.chatModels = value"
             />
           </div>
