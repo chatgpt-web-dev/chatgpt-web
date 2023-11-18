@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
-import type { CHATMODEL } from './model'
 import { KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
 import { fetchGetKeys, fetchUpdateApiKeyStatus, fetchUpsertApiKey } from '@/api'
 import { t } from '@/locales'
@@ -39,7 +38,7 @@ const columns = [
     key: 'chatModels',
     width: 320,
     render(row: any) {
-      const tags = row.chatModels.map((chatModel: CHATMODEL) => {
+      const tags = row.chatModels.map((chatModel: string) => {
         return h(
           NTag,
           {

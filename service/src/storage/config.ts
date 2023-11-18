@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import type { TextAuditServiceProvider } from 'src/utils/textAudit'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
-import { AuditConfig, CHATMODELS, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
+import { AuditConfig, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
 
 dotenv.config()
@@ -93,6 +93,9 @@ export async function getOriginConfig() {
       '',
     )
   }
+  if (!isNotEmptyString(config.siteConfig.chatModels))
+    config.siteConfig.chatModels = 'gpt-3.5-turbo,gpt-3.5-turbo-1106,gpt-3.5-turbo-16k,gpt-3.5-turbo-16k-0613,gpt-4,gpt-4-0613,gpt-4-32k,gpt-4-32k-0613,text-davinci-002-render-sha-mobile,text-embedding-ada-002,gpt-4-mobile,gpt-4-browsing,gpt-4-1106-preview,gpt-4-vision-preview'
+
   return config
 }
 
@@ -140,8 +143,8 @@ export function clearApiKeyCache() {
 
 export async function getApiKeys() {
   const result = await getKeys()
+  const config = await getCacheConfig()
   if (result.keys.length <= 0) {
-    const config = await getCacheConfig()
     if (config.apiModel === 'ChatGPTAPI')
       result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
 
@@ -157,7 +160,7 @@ export async function getApiKeys() {
       key.userRoles.push(UserRole.Guest)
     }
     if (key.chatModels == null || key.chatModels.length <= 0) {
-      CHATMODELS.forEach((chatModel) => {
+      config.siteConfig.chatModels.split(',').forEach((chatModel) => {
         key.chatModels.push(chatModel)
       })
     }

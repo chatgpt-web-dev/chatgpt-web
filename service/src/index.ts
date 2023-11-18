@@ -9,8 +9,8 @@ import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
-import { Status, UsageResponse, UserRole, chatModelOptions } from './storage/model'
+import type { AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import { Status, UsageResponse, UserRole } from './storage/model'
 import {
   clearChat,
   createChatRoom,
@@ -136,7 +136,7 @@ router.post('/room-prompt', auth, async (req, res) => {
 router.post('/room-chatmodel', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { chatModel, roomId } = req.body as { chatModel: CHATMODEL; roomId: number }
+    const { chatModel, roomId } = req.body as { chatModel: string; roomId: number }
     const success = await updateRoomChatModel(userId, roomId, chatModel)
     if (success)
       res.send({ status: 'Success', message: 'Saved successfully', data: null })
@@ -423,8 +423,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         result.data.detail = {}
       result.data.detail.usage = new UsageResponse()
       // 因为 token 本身不计算, 所以这里默认以 gpt 3.5 的算做一个伪统计
-      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo-0613')
-      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo-0613')
+      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo')
+      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo')
       result.data.detail.usage.total_tokens = result.data.detail.usage.prompt_tokens + result.data.detail.usage.completion_tokens
       result.data.detail.usage.estimated = true
     }
@@ -579,6 +579,18 @@ router.post('/session', async (req, res) => {
       key: string
       value: string
     }[] = []
+
+    const chatModelOptions = config.siteConfig.chatModels.split(',').map((model: string) => {
+      let label = model
+      if (model === 'text-davinci-002-render-sha-mobile')
+        label = 'gpt-3.5-mobile'
+      return {
+        label,
+        key: model,
+        value: model,
+      }
+    })
+
     let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig }
     if (userId != null) {
       const user = await getUserById(userId)
@@ -740,7 +752,7 @@ router.post('/user-info', auth, async (req, res) => {
 
 router.post('/user-chat-model', auth, async (req, res) => {
   try {
-    const { chatModel } = req.body as { chatModel: CHATMODEL }
+    const { chatModel } = req.body as { chatModel: string }
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)

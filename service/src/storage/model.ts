@@ -52,29 +52,8 @@ export class UserInfo {
 }
 
 export class UserConfig {
-  chatModel: CHATMODEL
+  chatModel: string
 }
-
-// https://platform.openai.com/docs/models/overview
-// 除此之外，gpt-4-0314、gpt-4-32k-0314、gpt-3.5-turbo-0301 模型将在 9 月 13 日被弃用。
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-1106-preview' | 'gpt-4-vision-preview'
-
-export const CHATMODELS: CHATMODEL[] = [
-  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-1106-preview', 'gpt-4-vision-preview',
-]
-
-export const chatModelOptions = [
-  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-1106-preview', 'gpt-4-vision-preview',
-].map((model: string) => {
-  let label = model
-  if (model === 'text-davinci-002-render-sha-mobile')
-    label = 'gpt-3.5-mobile'
-  return {
-    label,
-    key: model,
-    value: model,
-  }
-})
 
 export class ChatRoom {
   _id: ObjectId
@@ -86,7 +65,7 @@ export class ChatRoom {
   status: Status = Status.Normal
   // only access token used
   accountId?: string
-  chatModel: CHATMODEL
+  chatModel: string
   constructor(userId: string, title: string, roomId: number) {
     this.userId = userId
     this.title = title
@@ -198,6 +177,7 @@ export class SiteConfig {
     public registerReview?: boolean,
     public registerMails?: string,
     public siteDomain?: string,
+    public chatModels?: string,
   ) { }
 }
 
@@ -233,11 +213,11 @@ export class KeyConfig {
   _id: ObjectId
   key: string
   keyModel: APIMODEL
-  chatModels: CHATMODEL[]
+  chatModels: string[]
   userRoles: UserRole[]
   status: Status
   remark: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: CHATMODEL[], userRoles: UserRole[], remark: string) {
+  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
     this.chatModels = chatModels
