@@ -55,6 +55,12 @@ export async function initApi(key: KeyConfig, chatModel: CHATMODEL) {
     // The token limit includes the token count from both the message array sent and the model response.
     // 'gpt-35-turbo' has a limit of 4096 tokens, 'gpt-4' and 'gpt-4-32k' have limits of 8192 and 32768 tokens respectively.
 
+    // Check if the model type is GPT-4-turbo
+    if (model.toLowerCase().includes('1106-preview')) {
+      // If it's a '1106-preview' model, set the maxModelTokens to 131072
+      options.maxModelTokens = 131072
+      options.maxResponseTokens = 32768
+    }
     // Check if the model type includes '16k'
     if (model.toLowerCase().includes('16k')) {
       // If it's a '16k' model, set the maxModelTokens to 16384 and maxResponseTokens to 4096
