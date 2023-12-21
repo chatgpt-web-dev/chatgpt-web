@@ -308,7 +308,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
   return userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar } })
+    , { $set: { name: user.name, description: user.description, avatar: user.avatar, temperature: user.temperature, top_p: user.top_p, presencePenalty: user.presencePenalty, systemRole: user.systemRole } })
 }
 
 export async function updateUserChatModel(userId: string, chatModel: CHATMODEL) {

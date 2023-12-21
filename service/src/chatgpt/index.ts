@@ -15,7 +15,7 @@ import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/con
 import { sendResponse } from '../utils'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
-import { getChatByMessageId, updateRoomAccountId, updateRoomChatModel } from '../storage/mongo'
+import { getChatByMessageId, getUserById, updateRoomAccountId, updateRoomChatModel } from '../storage/mongo'
 import type { RequestOptions } from './types'
 
 const { HttpsProxyAgent } = httpsProxyAgent
@@ -109,7 +109,7 @@ async function chatReplyProcess(options: RequestOptions) {
   const key = await getRandomApiKey(options.user, options.user.config.chatModel, options.room.accountId)
   const userId = options.user._id.toString()
   const messageId = options.messageId
-  if (key == null || key === undefined)
+  if (key == null)
     throw new Error('没有可用的配置。请再试一次 | No available configuration. Please try again.')
 
   if (key.keyModel === 'ChatGPTUnofficialProxyAPI') {
@@ -123,18 +123,29 @@ async function chatReplyProcess(options: RequestOptions) {
 
   updateRoomChatModel(userId, options.room.roomId, model)
 
-  const { message, lastContext, process, systemMessage, temperature, top_p } = options
+  const { message, lastContext, process, systemMessage } = options
 
   try {
     const timeoutMs = (await getCacheConfig()).timeoutMs
     let options: SendMessageOptions = { timeoutMs }
 
+    const user = await getUserById(userId)
     if (key.keyModel === 'ChatGPTAPI') {
-      if (isNotEmptyString(systemMessage))
+      if (isNotEmptyString(systemMessage)) {
         options.systemMessage = systemMessage
-      options.completionParams = { model, temperature, top_p }
-    }
+      }
+      else {
+        if (isNotEmptyString(user.systemRole))
+          options.systemMessage = user.systemRole
+        else
+          options.systemMessage = '你是一个大型语言模型。请仔细按照用户的指示进行操作。使用中文并且使用Markdown格式进行回复。'
+      }
 
+      const temperature: number = user.temperature ?? 0.8
+      const top_p: number = user.top_p ?? 0.9
+      const presence_penalty: number = user.presencePenalty ?? 0.6
+      options.completionParams = { model, temperature, top_p, presence_penalty }
+    }
     if (lastContext != null) {
       if (key.keyModel === 'ChatGPTAPI')
         options.parentMessageId = lastContext.parentMessageId
