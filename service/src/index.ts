@@ -51,7 +51,7 @@ import { authLimiter, limiter } from './middleware/limiter'
 import { hasAnyRole, isEmail, isNotEmptyString } from './utils/is'
 import { sendNoticeMail, sendResetPasswordMail, sendTestMail, sendVerifyMail, sendVerifyMailAdmin } from './utils/mail'
 import { checkUserResetPassword, checkUserVerify, checkUserVerifyAdmin, getUserResetPasswordUrl, getUserVerifyUrl, getUserVerifyUrlAdmin, md5 } from './utils/security'
-import { rootAuth } from './middleware/rootAuth'
+import { isAdmin, rootAuth } from './middleware/rootAuth'
 
 dotenv.config()
 
@@ -553,9 +553,7 @@ router.post('/user-register', authLimiter, async (req, res) => {
 router.post('/config', rootAuth, async (req, res) => {
   try {
     const userId = req.headers.userId.toString()
-
-    const user = await getUserById(userId)
-    if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin))
+    if (!isAdmin(userId))
       throw new Error('无权限 | No permission.')
 
     const response = await chatConfig()
@@ -1107,8 +1105,11 @@ router.post('/setting-key-upsert', rootAuth, async (req, res) => {
 
 router.post('/statistics/by-day', auth, async (req, res) => {
   try {
-    const userId = req.headers.userId
-    const { start, end } = req.body as { start: number; end: number }
+    let { userId, start, end } = req.body as { userId?: string; start: number; end: number }
+    if (!userId)
+      userId = req.headers.userId as string
+    else if (!isAdmin(req.headers.userId as string))
+      throw new Error('无权限 | No permission')
 
     const data = await getUserStatisticsByDay(new ObjectId(userId as string), start, end)
     res.send({ status: 'Success', message: '', data })

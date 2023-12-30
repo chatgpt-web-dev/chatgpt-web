@@ -28,4 +28,9 @@ const rootAuth = async (req, res, next) => {
   }
 }
 
-export { rootAuth }
+const isAdmin = async (userId: string) => {
+  const user = await getUserById(userId)
+  return user != null && user.status === Status.Normal && user.roles.includes(UserRole.Admin)
+}
+
+export { rootAuth, isAdmin }
