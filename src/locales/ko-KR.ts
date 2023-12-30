@@ -7,6 +7,7 @@ export default {
     delete: '삭제',
     deleteSuccess: '삭제 성공',
     save: '저장',
+    sync: '모두 저장 및 동기화',
     test: '테스트',
     saveSuccess: '저장 성공',
     reset: '재설정',
@@ -165,6 +166,7 @@ export default {
     info2FAStep3Tip1: 'Note: How to turn off two-step verification?',
     info2FAStep3Tip2: '1. After logging in, use the two-step verification on the Two-Step Verification page to disable it.',
     info2FAStep3Tip3: '2. Contact the administrator to disable two-step verification.',
+    maxContextCount: 'Max Context Count',
   },
   store: {
     siderButton: '프롬프트 스토어',

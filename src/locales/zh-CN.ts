@@ -7,6 +7,7 @@ export default {
     delete: '删除',
     deleteSuccess: '删除成功',
     save: '保存',
+    sync: '保存并同步所有人',
     test: '测试',
     saveSuccess: '保存成功',
     reset: '重置',
@@ -167,6 +168,7 @@ export default {
     info2FAStep3Tip1: '注意：如何关闭两步验证？',
     info2FAStep3Tip2: '1. 登录后，在 两步验证 页面使用两步验证码关闭。',
     info2FAStep3Tip3: '2. 联系管理员来关闭两步验证。',
+    maxContextCount: '最大上下文数量',
   },
   store: {
     siderButton: '提示词商店',

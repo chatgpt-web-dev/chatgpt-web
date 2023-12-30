@@ -4,7 +4,7 @@ import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, 
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import type { MessageReactive } from 'naive-ui'
-import { NAutoComplete, NButton, NInput, NSelect, NSpace, NSpin, useDialog, useMessage } from 'naive-ui'
+import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -686,7 +686,7 @@ onUnmounted(() => {
               <span class="text-xl">
                 <SvgIcon icon="ri:chat-history-line" />
               </span>
-              <span style="margin-left:.25em">{{ usingContext ? '包含上下文' : '不含上下文' }}</span>
+              <!-- <span style="margin-left:.25em">{{ usingContext ? '包含上下文' : '不含上下文' }}</span> -->
             </HoverButton>
             <NSelect
               style="width: 250px"
@@ -695,6 +695,7 @@ onUnmounted(() => {
               :disabled="!!authStore.session?.auth && !authStore.token"
               @update-value="(val) => handleSyncChatModel(val)"
             />
+            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" @update:value="() => { userStore.updateSetting(false) }" />
           </div>
           <div class="flex items-center justify-between space-x-2">
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">

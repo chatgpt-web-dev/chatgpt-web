@@ -38,6 +38,7 @@ export class UserInfo {
   roles?: UserRole[]
   remark?: string
   secretKey?: string // 2fa
+  advanced?: AdvancedConfig
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -165,6 +166,7 @@ export class Config {
     public siteConfig?: SiteConfig,
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
+    public advancedConfig?: AdvancedConfig,
   ) { }
 }
 
@@ -199,6 +201,15 @@ export class AuditConfig {
     public textType: TextAudioType,
     public customizeEnabled: boolean,
     public sensitiveWords: string,
+  ) { }
+}
+
+export class AdvancedConfig {
+  constructor(
+    public systemMessage: string,
+    public temperature: number,
+    public top_p: number,
+    public maxContextCount: number,
   ) { }
 }
 

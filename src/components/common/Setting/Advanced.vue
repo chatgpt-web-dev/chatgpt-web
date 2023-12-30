@@ -1,29 +1,21 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import { NButton, NInput, NSlider, useMessage } from 'naive-ui'
-import { useSettingStore } from '@/store'
-import type { SettingsState } from '@/store/modules/settings/helper'
+import { useUserStore } from '@/store'
 import { t } from '@/locales'
 
-const settingStore = useSettingStore()
+const userStore = useUserStore()
 
 const ms = useMessage()
 
-const systemMessage = ref(settingStore.systemMessage ?? '')
-
-const temperature = ref(settingStore.temperature ?? 0.5)
-
-const top_p = ref(settingStore.top_p ?? 1)
-
-function updateSettings(options: Partial<SettingsState>) {
-  settingStore.updateSetting(options)
+function updateSettings(sync: boolean) {
+  userStore.updateSetting(sync)
   ms.success(t('common.success'))
 }
 
 function handleReset() {
-  settingStore.resetSetting()
+  userStore.resetSetting()
   ms.success(t('common.success'))
-  window.location.reload()
+  // window.location.reload()
 }
 </script>
 
@@ -33,35 +25,39 @@ function handleReset() {
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.role') }}</span>
         <div class="flex-1">
-          <NInput v-model:value="systemMessage" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" />
+          <NInput v-model:value="userStore.userInfo.advanced.systemMessage" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" />
         </div>
-        <NButton size="tiny" text type="primary" @click="updateSettings({ systemMessage })">
-          {{ $t('common.save') }}
-        </NButton>
       </div>
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.temperature') }} </span>
         <div class="flex-1">
-          <NSlider v-model:value="temperature" :max="1" :min="0" :step="0.1" />
+          <NSlider v-model:value="userStore.userInfo.advanced.temperature" :max="1" :min="0" :step="0.1" />
         </div>
-        <span>{{ temperature }}</span>
-        <NButton size="tiny" text type="primary" @click="updateSettings({ temperature })">
-          {{ $t('common.save') }}
-        </NButton>
+        <span>{{ userStore.userInfo.advanced.temperature }}</span>
       </div>
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.top_p') }} </span>
         <div class="flex-1">
-          <NSlider v-model:value="top_p" :max="1" :min="0" :step="0.1" />
+          <NSlider v-model:value="userStore.userInfo.advanced.top_p" :max="1" :min="0" :step="0.1" />
         </div>
-        <span>{{ top_p }}</span>
-        <NButton size="tiny" text type="primary" @click="updateSettings({ top_p })">
-          {{ $t('common.save') }}
-        </NButton>
+        <span>{{ userStore.userInfo.advanced.top_p }}</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[120px]">{{ $t('setting.maxContextCount') }} </span>
+        <div class="flex-1">
+          <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" />
+        </div>
+        <span>{{ userStore.userInfo.advanced.maxContextCount }}</span>
       </div>
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">&nbsp;</span>
-        <NButton size="small" @click="handleReset">
+        <NButton type="primary" @click="updateSettings(false)">
+          {{ $t('common.save') }}
+        </NButton>
+        <NButton v-if="userStore.userInfo.root" type="info" @click="updateSettings(true)">
+          {{ $t('common.sync') }}
+        </NButton>
+        <NButton type="warning" @click="handleReset">
           {{ $t('common.reset') }}
         </NButton>
       </div>
