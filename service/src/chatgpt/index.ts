@@ -41,7 +41,7 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
   const model = chatModel as string
 
   if (key.keyModel === 'ChatGPTAPI') {
-    const OPENAI_API_BASE_URL = config.apiBaseUrl
+    const OPENAI_API_BASE_URL = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
 
     let contextCount = 0
     const options: ChatGPTAPIOptions = {
@@ -97,7 +97,11 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
   else {
     const options: ChatGPTUnofficialProxyAPIOptions = {
       accessToken: key.key,
-      apiReverseProxyUrl: isNotEmptyString(config.reverseProxy) ? config.reverseProxy : 'https://ai.fakeopen.com/api/conversation',
+      apiReverseProxyUrl: isNotEmptyString(key.baseUrl)
+        ? key.baseUrl
+        : isNotEmptyString(config.reverseProxy)
+          ? config.reverseProxy
+          : 'https://ai.fakeopen.com/api/conversation',
       model,
       debug: !config.apiDisableDebug,
     }

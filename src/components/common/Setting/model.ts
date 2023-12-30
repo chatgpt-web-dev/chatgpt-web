@@ -91,6 +91,7 @@ export class KeyConfig {
   userRoles: UserRole[]
   status: Status
   remark: string
+  baseUrl?: string
   constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
