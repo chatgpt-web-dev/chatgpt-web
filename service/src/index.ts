@@ -95,8 +95,8 @@ router.get('/chatrooms', auth, async (req, res) => {
 router.post('/room-create', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { title, roomId } = req.body as { title: string; roomId: number }
-    const room = await createChatRoom(userId, title, roomId)
+    const { title, roomId, chatModel } = req.body as { title: string; roomId: number; chatModel: string }
+    const room = await createChatRoom(userId, title, roomId, chatModel)
     res.send({ status: 'Success', message: null, data: room })
   }
   catch (error) {

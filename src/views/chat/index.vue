@@ -13,11 +13,14 @@ import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
-import { fetchChatAPIProcess, fetchChatResponseoHistory, fetchChatStopResponding, fetchUpdateUserChatModel } from '@/api'
+import {
+  fetchChatAPIProcess,
+  fetchChatResponseoHistory,
+  fetchChatStopResponding,
+} from '@/api'
 import { t } from '@/locales'
 import { debounce } from '@/utils/functions/debounce'
 import IconPrompt from '@/icons/Prompt.vue'
-import { UserConfig } from '@/components/common/Setting/model'
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
 let controller = new AbortController()
@@ -582,11 +585,7 @@ const footerClass = computed(() => {
 
 async function handleSyncChatModel(chatModel: string) {
   nowSelectChatModel.value = chatModel
-  if (userStore.userInfo.config == null)
-    userStore.userInfo.config = new UserConfig()
-  userStore.userInfo.config.chatModel = chatModel
-  userStore.recordState()
-  await fetchUpdateUserChatModel(chatModel)
+  await chatStore.setChatModel(chatModel, +uuid)
 }
 
 onMounted(() => {
