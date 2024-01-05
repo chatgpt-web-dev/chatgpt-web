@@ -142,6 +142,7 @@ export default {
     userRoles: '用戶權限',
     status: '狀態',
     chatModels: '對話模型',
+    defaultChatModel: '預設對話模型',
     remark: '備註',
     email: '電子郵箱',
     password: '密碼',

@@ -1,17 +1,19 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { NButton, NInput, NPopconfirm, NSelect, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NPopconfirm, NSelect, useMessage } from 'naive-ui'
+import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
-import { useAppStore, useUserStore } from '@/store'
+import { useAppStore, useAuthStore, useUserStore } from '@/store'
 import type { UserInfo } from '@/store/modules/user/helper'
 import { getCurrentDate } from '@/utils/functions'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
-import { fetchClearAllChat } from '@/api'
+import { fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
+const authStore = useAuthStore()
 
 const { isMobile } = useBasicLayout()
 
@@ -64,6 +66,14 @@ const languageOptions: { label: string; key: Language; value: Language }[] = [
 async function updateUserInfo(options: Partial<UserInfo>) {
   await userStore.updateUserInfo(true, options)
   ms.success(t('common.success'))
+}
+
+async function updateUserChatModel(chatModel: string) {
+  if (!userStore.userInfo.config)
+    userStore.userInfo.config = new UserConfig()
+  userStore.userInfo.config.chatModel = chatModel
+  userStore.recordState()
+  await fetchUpdateUserChatModel(chatModel)
 }
 
 function exportData(): void {
@@ -138,6 +148,25 @@ function handleImportButtonClick(): void {
           <NInput v-model:value="avatar" placeholder="" />
         </div>
       </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.saveUserInfo') }}</span>
+        <NButton type="primary" @click="updateUserInfo({ avatar, name, description })">
+          {{ $t('common.save') }}
+        </NButton>
+      </div>
+      <NDivider />
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.defaultChatModel') }}</span>
+        <div class="w-[200px]">
+          <NSelect
+            style="width: 200px"
+            :value="userInfo.config.chatModel"
+            :options="authStore.session?.chatModels"
+            :disabled="!!authStore.session?.auth && !authStore.token"
+            @update-value="(val) => updateUserChatModel(val)"
+          />
+        </div>
+      </div>
       <div
         class="flex items-center space-x-4"
         :class="isMobile && 'items-start'"
@@ -199,12 +228,6 @@ function handleImportButtonClick(): void {
             @update-value="value => appStore.setLanguage(value)"
           />
         </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.saveUserInfo') }}</span>
-        <NButton type="primary" @click="updateUserInfo({ avatar, name, description })">
-          {{ $t('common.save') }}
-        </NButton>
       </div>
     </div>
   </div>

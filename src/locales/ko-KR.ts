@@ -140,6 +140,7 @@ export default {
     userRoles: 'User Role',
     status: 'Status',
     chatModels: 'Chat Models',
+    defaultChatModel: '기본 대화 모델',
     remark: 'Remark',
     email: 'Email',
     password: 'Password',
