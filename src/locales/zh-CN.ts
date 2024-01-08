@@ -142,6 +142,7 @@ export default {
     userRoles: '用户权限',
     status: '状态',
     chatModels: '对话模型',
+    defaultChatModel: '默认对话模型',
     remark: '备注',
     email: '电子邮箱',
     password: '密码',

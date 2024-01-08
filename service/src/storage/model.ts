@@ -67,14 +67,14 @@ export class ChatRoom {
   // only access token used
   accountId?: string
   chatModel: string
-  constructor(userId: string, title: string, roomId: number) {
+  constructor(userId: string, title: string, roomId: number, chatModel: string) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
     this.usingContext = true
     this.accountId = null
-    this.chatModel = null
+    this.chatModel = chatModel
   }
 }
 

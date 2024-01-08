@@ -185,10 +185,10 @@ export function fetchGetChatRooms<T = any>() {
   })
 }
 
-export function fetchCreateChatRoom<T = any>(title: string, roomId: number) {
+export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string) {
   return post<T>({
     url: '/room-create',
-    data: { title, roomId },
+    data: { title, roomId, chatModel },
   })
 }
 
@@ -203,6 +203,13 @@ export function fetchUpdateChatRoomPrompt<T = any>(prompt: string, roomId: numbe
   return post<T>({
     url: '/room-prompt',
     data: { prompt, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomChatModel<T = any>(chatModel: string, roomId: number) {
+  return post<T>({
+    url: '/room-chatmodel',
+    data: { chatModel, roomId },
   })
 }
 
