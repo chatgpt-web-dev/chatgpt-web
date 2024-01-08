@@ -12,6 +12,7 @@ import {
   fetchRenameChatRoom,
   fetchUpdateChatRoomChatModel,
   fetchUpdateChatRoomUsingContext,
+  fetchUpdateUserChatModel,
 } from '@/api'
 
 export const useChatStore = defineStore('chat-store', {
@@ -107,6 +108,9 @@ export const useChatStore = defineStore('chat-store', {
 
     async setChatModel(chatModel: string, roomId: number) {
       await fetchUpdateChatRoomChatModel(chatModel, roomId)
+      const userStore = useUserStore()
+      userStore.userInfo.config.chatModel = chatModel
+      await fetchUpdateUserChatModel(chatModel)
     },
 
     async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
