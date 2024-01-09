@@ -59,4 +59,4 @@ COPY --from=backend /app/src/utils/templates /app/build/templates
 
 EXPOSE 3002
 
-CMD ["sh", "-c", "./replace-title.sh && pnpm run prod"]
+CMD ["sh", "-c", "./replace-title.sh && node --import tsx/esm ./build/index.js"]
