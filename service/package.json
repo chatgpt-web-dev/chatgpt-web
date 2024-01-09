@@ -1,5 +1,6 @@
 {
   "name": "chatgpt-web-service",
+  "type": "module",
   "version": "1.0.0",
   "private": false,
   "description": "ChatGPT Web Service",
@@ -14,10 +15,11 @@
     "node": "^16 || ^18 || ^20 || ^21"
   },
   "scripts": {
-    "start": "esno ./src/index.ts",
-    "dev": "esno watch ./src/index.ts",
-    "prod": "esno ./build/index.js",
-    "build": "pnpm clean && tsup",
+    "start": "tsx ./src/index.ts",
+    "dev": "tsx watch ./src/index.ts",
+    "prod": "node --import tsx/esm ./build/index.js",
+    "prod-node18": "node --loader tsx/esm ./build/index.js",
+    "build": "pnpm clean && tsc",
     "clean": "rimraf build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -28,28 +30,27 @@
     "chatgpt": "^5.2.4",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
-    "esno": "^0.16.3",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
     "gpt-token": "^0.0.5",
     "https-proxy-agent": "^5.0.1",
     "isomorphic-fetch": "^3.0.0",
     "jwt-decode": "^3.1.2",
+    "jsonwebtoken": "^9.0.0",
     "mongodb": "^5.9.2",
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.1",
     "request-ip": "^3.3.0",
-    "socks-proxy-agent": "^7.0.0"
+    "socks-proxy-agent": "^7.0.0",
+    "speakeasy": "^2.0.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.35.3",
+    "@antfu/eslint-config": "^0.43.1",
     "@types/express": "^4.17.17",
     "@types/node": "^18.14.6",
-    "eslint": "^8.35.0",
-    "jsonwebtoken": "^9.0.0",
+    "eslint": "^8.56.0",
     "rimraf": "^4.3.0",
-    "speakeasy": "^2.0.0",
-    "tsup": "^6.6.3",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   }
 }

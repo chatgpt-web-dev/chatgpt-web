@@ -1,5 +1,12 @@
 {
   "root": true,
-  "ignorePatterns": ["build"],
-  "extends": ["@antfu"]
+  "ignorePatterns": ["build", "tsconfig.json"],
+  "extends": ["@antfu"],
+  "rules": {
+    "antfu/top-level-function": "off",
+    "n/prefer-global/process": "off",
+    "no-restricted-globals": "off",
+    "unicorn/prefer-node-protocol": "off",
+    "unicorn/prefer-number-properties": "off"
+  }
 }

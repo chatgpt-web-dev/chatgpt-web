@@ -1,8 +1,9 @@
 import { rateLimit } from 'express-rate-limit'
 import * as dotenv from 'dotenv'
+import requestIp from 'request-ip'
+
 import { isNotEmptyString } from '../utils/is'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const requestIp = require('request-ip')
+
 dotenv.config()
 
 const MAX_REQUEST_PER_HOUR = process.env.MAX_REQUEST_PER_HOUR
