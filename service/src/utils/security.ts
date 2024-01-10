@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash } from 'node:crypto'
 import * as dotenv from 'dotenv'
 import { getCacheConfig } from '../storage/config'
 

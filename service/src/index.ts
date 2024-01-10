@@ -4,7 +4,8 @@ import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
 import { textTokens } from 'gpt-token'
 import speakeasy from 'speakeasy'
-import { type RequestProps, TwoFAConfig } from './types'
+import { TwoFAConfig } from './types'
+import type { AuthJwtPayload, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
@@ -198,7 +199,7 @@ router.get('/chat-history', auth, async (req, res) => {
       res.send({ status: 'Success', message: null, data: [] })
       return
     }
-    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId))
+    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : Number.parseInt(lastId))
 
     const result = []
     chats.forEach((c) => {
@@ -370,7 +371,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   const userId = req.headers.userId as string
   const room = await getChatRoom(userId, roomId)
   if (room == null)
-    global.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
+    globalThis.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
   if (room != null && isNotEmptyString(room.prompt))
     systemMessage = room.prompt
   let lastResponse
@@ -478,7 +479,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
     }
     catch (error) {
-      global.console.error(error)
+      globalThis.console.error(error)
     }
   }
 })
@@ -690,10 +691,10 @@ router.post('/user-login', authLimiter, async (req, res) => {
       name: user.name ? user.name : user.email,
       avatar: user.avatar,
       description: user.description,
-      userId: user._id,
+      userId: user._id.toString(),
       root: user.roles.includes(UserRole.Admin),
       config: user.config,
-    }, config.siteConfig.loginSalt.trim())
+    } as AuthJwtPayload, config.siteConfig.loginSalt.trim())
     res.send({ status: 'Success', message: '登录成功 | Login successfully', data: { token: jwtToken } })
   }
   catch (error) {
