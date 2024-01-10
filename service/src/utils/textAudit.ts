@@ -72,7 +72,7 @@ export class BaiduTextAuditService implements TextAuditService {
       return true
     }
     catch (error) {
-      global.console.error(`百度审核${error}`)
+      globalThis.console.error(`百度审核${error}`)
     }
     return false
   }

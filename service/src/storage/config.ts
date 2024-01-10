@@ -27,7 +27,7 @@ export async function getOriginConfig() {
   let config = await getConfig()
   if (config == null) {
     config = new Config(new ObjectId(),
-      !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000,
+      !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000,
       process.env.OPENAI_API_KEY,
       process.env.OPENAI_API_DISABLE_DEBUG === 'true',
       process.env.OPENAI_ACCESS_TOKEN,
@@ -50,7 +50,7 @@ export async function getOriginConfig() {
         process.env.REGISTER_MAILS,
         process.env.SITE_DOMAIN),
       new MailConfig(process.env.SMTP_HOST,
-        !isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
+        !Number.isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
         process.env.SMTP_TSL === 'true',
         process.env.SMTP_USERNAME,
         process.env.SMTP_PASSWORD))

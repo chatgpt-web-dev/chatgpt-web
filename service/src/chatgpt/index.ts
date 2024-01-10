@@ -172,7 +172,7 @@ async function chatReplyProcess(options: RequestOptions) {
         return await chatReplyProcess(options)
       }
     }
-    global.console.error(error)
+    globalThis.console.error(error)
     if (Reflect.has(ErrorCodeMessage, code))
       return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
     return sendResponse({ type: 'Fail', message: error.message ?? 'Please check the back-end console' })
@@ -263,7 +263,7 @@ async function fetchBalance() {
   if (isNotEmptyString(config.socksProxy)) {
     socksAgent = new SocksProxyAgent({
       hostname: config.socksProxy.split(':')[0],
-      port: parseInt(config.socksProxy.split(':')[1]),
+      port: Number.parseInt(config.socksProxy.split(':')[1]),
       userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
       password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
     })
@@ -303,7 +303,7 @@ async function fetchBalance() {
     return Promise.resolve(cachedBalance.toFixed(3))
   }
   catch (error) {
-    global.console.error(error)
+    globalThis.console.error(error)
     return Promise.resolve('-')
   }
 }
@@ -333,7 +333,7 @@ async function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPI
   if (isNotEmptyString(config.socksProxy)) {
     const agent = new SocksProxyAgent({
       hostname: config.socksProxy.split(':')[0],
-      port: parseInt(config.socksProxy.split(':')[1]),
+      port: Number.parseInt(config.socksProxy.split(':')[1]),
       userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
       password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
 
