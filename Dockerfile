@@ -55,7 +55,7 @@ COPY --from=frontend /app/dist /app/public
 
 COPY --from=backend /app/build /app/build
 
-COPY --from=backend /app/src/utils/templates /app/build/templates
+COPY --from=backend /app/src/utils/templates /app/build/utils/templates
 
 EXPOSE 3002
 
