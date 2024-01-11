@@ -102,6 +102,16 @@ export class KeyConfig {
   }
 }
 
+export class UserPrompt {
+  _id?: string
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
 export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
 
 export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {

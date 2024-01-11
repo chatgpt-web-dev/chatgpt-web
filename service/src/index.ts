@@ -10,25 +10,30 @@ import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo, UserPrompt } from './storage/model'
 import { AdvancedConfig, Status, UsageResponse, UserRole } from './storage/model'
 import {
   clearChat,
+  clearUserPrompt,
   createChatRoom,
   createUser,
   deleteAllChatRooms,
   deleteChat,
   deleteChatRoom,
+  deleteUserPrompt,
   disableUser2FA,
   existsChatRoom,
   getChat,
   getChatRoom,
   getChatRooms,
+  getChatRoomsCount,
   getChats,
   getUser,
   getUserById,
+  getUserPromptList,
   getUserStatisticsByDay,
   getUsers,
+  importUserPrompt,
   insertChat,
   insertChatUsage,
   renameChatRoom,
@@ -47,6 +52,7 @@ import {
   updateUserPasswordWithVerifyOld,
   updateUserStatus,
   upsertKey,
+  upsertUserPrompt,
   verifyUser,
 } from './storage/mongo'
 import { authLimiter, limiter } from './middleware/limiter'
@@ -86,6 +92,43 @@ router.get('/chatrooms', auth, async (req, res) => {
       })
     })
     res.send({ status: 'Success', message: null, data: result })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Load error', data: [] })
+  }
+})
+
+function formatTimestamp(timestamp: number) {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+router.get('/chatrooms-count', auth, async (req, res) => {
+  try {
+    const userId = req.query.userId as string
+    const page = +req.query.page
+    const size = +req.query.size
+    const rooms = await getChatRoomsCount(userId, page, size)
+    const result = []
+    rooms.data.forEach((r) => {
+      result.push({
+        uuid: r.roomId,
+        title: r.title,
+        userId: r.userId,
+        name: r.username,
+        lastTime: formatTimestamp(r.dateTime),
+        chatCount: r.chatCount,
+      })
+    })
+    res.send({ status: 'Success', message: null, data: { data: result, total: rooms.total } })
   }
   catch (error) {
     console.error(error)
@@ -195,12 +238,35 @@ router.get('/chat-history', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const roomId = +req.query.roomId
     const lastId = req.query.lastId as string
-    if (!roomId || !await existsChatRoom(userId, roomId)) {
+    const all = req.query.all as string
+    if ((!roomId || !await existsChatRoom(userId, roomId)) && (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)) {
       res.send({ status: 'Success', message: null, data: [] })
       return
     }
-    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : Number.parseInt(lastId))
 
+    if (all !== null && all !== 'undefined' && all !== undefined && all.trim().length !== 0) {
+      const config = await getCacheConfig()
+      if (config.siteConfig.loginEnabled) {
+        try {
+          const token = req.header('Authorization').replace('Bearer ', '')
+          const info = jwt.verify(token, config.siteConfig.loginSalt.trim())
+          req.headers.userId = info.userId
+          const user = await getUserById(info.userId)
+          if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin)) {
+            res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+            return
+          }
+        }
+        catch (error) {
+          res.send({ status: 'Unauthorized', message: error.message ?? 'Please authenticate.', data: null })
+        }
+      }
+      else {
+        res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
+      }
+    }
+
+    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : Number.parseInt(lastId), all)
     const result = []
     chats.forEach((c) => {
       if (c.status !== Status.InversionDeleted) {
@@ -595,12 +661,16 @@ router.post('/session', async (req, res) => {
       }
     })
 
-    let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
+    let userInfo: { name: string; description: string; temperature: number; top_p: number; presencePenalty: number; avatar: string; systemRole: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
     if (userId != null) {
       const user = await getUserById(userId)
       userInfo = {
         name: user.name,
         description: user.description,
+        temperature: user.temperature,
+        top_p: user.top_p,
+        presencePenalty: user.presencePenalty,
+        systemRole: user.systemRole,
         avatar: user.avatar,
         userId: user._id.toString(),
         root: user.roles.includes(UserRole.Admin),
@@ -741,13 +811,13 @@ router.post('/user-reset-password', authLimiter, async (req, res) => {
 
 router.post('/user-info', auth, async (req, res) => {
   try {
-    const { name, avatar, description } = req.body as UserInfo
+    const { name, avatar, description, temperature, top_p, presencePenalty, systemRole } = req.body as UserInfo
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)
     if (user == null || user.status !== Status.Normal)
       throw new Error('用户不存在 | User does not exist.')
-    await updateUserInfo(userId, { name, avatar, description } as UserInfo)
+    await updateUserInfo(userId, { name, avatar, description, temperature, top_p, presencePenalty, systemRole } as UserInfo)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {
@@ -1172,6 +1242,80 @@ router.post('/statistics/by-day', auth, async (req, res) => {
   }
   catch (error) {
     res.send(error)
+  }
+})
+
+router.get('/prompt-list', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const prompts = await getUserPromptList(userId)
+    const result = []
+    prompts.data.forEach((p) => {
+      result.push({
+        _id: p._id,
+        title: p.title,
+        value: p.value,
+      })
+    })
+    res.send({ status: 'Success', message: null, data: { data: result, total: prompts.total } })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-upsert', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt
+    if (userPrompt._id !== undefined)
+      userPrompt._id = new ObjectId(userPrompt._id)
+    userPrompt.userId = userId
+    await upsertUserPrompt(userPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-delete', auth, async (req, res) => {
+  try {
+    const { id } = req.body as { id: string }
+    await deleteUserPrompt(id)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-clear', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    await clearUserPrompt(userId)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-import', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const userPrompt = req.body as UserPrompt[]
+    const updatedUserPrompt = userPrompt.map((prompt) => {
+      return {
+        ...prompt,
+        userId,
+      }
+    })
+    await importUserPrompt(updatedUserPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
 

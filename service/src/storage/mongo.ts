@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import { md5 } from '../utils/security'
-import type { AdvancedConfig, ChatOptions, Config, KeyConfig, UsageResponse } from './model'
+import type { AdvancedConfig, ChatOptions, Config, KeyConfig, UsageResponse, UserPrompt } from './model'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 import { getCacheConfig } from './config'
 
@@ -20,6 +20,7 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
+const userPromptCol = client.db(dbName).collection<UserPrompt>('user_prompt')
 
 /**
  * 插入聊天信息
@@ -145,6 +146,94 @@ export async function getChatRooms(userId: string) {
   return rooms
 }
 
+export async function getChatRoomsCount(userId: string, page: number, size: number) {
+  let total = 0
+  const skip = (page - 1) * size
+  const limit = size
+  const agg = []
+  if (userId !== null && userId !== 'undefined' && userId !== undefined && userId.trim().length !== 0) {
+    agg.push({
+      $match: {
+        userId,
+      },
+    })
+    total = await roomCol.countDocuments({ userId })
+  }
+  else {
+    total = await roomCol.countDocuments()
+  }
+  const agg2 = [
+    {
+      $lookup: {
+        from: 'chat',
+        localField: 'roomId',
+        foreignField: 'roomId',
+        as: 'chat',
+      },
+    }, {
+      $addFields: {
+        title: '$chat.prompt',
+        user_ObjectId: {
+          $toObjectId: '$userId',
+        },
+      },
+    }, {
+      $lookup: {
+        from: 'user',
+        localField: 'user_ObjectId',
+        foreignField: '_id',
+        as: 'user',
+      },
+    }, {
+      $unwind: {
+        path: '$user',
+        preserveNullAndEmptyArrays: false,
+      },
+    }, {
+      $sort: {
+        'chat.dateTime': -1,
+      },
+    }, {
+      $addFields: {
+        chatCount: {
+          $size: '$chat',
+        },
+        chat: {
+          $arrayElemAt: [
+            {
+              $slice: [
+                '$chat', -1,
+              ],
+            }, 0,
+          ],
+        },
+      },
+    }, {
+      $project: {
+        userId: 1,
+        title: '$chat.prompt',
+        username: '$user.name',
+        roomId: 1,
+        chatCount: 1,
+        dateTime: '$chat.dateTime',
+      },
+    }, {
+      $sort: {
+        dateTime: -1,
+      },
+    }, {
+      $skip: skip,
+    }, {
+      $limit: limit,
+    },
+  ]
+  Array.prototype.push.apply(agg, agg2)
+
+  const cursor = roomCol.aggregate(agg)
+  const data = await cursor.toArray()
+  return { total, data }
+}
+
 export async function getChatRoom(userId: string, roomId: number) {
   return await roomCol.findOne({ userId, roomId, status: { $ne: Status.Deleted } }) as ChatRoom
 }
@@ -159,10 +248,15 @@ export async function deleteAllChatRooms(userId: string) {
   await chatCol.updateMany({ userId, status: Status.Normal }, { $set: { status: Status.Deleted } })
 }
 
-export async function getChats(roomId: number, lastId?: number) {
+export async function getChats(roomId: number, lastId?: number, all?: string) {
   if (!lastId)
     lastId = new Date().getTime()
-  const query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  let query = {}
+  if (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)
+    query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  else
+    query = { roomId, uuid: { $lt: lastId } }
+
   const limit = 20
   const cursor = chatCol.find(query).sort({ dateTime: -1 }).limit(limit)
   const chats = []
@@ -222,7 +316,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar } })
+    , { $set: { name: user.name, description: user.description, avatar: user.avatar, temperature: user.temperature, top_p: user.top_p, presencePenalty: user.presencePenalty, systemRole: user.systemRole } })
 }
 
 export async function updateUserChatModel(userId: string, chatModel: string) {
@@ -424,4 +518,34 @@ export async function upsertKey(key: KeyConfig): Promise<KeyConfig> {
 
 export async function updateApiKeyStatus(id: string, status: Status) {
   await keyCol.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
+}
+
+export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
+  if (userPrompt._id === undefined)
+    await userPromptCol.insertOne(userPrompt)
+  else
+    await userPromptCol.replaceOne({ _id: userPrompt._id }, userPrompt, { upsert: true })
+  return userPrompt
+}
+export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[]; total: number }> {
+  const query = { userId }
+  const total = await userPromptCol.countDocuments(query)
+  const cursor = userPromptCol.find(query).sort({ _id: -1 })
+  const data = []
+  await cursor.forEach(doc => data.push(doc))
+  return { data, total }
+}
+
+export async function deleteUserPrompt(id: string) {
+  const query = { _id: new ObjectId(id) }
+  await userPromptCol.deleteOne(query)
+}
+
+export async function clearUserPrompt(userId: string) {
+  const query = { userId }
+  await userPromptCol.deleteMany(query)
+}
+
+export async function importUserPrompt(userPromptList: UserPrompt[]) {
+  await userPromptCol.insertMany(userPromptList)
 }

@@ -26,6 +26,10 @@ export enum UserRole {
 export class UserInfo {
   _id: ObjectId
   name: string
+  temperature: number
+  top_p: number
+  presencePenalty: number
+  systemRole: string
   email: string
   password: string
   status: Status
@@ -236,6 +240,18 @@ export class KeyConfig {
     this.userRoles = userRoles
     this.status = Status.Normal
     this.remark = remark
+  }
+}
+
+export class UserPrompt {
+  _id: ObjectId
+  userId: string
+  title: string
+  value: string
+  constructor(userId: string, title: string, value: string) {
+    this.userId = userId
+    this.title = title
+    this.value = value
   }
 }
 
