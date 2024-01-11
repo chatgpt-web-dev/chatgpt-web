@@ -146,7 +146,7 @@ async function chatReplyProcess(options: RequestOptions) {
         if (isNotEmptyString(user.systemRole))
           options.systemMessage = user.systemRole
         else
-          options.systemMessage = '你是一个大型语言模型。请仔细按照用户的指示进行操作。使用中文并且使用Markdown格式进行回复。'
+          options.systemMessage = 'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully. Respond using markdown.'
       }
 
       const temperature: number = user.temperature ?? 0.8

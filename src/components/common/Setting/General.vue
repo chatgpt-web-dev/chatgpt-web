@@ -172,7 +172,7 @@ function handleImportButtonClick(): void {
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[100px]">{{ $t('setting.systemRole') }}</span>
         <div class="flex-1">
-          <NInput v-model:value="systemRole" type="textarea" placeholder="你是一个大型语言模型。请仔细按照用户的指示进行操作。使用中文并且使用Markdown格式进行回复。" />
+          <NInput v-model:value="systemRole" type="textarea" placeholder="Customize global system roles" />
         </div>
       </div>
       <div class="flex items-center space-x-4">
