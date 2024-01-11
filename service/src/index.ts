@@ -1268,8 +1268,8 @@ router.post('/prompt-upsert', auth, async (req, res) => {
     if (userPrompt._id !== undefined)
       userPrompt._id = new ObjectId(userPrompt._id)
     userPrompt.userId = userId
-    await upsertUserPrompt(userPrompt)
-    res.send({ status: 'Success', message: '成功 | Successfully' })
+    const newUserPrompt = await upsertUserPrompt(userPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully', data: { _id: newUserPrompt._id.toHexString() } })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })

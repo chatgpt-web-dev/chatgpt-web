@@ -48,29 +48,6 @@ const authStore = useAuthStoreWithout()
 
 const promptStore = usePromptStore()
 
-// const dataSource = ref<DataProps[]>([])
-
-// const pagination = reactive ({
-//   page: 1,
-//   pageSize: 25,
-//   pageCount: 1,
-//   itemCount: 1,
-//   prefix({ itemCount }: { itemCount: number | undefined }) {
-//     return `Total is ${itemCount}.`
-//   },
-//   showSizePicker: true,
-//   pageSizes: [25, 50, 100],
-//   onChange: (page: number) => {
-//     pagination.page = page
-//     handleGetUserPromptList(pagination.page)
-//   },
-//   onUpdatePageSize: (pageSize: number) => {
-//     pagination.pageSize = pageSize
-//     pagination.page = 1
-//     handleGetUserPromptList(pagination.page)
-//   },
-// })
-
 // 移动端自适应相关
 const { isMobile } = useBasicLayout()
 
@@ -132,8 +109,8 @@ async function addPromptTemplate() {
     }
   }
   const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
-  await fetchUpsertUserPrompt(userPrompt)
-  promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value } as never)
+  const data = (await fetchUpsertUserPrompt(userPrompt)).data
+  promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id } as never)
   message.success(t('common.addSuccess'))
   changeShowModal('add')
 }
@@ -163,8 +140,8 @@ const modifyPromptTemplate = async () => {
   }
   const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
   userPrompt._id = tempModifiedItem.value._id
-  await fetchUpsertUserPrompt(userPrompt)
-  promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value }, ...tempList] as never
+	const data = (await fetchUpsertUserPrompt(userPrompt)).data
+  promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
   message.success(t('common.editSuccess'))
   changeShowModal('modify')
 }
@@ -237,6 +214,8 @@ const importPromptTemplate = async (from = 'online') => {
       promptList.value.unshift(p)
     })
 
+		await handleGetUserPromptList()
+
     message.success(t('common.importSuccess'))
   }
   catch {
@@ -249,7 +228,13 @@ const importPromptTemplate = async (from = 'online') => {
 // 模板导出
 const exportPromptTemplate = () => {
   exportLoading.value = true
-  const jsonDataStr = JSON.stringify(promptList.value)
+	const exportData = promptList.value.map((item: UserPrompt) => {
+		return {
+			key: item.title,
+			value: item.value,
+		}
+	})
+  const jsonDataStr = JSON.stringify(exportData)
   const blob = new Blob([jsonDataStr], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -389,6 +374,7 @@ async function handleGetUserPromptList() {
   if (loading.value)
     return
   loading.value = true
+	promptList.value = []
   const data = (await fetchUserPromptList()).data
   data.data.forEach((d: UserPrompt) => {
     promptList.value.push(d)

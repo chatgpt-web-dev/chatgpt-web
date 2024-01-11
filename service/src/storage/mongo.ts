@@ -521,18 +521,20 @@ export async function updateApiKeyStatus(id: string, status: Status) {
 }
 
 export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
-  if (userPrompt._id === undefined)
-    await userPromptCol.insertOne(userPrompt)
-  else
+  if (userPrompt._id === undefined) {
+    const doc = await userPromptCol.insertOne(userPrompt)
+    userPrompt._id = doc.insertedId
+  }
+  else {
     await userPromptCol.replaceOne({ _id: userPrompt._id }, userPrompt, { upsert: true })
+  }
   return userPrompt
 }
 export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[]; total: number }> {
   const query = { userId }
   const total = await userPromptCol.countDocuments(query)
   const cursor = userPromptCol.find(query).sort({ _id: -1 })
-  const data = []
-  await cursor.forEach(doc => data.push(doc))
+  const data = await cursor.toArray()
   return { data, total }
 }
 
