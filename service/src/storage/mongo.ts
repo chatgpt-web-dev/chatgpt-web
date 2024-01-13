@@ -10,9 +10,18 @@ import { getCacheConfig } from './config'
 dotenv.config()
 
 const url = process.env.MONGODB_URL
-const parsedUrl = new URL(url)
-const dbName = (parsedUrl.pathname && parsedUrl.pathname !== '/') ? parsedUrl.pathname.substring(1) : 'chatgpt'
-const client = new MongoClient(url)
+
+let client: MongoClient
+let dbName: string
+try {
+  client = new MongoClient(url)
+  const parsedUrl = new URL(url)
+  dbName = (parsedUrl.pathname && parsedUrl.pathname !== '/') ? parsedUrl.pathname.substring(1) : 'chatgpt'
+}
+catch (e) {
+  globalThis.console.error('MongoDB url invalid. please ensure set valid env MONGODB_URL.', e.message)
+  process.exit(1)
+}
 
 const chatCol = client.db(dbName).collection<ChatInfo>('chat')
 const roomCol = client.db(dbName).collection<ChatRoom>('chat_room')
