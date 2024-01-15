@@ -31,10 +31,14 @@ export function useTheme() {
   watch(
     () => isDark.value,
     (dark) => {
-      if (dark)
+      if (dark) {
         document.documentElement.classList.add('dark')
-      else
+        document.querySelector('head meta[name="theme-color"]')?.setAttribute('content', '#121212')
+      }
+      else {
         document.documentElement.classList.remove('dark')
+        document.querySelector('head meta[name="theme-color"]')?.setAttribute('content', '#eee')
+      }
     },
     { immediate: true },
   )
