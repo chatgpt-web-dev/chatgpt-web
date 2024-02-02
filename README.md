@@ -7,7 +7,12 @@
 </br>
 
 ## 说明
-> **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), 新增了部分特色功能:**
+> [!IMPORTANT]  
+> **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
+> 
+> 由于原项目作者不愿意引入对数据库的依赖 故制作该 Hard Fork 独立开发 [详见讨论](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
+> 
+> 新增了部分特色功能:
 
 [✓] 注册 & 登录 & 重置密码 & 2FA
 
@@ -357,8 +362,8 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
 
 感谢所有做过贡献的人!
 
-<a href="https://github.com/Chanzhaoyu/chatgpt-web/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Chanzhaoyu/chatgpt-web" />
+<a href="https://github.com/chatgpt-web-dev/chatgpt-web/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=chatgpt-web-dev/chatgpt-web" />
 </a>
 
 ## 赞助
