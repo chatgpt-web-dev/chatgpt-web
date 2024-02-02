@@ -37,7 +37,7 @@ async function getUserId(req: Request): Promise<string | undefined> {
     return info.userId
   }
   catch (error) {
-
+    globalThis.console.error('getUserId err. ', error.message)
   }
   return null
 }
