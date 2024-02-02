@@ -7,12 +7,15 @@
 </br>
 
 ## 说明
+
 > [!IMPORTANT]  
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
 > 
 > 由于原项目作者不愿意引入对数据库的依赖 故制作该 Hard Fork 独立开发 [详见讨论](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
 > 
-> 新增了部分特色功能:
+> 再次感谢 [Chanzhaoyu](https://github.com/Chanzhaoyu) 大佬对开源的贡献 🙏
+
+新增了部分特色功能:
 
 [✓] 注册 & 登录 & 重置密码 & 2FA
 
