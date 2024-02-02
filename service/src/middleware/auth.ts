@@ -30,14 +30,15 @@ async function auth(req, res, next) {
 }
 
 async function getUserId(req: Request): Promise<string | undefined> {
+  let token: string
   try {
-    const token = req.header('Authorization').replace('Bearer ', '')
+    token = req.header('Authorization').replace('Bearer ', '')
     const config = await getCacheConfig()
     const info = jwt.verify(token, config.siteConfig.loginSalt.trim()) as AuthJwtPayload
     return info.userId
   }
   catch (error) {
-    globalThis.console.error('getUserId err. ', error.message)
+    globalThis.console.error(`auth middleware getUserId err from token ${token} `, error.message)
   }
   return null
 }
