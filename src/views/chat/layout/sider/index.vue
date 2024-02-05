@@ -87,7 +87,7 @@ watch(
         </div>
       </main>
       <Footer />
-      <GithubSite class="flex-none flex-col-2 items-center text-center m-0" />
+      <GithubSite class="flex-col-2 text-center m-0" />
     </div>
   </NLayoutSider>
   <template v-if="isMobile">
