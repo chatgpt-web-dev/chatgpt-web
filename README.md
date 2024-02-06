@@ -371,6 +371,14 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
   <img src="https://contrib.rocks/image?repo=chatgpt-web-dev/chatgpt-web" />
 </a>
 
+## Star 历史
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date&theme=dark" />
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date" />
+  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date" />
+</picture>
+
 ## 赞助
 如果你觉得这个项目对你有帮助，请给我点个Star。并且情况允许的话，可以给我一点点支持，总之非常感谢支持～
 
