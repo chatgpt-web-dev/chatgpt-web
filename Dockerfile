@@ -1,6 +1,12 @@
 # build front-end
 FROM node:lts-alpine AS frontend
 
+ARG GIT_COMMIT_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ARG RELEASE_VERSION=v0.0.0
+
+ENV VITE_GIT_COMMIT_HASH $GIT_COMMIT_HASH
+ENV VITE_RELEASE_VERSION $RELEASE_VERSION
+
 RUN npm install pnpm -g
 
 WORKDIR /app
