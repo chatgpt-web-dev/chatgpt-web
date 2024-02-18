@@ -384,14 +384,14 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     const config = await getCacheConfig()
     const userId = req.headers.userId.toString()
     const user = await getUserById(userId)
-    // new code
+    // 在调用前判断对话额度是否够用
     const useAmount = user.useAmount ?? 0
     // report if useamount is 0
     if (Number(useAmount) <= 0) {
       res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
       return
     }
-    // new code
+
     if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
       if (!user.roles.includes(UserRole.Admin) && await containsSensitiveWords(config.auditConfig, prompt)) {
         res.send({ status: 'Fail', message: '含有敏感词 | Contains sensitive words', data: null })
@@ -783,7 +783,7 @@ router.post('/user-info', auth, async (req, res) => {
   }
 })
 
-// new code
+// 使用兑换码后更新用户用量
 router.post('/user-updateamtinfo', auth, async (req, res) => {
   try {
     const { useAmount } = req.body as { useAmount: number }
@@ -800,6 +800,7 @@ router.post('/user-updateamtinfo', auth, async (req, res) => {
   }
 })
 
+// 获取用户对话额度
 router.get('/user-getamtinfo', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
@@ -811,7 +812,7 @@ router.get('/user-getamtinfo', auth, async (req, res) => {
     res.send({ status: 'Fail', message: 'Read Amount Error', data: 0 })
   }
 })
-
+// 兑换对话额度
 router.post('/redeem-card', auth, async (req, res) => {
   try {
     const { redeemCardNo } = req.body as { redeemCardNo: string }
@@ -837,8 +838,6 @@ router.post('/redeem-card', auth, async (req, res) => {
     res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
-
-// new code
 
 router.post('/user-chat-model', auth, async (req, res) => {
   try {
@@ -882,6 +881,7 @@ router.post('/user-status', rootAuth, async (req, res) => {
   }
 })
 
+// 函数中加入useAmount
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
     const { userId, email, password, roles, remark, useAmount } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string; useAmount?: number }

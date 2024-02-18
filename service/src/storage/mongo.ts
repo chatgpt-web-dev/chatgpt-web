@@ -29,6 +29,7 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
+// 新增兑换券的数据库
 const redeemCol = client.db(dbName).collection('giftcards')
 
 /**
@@ -40,27 +41,23 @@ const redeemCol = client.db(dbName).collection('giftcards')
  * @returns model
  */
 
-// new functions start
-
+// 获取、比对兑换券号码
 export async function getAmtByCardNo(redeemCardNo: string) {
   // const chatInfo = new ChatInfo(roomId, uuid, text, options)
   const amt_isused = await redeemCol.findOne({ cardno: redeemCardNo.trim() }) as GiftCard
   return amt_isused
 }
-
+// 兑换后更新兑换券信息
 export async function updateGiftCard(redeemCardNo: string, userId: string) {
   return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }
     , { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
 }
-
-// unfinished
+// 使用对话后更新用户额度
 export async function updateAmountMinusOne(userId: string) {
   const result = await userCol.updateOne({ _id: new ObjectId(userId) }
     , { $inc: { useAmount: -1 } })
   return result.modifiedCount > 0
 }
-
-// new functions end
 
 export async function insertChat(uuid: number, text: string, roomId: number, options?: ChatOptions) {
   const chatInfo = new ChatInfo(roomId, uuid, text, options)
@@ -241,7 +238,7 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   }
   await chatCol.updateOne(query, update)
 }
-
+// createUser、updateUserInfo中加入useAmount
 export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
@@ -259,12 +256,11 @@ export async function updateUserInfo(userId: string, user: UserInfo) {
     , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
 }
 
-// new function start
+// 兑换后更新用户对话额度（兑换计算目前在前端完成，将总数报给后端）
 export async function updateUserAmount(userId: string, amt: number) {
   return userCol.updateOne({ _id: new ObjectId(userId) }
     , { $set: { useAmount: amt } })
 }
-// new function end
 
 export async function updateUserChatModel(userId: string, chatModel: string) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
@@ -351,6 +347,7 @@ export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
+// 增加了useAmount信息
 export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }

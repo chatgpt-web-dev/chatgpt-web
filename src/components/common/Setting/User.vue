@@ -70,6 +70,7 @@ const columns = [
     key: 'remark',
     width: 220,
   },
+  // 新增额度信息
   {
     title: 'Amts',
     key: 'useAmount',

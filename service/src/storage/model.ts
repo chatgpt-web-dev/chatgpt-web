@@ -22,7 +22,7 @@ export enum UserRole {
   Tester = 7,
   Partner = 8,
 }
-
+// 新增一个兑换码的类
 export class GiftCard {
   _id: ObjectId
   cardno: string

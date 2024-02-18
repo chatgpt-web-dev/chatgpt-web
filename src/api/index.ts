@@ -117,27 +117,26 @@ export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, descr
   })
 }
 
-// new code
+// 提交用户兑换后额度
 export function fetchUpdateUserAmt<T = any>(useAmount: number) {
   return post<T>({
     url: '/user-updateamtinfo',
     data: { useAmount },
   })
 }
-
+// 获取用户目前额度（因为兑换加总在前端完成，因此先查询一次实际额度）
 export function fetchUserAmt<T = any>() {
   return get<T>({
     url: '/user-getamtinfo',
   })
 }
-
+// 获取兑换码对应的额度
 export function decode_redeemcard<T = any>(redeemCardNo: string) {
   return post<T>({
     url: '/redeem-card',
     data: { redeemCardNo },
   })
 }
-// new code
 
 export function fetchUpdateUserChatModel<T = any>(chatModel: string) {
   return post<T>({
@@ -187,6 +186,7 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   })
 }
 
+// 增加useAmount信息
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
