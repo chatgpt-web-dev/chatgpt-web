@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { fetchResetAdvanced, fetchUpdateAdvanced, fetchUpdateUserInfo } from '../../../api/'
+import { fetchResetAdvanced, fetchUpdateAdvanced, fetchUpdateUserAmt, fetchUpdateUserInfo, fetchUserAmt } from '../../../api/'
 import type { UserInfo, UserState } from './helper'
 import { defaultSetting, getLocalState, setLocalState } from './helper'
 
@@ -11,11 +11,18 @@ export const useUserStore = defineStore('user-store', {
       this.recordState()
       if (update)
         await fetchUpdateUserInfo(userInfo.name ?? '', userInfo.avatar ?? '', userInfo.description ?? '')
+        if (userInfo.useAmount)
+          await fetchUpdateUserAmt(userInfo.useAmount)
     },
     async updateSetting(sync: boolean) {
       await fetchUpdateAdvanced(sync, this.userInfo.advanced)
       this.recordState()
     },
+
+    async readUserAmt() {
+      this.userInfo.useAmount = (await (fetchUserAmt())).data ?? 15
+    },
+
     async resetSetting() {
       await fetchResetAdvanced()
       this.userInfo.advanced = { ...defaultSetting().userInfo.advanced }

@@ -23,6 +23,17 @@ export enum UserRole {
   Partner = 8,
 }
 
+export class GiftCard {
+  _id: ObjectId
+  cardno: string
+  amount: number
+  redeemed: number // boolean
+  constructor(amount: number, redeemed: number) {
+    this.amount = amount
+    this.redeemed = redeemed
+  }
+}
+
 export class UserInfo {
   _id: ObjectId
   name: string
@@ -39,6 +50,7 @@ export class UserInfo {
   remark?: string
   secretKey?: string // 2fa
   advanced?: AdvancedConfig
+  useAmount?: number // chat usage amount
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -49,6 +61,7 @@ export class UserInfo {
     this.updateTime = new Date().toLocaleString()
     this.roles = [UserRole.User]
     this.remark = null
+    this.useAmount = null
   }
 }
 

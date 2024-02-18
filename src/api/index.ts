@@ -117,6 +117,28 @@ export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, descr
   })
 }
 
+// new code
+export function fetchUpdateUserAmt<T = any>(useAmount: number) {
+  return post<T>({
+    url: '/user-updateamtinfo',
+    data: { useAmount },
+  })
+}
+
+export function fetchUserAmt<T = any>() {
+  return get<T>({
+    url: '/user-getamtinfo',
+  })
+}
+
+export function decode_redeemcard<T = any>(redeemCardNo: string) {
+  return post<T>({
+    url: '/redeem-card',
+    data: { redeemCardNo },
+  })
+}
+// new code
+
 export function fetchUpdateUserChatModel<T = any>(chatModel: string) {
   return post<T>({
     url: '/user-chat-model',
@@ -168,7 +190,7 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
-    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark },
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark, useAmount: userInfo.useAmount },
   })
 }
 

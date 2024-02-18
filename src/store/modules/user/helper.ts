@@ -12,6 +12,8 @@ export interface UserInfo {
   config: UserConfig
   roles: UserRole[]
   advanced: SettingsState
+  useAmount?: number // chat usage amount
+  redeemCardNo?: string
 }
 
 export interface UserState {
@@ -40,6 +42,7 @@ export function defaultSetting(): UserState {
         top_p: 1,
         maxContextCount: 20,
       },
+      useAmount: 1,
     },
   }
 }

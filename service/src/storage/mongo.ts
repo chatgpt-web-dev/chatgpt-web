@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import { md5 } from '../utils/security'
-import type { AdvancedConfig, ChatOptions, Config, KeyConfig, UsageResponse } from './model'
+import type { AdvancedConfig, ChatOptions, Config, GiftCard, KeyConfig, UsageResponse } from './model'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 import { getCacheConfig } from './config'
 
@@ -29,6 +29,7 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
+const redeemCol = client.db(dbName).collection('giftcards')
 
 /**
  * 插入聊天信息
@@ -38,6 +39,29 @@ const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
  * @param options
  * @returns model
  */
+
+// new functions start
+
+export async function getAmtByCardNo(redeemCardNo: string) {
+  // const chatInfo = new ChatInfo(roomId, uuid, text, options)
+  const amt_isused = await redeemCol.findOne({ cardno: redeemCardNo.trim() }) as GiftCard
+  return amt_isused
+}
+
+export async function updateGiftCard(redeemCardNo: string, userId: string) {
+  return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }
+    , { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
+}
+
+// unfinished
+export async function updateAmountMinusOne(userId: string) {
+  const result = await userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $inc: { useAmount: -1 } })
+  return result.modifiedCount > 0
+}
+
+// new functions end
+
 export async function insertChat(uuid: number, text: string, roomId: number, options?: ChatOptions) {
   const chatInfo = new ChatInfo(roomId, uuid, text, options)
   await chatCol.insertOne(chatInfo)
@@ -218,21 +242,29 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   await chatCol.updateOne(query, update)
 }
 
-export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string): Promise<UserInfo> {
+export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
   userInfo.roles = roles
   userInfo.remark = remark
+  userInfo.useAmount = useAmount
   await userCol.insertOne(userInfo)
   return userInfo
 }
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar } })
+    , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
 }
+
+// new function start
+export async function updateUserAmount(userId: string, amt: number) {
+  return userCol.updateOne({ _id: new ObjectId(userId) }
+    , { $set: { useAmount: amt } })
+}
+// new function end
 
 export async function updateUserChatModel(userId: string, chatModel: string) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
@@ -319,15 +351,15 @@ export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
-export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string) {
+export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }
   if (user.password !== password && user.password) {
     const newPassword = md5(password)
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark, useAmount } })
   }
   else {
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark, useAmount } })
   }
 }
 
