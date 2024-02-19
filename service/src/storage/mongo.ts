@@ -30,6 +30,14 @@ const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
 // 新增兑换券的数据库
+// {
+//   "_id": { "$comment": "Mongodb系统自动" , "$type": "ObjectId" },
+//   "cardno": { "$comment": "卡号（可以用csv导入）", "$type": "String" },
+//   "amount": { "$comment": "卡号对应的额度", "$type": "Int32" },
+//   "redeemed": { "$comment": "标记是否已被兑换，0｜1表示false｜true，目前类型为Int是为图方便和测试考虑以后识别泄漏啥的（多次被兑换）", "$type": "Int32" },
+//   "redeemed_by": { "$comment": "执行成功兑换的用户", "$type": "String" },
+//   "redeemed_date": { "$comment": "执行成功兑换的日期，考虑通用性选择了String类型，由new Date().toLocaleString()产生", "$type": "String" }
+// }
 const redeemCol = client.db(dbName).collection('giftcards')
 
 /**
