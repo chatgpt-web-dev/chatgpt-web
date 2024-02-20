@@ -38,7 +38,7 @@ const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
 //   "redeemed_by": { "$comment": "执行成功兑换的用户", "$type": "String" },
 //   "redeemed_date": { "$comment": "执行成功兑换的日期，考虑通用性选择了String类型，由new Date().toLocaleString()产生", "$type": "String" }
 // }
-const redeemCol = client.db(dbName).collection('giftcards')
+const redeemCol = client.db(dbName).collection<GiftCard>('giftcards')
 
 /**
  * 插入聊天信息

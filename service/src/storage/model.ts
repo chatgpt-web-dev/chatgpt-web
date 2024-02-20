@@ -28,6 +28,8 @@ export class GiftCard {
   cardno: string
   amount: number
   redeemed: number // boolean
+  redeemed_by: string
+  redeemed_date: string
   constructor(amount: number, redeemed: number) {
     this.amount = amount
     this.redeemed = redeemed
