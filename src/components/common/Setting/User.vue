@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { h, onMounted, reactive, ref } from 'vue'
-import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NTag, useDialog, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NInput, NInputNumber, NModal, NSelect, NSpace, NTag, useDialog, useMessage } from 'naive-ui'
 import { Status, UserInfo, UserRole, userRoleOptions } from './model'
 import { fetchDisableUser2FAByAdmin, fetchGetUsers, fetchUpdateUser, fetchUpdateUserStatus } from '@/api'
 import { t } from '@/locales'
@@ -69,6 +69,12 @@ const columns = [
     title: 'Remark',
     key: 'remark',
     width: 220,
+  },
+  // 新增额度信息
+  {
+    title: 'Amts',
+    key: 'useAmount',
+    width: 80,
   },
   {
     title: 'Action',
@@ -294,6 +300,15 @@ onMounted(async () => {
           <div class="flex-1">
             <NInput
               v-model:value="userRef.remark" type="textarea"
+              :autosize="{ minRows: 1, maxRows: 2 }" placeholder=""
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
+          <div class="flex-1">
+            <NInputNumber
+              v-model:value="userRef.useAmount"
               :autosize="{ minRows: 1, maxRows: 2 }" placeholder=""
             />
           </div>

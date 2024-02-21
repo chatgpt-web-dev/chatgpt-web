@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: '您确定要为此用户禁用两步验证吗？?',
   },
   setting: {
+    redeemCardNo: '兌換碼卡號',
+    useAmount: '可提問次數',
     setting: '設定',
     general: '總覽',
     advanced: '高級',

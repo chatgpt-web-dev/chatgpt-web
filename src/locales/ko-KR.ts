@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
   },
   setting: {
+    redeemCardNo: '질문 허용 횟수',
+    useAmount: '질문 허용 횟수',
     setting: '설정',
     general: '일반',
     advanced: '고급',
