@@ -383,11 +383,16 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   try {
     const config = await getCacheConfig()
     const userId = req.headers.userId.toString()
-    const user = await getUserById(userId)
+    let user = await getUserById(userId)
     // 在调用前判断对话额度是否够用
-    const useAmount = user.useAmount ?? 0
-    // report if useamount is 0
-    if (Number(useAmount) <= 0) {
+    const useAmount = user ? (user.useAmount ?? 0) : 0
+
+    // if use the fixed fakeuserid(some probability of duplicated with real ones), redefine user which is send to chatReplyProcess
+    if (userId === '6406d8c50aedd633885fa16f')
+      user = { _id: userId, roles: [UserRole.User], useAmount: 999, advanced: { maxContextCount: 999 }, limit_switch: false } as UserInfo
+
+    // report if useamount is 0, 6406d8c50aedd633885fa16f is the fakeuserid in nologin situation
+    if (userId !== '6406d8c50aedd633885fa16f' && Number(useAmount) <= 0 && user.limit_switch) {
       res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
       return
     }
@@ -662,6 +667,21 @@ router.post('/session', async (req, res) => {
           value: c.key,
         })
       })
+
+      res.send({
+        status: 'Success',
+        message: '',
+        data: {
+          auth: hasAuth,
+          allowRegister,
+          model: config.apiModel,
+          title: config.siteConfig.siteTitle,
+          chatModels,
+          allChatModels: chatModelOptions,
+          userInfo,
+        },
+      })
+      return
     }
 
     res.send({
@@ -672,7 +692,7 @@ router.post('/session', async (req, res) => {
         allowRegister,
         model: config.apiModel,
         title: config.siteConfig.siteTitle,
-        chatModels,
+        chatModels: chatModelOptions, // if userId is null which means in nologin mode, open all model options, otherwise user can only choose gpt-3.5-turbo
         allChatModels: chatModelOptions,
         userInfo,
       },
@@ -805,7 +825,10 @@ router.get('/user-getamtinfo', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
     const user = await getUserById(userId)
-    res.send({ status: 'Success', message: null, data: user.useAmount })
+    if (user.limit_switch)
+      res.send({ status: 'Success', message: null, data: user.useAmount })
+    else
+      res.send({ status: 'Success', message: null, data: 99999 })
   }
   catch (error) {
     console.error(error)
@@ -881,16 +904,16 @@ router.post('/user-status', rootAuth, async (req, res) => {
   }
 })
 
-// 函数中加入useAmount
+// 函数中加入useAmount limit_switch
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
-    const { userId, email, password, roles, remark, useAmount } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string; useAmount?: number }
+    const { userId, email, password, roles, remark, useAmount, limit_switch } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string; useAmount?: number; limit_switch?: boolean }
     if (userId) {
-      await updateUser(userId, roles, password, remark, Number(useAmount))
+      await updateUser(userId, roles, password, remark, Number(useAmount), limit_switch)
     }
     else {
       const newPassword = md5(password)
-      const user = await createUser(email, newPassword, roles, remark, Number(useAmount))
+      const user = await createUser(email, newPassword, roles, remark, Number(useAmount), limit_switch)
       await updateUserStatus(user._id.toString(), Status.Normal)
     }
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })

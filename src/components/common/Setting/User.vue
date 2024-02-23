@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { h, onMounted, reactive, ref } from 'vue'
-import { NButton, NDataTable, NInput, NInputNumber, NModal, NSelect, NSpace, NTag, useDialog, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NInput, NInputNumber, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
 import { Status, UserInfo, UserRole, userRoleOptions } from './model'
 import { fetchDisableUser2FAByAdmin, fetchGetUsers, fetchUpdateUser, fetchUpdateUserStatus } from '@/api'
 import { t } from '@/locales'
@@ -21,23 +21,32 @@ const columns = [
     key: 'email',
     resizable: true,
     width: 200,
-    minWidth: 100,
+    minWidth: 80,
     maxWidth: 200,
   },
   {
     title: 'Register Time',
     key: 'createTime',
+    resizable: true,
     width: 200,
+    minWidth: 80,
+    maxWidth: 200,
   },
   {
     title: 'Verify Time',
     key: 'verifyTime',
+    resizable: true,
     width: 200,
+    minWidth: 80,
+    maxWidth: 200,
   },
   {
     title: 'Roles',
     key: 'status',
+    resizable: true,
     width: 200,
+    minWidth: 80,
+    maxWidth: 200,
     render(row: any) {
       const roles = row.roles.map((role: UserRole) => {
         return h(
@@ -68,13 +77,35 @@ const columns = [
   {
     title: 'Remark',
     key: 'remark',
-    width: 220,
+    resizable: true,
+    width: 200,
+    minWidth: 80,
+    maxWidth: 200,
   },
   // 新增额度信息
   {
     title: 'Amts',
     key: 'useAmount',
+    resizable: true,
     width: 80,
+    minWidth: 30,
+    maxWidth: 100,
+  },
+  // switch off amt limit
+  {
+    title: 'limit switch',
+    key: 'limit_switch',
+    resizable: true,
+    width: 80,
+    minWidth: 30,
+    maxWidth: 100,
+    render(row: any) {
+        return h(NSwitch, {
+        defaultValue: row.limit_switch,
+        round: false,
+        disabled: true,
+      })
+    },
   },
   {
     title: 'Action',
@@ -310,6 +341,16 @@ onMounted(async () => {
             <NInputNumber
               v-model:value="userRef.useAmount"
               :autosize="{ minRows: 1, maxRows: 2 }" placeholder=""
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.limit_switch') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              v-model:value="userRef.limit_switch"
+              :round="false"
+              @update:value="(val) => { if (userRef) userRef.limit_switch = val }"
             />
           </div>
         </div>
