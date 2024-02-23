@@ -74,11 +74,11 @@ function handleShowPrompt() {
             <IconPrompt class="w-[20px] m-auto" />
           </span>
         </HoverButton>
-        <HoverButton :tooltip="usingContext ? '点击停止包含上下文' : '点击开启包含上下文'" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="toggleUsingContext">
+        <HoverButton :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="toggleUsingContext">
           <span class="text-xl">
             <SvgIcon icon="ri:chat-history-line" />
           </span>
-          <span style="margin-left:.25em">{{ usingContext ? '包含上下文' : '不含上下文' }}</span>
+          <span style="margin-left:.25em">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
         </HoverButton>
         <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">

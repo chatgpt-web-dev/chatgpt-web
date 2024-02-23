@@ -588,6 +588,10 @@ async function handleSyncChatModel(chatModel: string) {
   await chatStore.setChatModel(chatModel, +uuid)
 }
 
+function formatTooltip(value: number) {
+  return `${t('setting.maxContextCount')}: ${value}`
+}
+
 onMounted(() => {
   firstLoading.value = true
   handleSyncChat()
@@ -681,7 +685,7 @@ onUnmounted(() => {
                 <IconPrompt class="w-[20px] m-auto" />
               </span>
             </HoverButton>
-            <HoverButton v-if="!isMobile" :tooltip="usingContext ? '点击停止包含上下文' : '点击开启包含上下文'" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="handleToggleUsingContext">
+            <HoverButton v-if="!isMobile" :tooltip="usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="handleToggleUsingContext">
               <span class="text-xl">
                 <SvgIcon icon="ri:chat-history-line" />
               </span>
@@ -694,7 +698,7 @@ onUnmounted(() => {
               :disabled="!!authStore.session?.auth && !authStore.token"
               @update-value="(val) => handleSyncChatModel(val)"
             />
-            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" @update:value="() => { userStore.updateSetting(false) }" />
+            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
           </div>
           <div class="flex items-center justify-between space-x-2">
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">

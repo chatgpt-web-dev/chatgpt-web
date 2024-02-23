@@ -107,6 +107,12 @@ const columns = [
       })
     },
   },
+  // 新增额度信息
+  {
+    title: 'Amts',
+    key: 'useAmount',
+    width: 80,
+  },
   {
     title: 'Action',
     key: '_id',

@@ -246,6 +246,7 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   }
   await chatCol.updateOne(query, update)
 }
+
 // createUser、updateUserInfo中加入useAmount limit_switch
 export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
@@ -355,6 +356,7 @@ export async function verifyUser(email: string, status: Status) {
 export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
+
 
 // 增加了useAmount信息 and limit_switch
 export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number, limit_switch?: boolean) {
