@@ -15,7 +15,7 @@ import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/con
 import { sendResponse } from '../utils'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
-import { getChatByMessageId, updateAmountMinusOne, updateRoomAccountId } from '../storage/mongo'
+import { getChatByMessageId, updateRoomAccountId } from '../storage/mongo'
 import type { RequestOptions } from './types'
 
 const { HttpsProxyAgent } = httpsProxyAgent
@@ -159,8 +159,6 @@ async function chatReplyProcess(options: RequestOptions) {
         process?.(partialResponse)
       },
     })
-    // update personal useAmount
-    await updateAmountMinusOne(userId)
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {

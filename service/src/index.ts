@@ -33,6 +33,7 @@ import {
   insertChat,
   insertChatUsage,
   renameChatRoom,
+  updateAmountMinusOne,
   updateApiKeyStatus,
   updateChat,
   updateConfig,
@@ -380,10 +381,10 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let lastResponse
   let result
   let message: ChatInfo
+  let user = await getUserById(userId)
   try {
     const config = await getCacheConfig()
     const userId = req.headers.userId.toString()
-    let user = await getUserById(userId)
     // 在调用前判断对话额度是否够用
     const useAmount = user ? (user.useAmount ?? 0) : 0
 
@@ -493,6 +494,10 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
           result.data.id,
           result.data.detail?.usage as UsageResponse)
       }
+      // update personal useAmount moved here
+      // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
+      if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
+        await updateAmountMinusOne(userId)
     }
     catch (error) {
       globalThis.console.error(error)
