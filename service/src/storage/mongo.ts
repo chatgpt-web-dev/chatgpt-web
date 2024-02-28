@@ -3,7 +3,7 @@ import { MongoClient, ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import { md5 } from '../utils/security'
-import type { AdvancedConfig, ChatOptions, Config, GiftCard, KeyConfig, UsageResponse } from './model'
+import type { AdvancedConfig, ChatOptions, Config, KeyConfig, UsageResponse } from './model'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 import { getCacheConfig } from './config'
 
@@ -29,16 +29,6 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
-// 新增兑换券的数据库
-// {
-//   "_id": { "$comment": "Mongodb系统自动" , "$type": "ObjectId" },
-//   "cardno": { "$comment": "卡号（可以用csv导入）", "$type": "String" },
-//   "amount": { "$comment": "卡号对应的额度", "$type": "Int32" },
-//   "redeemed": { "$comment": "标记是否已被兑换，0｜1表示false｜true，目前类型为Int是为图方便和测试考虑以后识别泄漏啥的（多次被兑换）", "$type": "Int32" },
-//   "redeemed_by": { "$comment": "执行成功兑换的用户", "$type": "String" },
-//   "redeemed_date": { "$comment": "执行成功兑换的日期，考虑通用性选择了String类型，由new Date().toLocaleString()产生", "$type": "String" }
-// }
-const redeemCol = client.db(dbName).collection<GiftCard>('giftcards')
 
 /**
  * 插入聊天信息
@@ -48,25 +38,6 @@ const redeemCol = client.db(dbName).collection<GiftCard>('giftcards')
  * @param options
  * @returns model
  */
-
-// 获取、比对兑换券号码
-export async function getAmtByCardNo(redeemCardNo: string) {
-  // const chatInfo = new ChatInfo(roomId, uuid, text, options)
-  const amt_isused = await redeemCol.findOne({ cardno: redeemCardNo.trim() }) as GiftCard
-  return amt_isused
-}
-// 兑换后更新兑换券信息
-export async function updateGiftCard(redeemCardNo: string, userId: string) {
-  return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }
-    , { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
-}
-// 使用对话后更新用户额度
-export async function updateAmountMinusOne(userId: string) {
-  const result = await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $inc: { useAmount: -1 } })
-  return result.modifiedCount > 0
-}
-
 export async function insertChat(uuid: number, text: string, roomId: number, options?: ChatOptions) {
   const chatInfo = new ChatInfo(roomId, uuid, text, options)
   await chatCol.insertOne(chatInfo)
@@ -246,28 +217,21 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   }
   await chatCol.updateOne(query, update)
 }
-// createUser、updateUserInfo中加入useAmount
-export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number): Promise<UserInfo> {
+
+export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
   userInfo.roles = roles
   userInfo.remark = remark
-  userInfo.useAmount = useAmount
   await userCol.insertOne(userInfo)
   return userInfo
 }
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
-}
-
-// 兑换后更新用户对话额度（兑换计算目前在前端完成，将总数报给后端）
-export async function updateUserAmount(userId: string, amt: number) {
-  return userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { useAmount: amt } })
+    , { $set: { name: user.name, description: user.description, avatar: user.avatar } })
 }
 
 export async function updateUserChatModel(userId: string, chatModel: string) {
@@ -355,16 +319,15 @@ export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
-// 增加了useAmount信息
-export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number) {
+export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }
   if (user.password !== password && user.password) {
     const newPassword = md5(password)
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark, useAmount } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark } })
   }
   else {
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark, useAmount } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark } })
   }
 }
 

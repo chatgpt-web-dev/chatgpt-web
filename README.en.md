@@ -23,8 +23,6 @@
 
 [✓] Random Key
 
-[✓] Conversation round limit & setting different limits by user & giftcards
-
 </br>
 
 ## Screenshots
@@ -37,9 +35,6 @@
 ![cover3](./docs/prompt_en.jpg)
 ![cover3](./docs/user-manager.jpg)
 ![cover3](./docs/key-manager-en.jpg)
-![userlimit](./docs/add_redeem_and_limit.png)
-![setmanuallimit](./docs/manual_set_limit.png)
-![giftcarddb](./docs/giftcard_db_design.png)
 
 - [ChatGPT Web](#chatgpt-web)
 	- [Introduction](#introduction)

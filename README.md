@@ -22,8 +22,6 @@
 [✓] 用户管理
 
 [✓] 多 Key 随机
-
-[✓] 对话数量限制 & 设置不同用户对话数量 & 兑换数量
 </br>
 
 ## 截图
@@ -36,9 +34,6 @@
 ![cover3](./docs/prompt.jpg)
 ![cover3](./docs/user-manager.jpg)
 ![cover3](./docs/key-manager.jpg)
-![userlimit](./docs/add_redeem_and_limit.png)
-![setmanuallimit](./docs/manual_set_limit.png)
-![giftcarddb](./docs/giftcard_db_design.png)
 
 - [ChatGPT Web](#chatgpt-web)
 	- [介绍](#介绍)

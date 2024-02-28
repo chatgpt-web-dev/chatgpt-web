@@ -80,8 +80,6 @@ export default {
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
   },
   setting: {
-    redeemCardNo: 'Redeem CardNo',
-    useAmount: 'No. of questions',
     setting: 'Setting',
     general: 'General',
     advanced: 'Advanced',

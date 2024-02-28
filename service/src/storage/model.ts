@@ -22,19 +22,6 @@ export enum UserRole {
   Tester = 7,
   Partner = 8,
 }
-// 新增一个兑换码的类
-export class GiftCard {
-  _id: ObjectId
-  cardno: string
-  amount: number
-  redeemed: number // boolean
-  redeemed_by: string
-  redeemed_date: string
-  constructor(amount: number, redeemed: number) {
-    this.amount = amount
-    this.redeemed = redeemed
-  }
-}
 
 export class UserInfo {
   _id: ObjectId
@@ -52,7 +39,6 @@ export class UserInfo {
   remark?: string
   secretKey?: string // 2fa
   advanced?: AdvancedConfig
-  useAmount?: number // chat usage amount
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -63,7 +49,6 @@ export class UserInfo {
     this.updateTime = new Date().toLocaleString()
     this.roles = [UserRole.User]
     this.remark = null
-    this.useAmount = null
   }
 }
 

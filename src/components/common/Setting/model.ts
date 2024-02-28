@@ -126,8 +126,6 @@ export class UserInfo {
   password?: string
   roles: UserRole[]
   remark?: string
-  useAmount?: number
-  // 配合改造，增加额度信息
   constructor(roles: UserRole[]) {
     this.roles = roles
   }

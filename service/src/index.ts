@@ -21,7 +21,6 @@ import {
   deleteChatRoom,
   disableUser2FA,
   existsChatRoom,
-  getAmtByCardNo,
   getChat,
   getChatRoom,
   getChatRooms,
@@ -36,14 +35,12 @@ import {
   updateApiKeyStatus,
   updateChat,
   updateConfig,
-  updateGiftCard,
   updateRoomChatModel,
   updateRoomPrompt,
   updateRoomUsingContext,
   updateUser,
   updateUser2FA,
   updateUserAdvancedConfig,
-  updateUserAmount,
   updateUserChatModel,
   updateUserInfo,
   updateUserPassword,
@@ -384,14 +381,6 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     const config = await getCacheConfig()
     const userId = req.headers.userId.toString()
     const user = await getUserById(userId)
-    // 在调用前判断对话额度是否够用
-    const useAmount = user.useAmount ?? 0
-    // report if useamount is 0
-    if (Number(useAmount) <= 0) {
-      res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
-      return
-    }
-
     if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
       if (!user.roles.includes(UserRole.Admin) && await containsSensitiveWords(config.auditConfig, prompt)) {
         res.send({ status: 'Fail', message: '含有敏感词 | Contains sensitive words', data: null })
@@ -783,62 +772,6 @@ router.post('/user-info', auth, async (req, res) => {
   }
 })
 
-// 使用兑换码后更新用户用量
-router.post('/user-updateamtinfo', auth, async (req, res) => {
-  try {
-    const { useAmount } = req.body as { useAmount: number }
-    const userId = req.headers.userId.toString()
-
-    const user = await getUserById(userId)
-    if (user == null || user.status !== Status.Normal)
-      throw new Error('用户不存在 | User does not exist.')
-    await updateUserAmount(userId, useAmount)
-    res.send({ status: 'Success', message: '更新用量成功 | Update Amount successfully' })
-  }
-  catch (error) {
-    res.send({ status: 'Fail', message: error.message, data: null })
-  }
-})
-
-// 获取用户对话额度
-router.get('/user-getamtinfo', auth, async (req, res) => {
-  try {
-    const userId = req.headers.userId as string
-    const user = await getUserById(userId)
-    res.send({ status: 'Success', message: null, data: user.useAmount })
-  }
-  catch (error) {
-    console.error(error)
-    res.send({ status: 'Fail', message: 'Read Amount Error', data: 0 })
-  }
-})
-// 兑换对话额度
-router.post('/redeem-card', auth, async (req, res) => {
-  try {
-    const { redeemCardNo } = req.body as { redeemCardNo: string }
-    const userId = req.headers.userId.toString()
-    const user = await getUserById(userId)
-
-    if (user == null || user.status !== Status.Normal)
-      throw new Error('用户不存在 | User does not exist.')
-
-    const amt_isused = await getAmtByCardNo(redeemCardNo)
-    if (amt_isused) {
-      if (amt_isused.redeemed === 1)
-        throw new Error('该兑换码已被使用过 | RedeemCode been redeemed.')
-      await updateGiftCard(redeemCardNo, userId)
-      const data = amt_isused.amount
-      res.send({ status: 'Success', message: '兑换成功 | Redeem successfully', data })
-    }
-    else {
-      throw new Error('该兑换码无效，请检查是否输错 | RedeemCode not exist or Misspelled.')
-    }
-  }
-  catch (error) {
-    res.send({ status: 'Fail', message: error.message, data: null })
-  }
-})
-
 router.post('/user-chat-model', auth, async (req, res) => {
   try {
     const { chatModel } = req.body as { chatModel: string }
@@ -881,16 +814,15 @@ router.post('/user-status', rootAuth, async (req, res) => {
   }
 })
 
-// 函数中加入useAmount
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
-    const { userId, email, password, roles, remark, useAmount } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string; useAmount?: number }
+    const { userId, email, password, roles, remark } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string }
     if (userId) {
-      await updateUser(userId, roles, password, remark, Number(useAmount))
+      await updateUser(userId, roles, password, remark)
     }
     else {
       const newPassword = md5(password)
-      const user = await createUser(email, newPassword, roles, remark, Number(useAmount))
+      const user = await createUser(email, newPassword, roles, remark)
       await updateUserStatus(user._id.toString(), Status.Normal)
     }
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
