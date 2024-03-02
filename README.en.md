@@ -215,13 +215,16 @@ pnpm dev
 #### Docker Build & Run
 
 ```bash
-docker build -t chatgpt-web .
+GIT_COMMIT_HASH=`git rev-parse HEAD`
+RELEASE_VERSION=`git branch --show-current`
+docker build --build-arg GIT_COMMIT_HASH=${GIT_COMMIT_HASH} --build-arg RELEASE_VERSION=${RELEASE_VERSION} -t chatgpt-web .
 
 # foreground operation
-docker run --name chatgpt-web --rm -it -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key chatgpt-web
+# If run mongodb in host machine, please use MONGODB_URL=mongodb://host.docker.internal:27017/chatgpt
+docker run --name chatgpt-web --rm -it -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key --env MONGODB_URL=your_mongodb_url chatgpt-web
 
 # background operation
-docker run --name chatgpt-web -d -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key chatgpt-web
+docker run --name chatgpt-web -d -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key --env MONGODB_URL=your_mongodb_url chatgpt-web
 
 # running address
 http://localhost:3002/
