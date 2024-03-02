@@ -53,6 +53,7 @@ export class UserInfo {
   secretKey?: string // 2fa
   advanced?: AdvancedConfig
   useAmount?: number // chat usage amount
+  limit_switch?: boolean // chat amount limit switch
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -64,6 +65,7 @@ export class UserInfo {
     this.roles = [UserRole.User]
     this.remark = null
     this.useAmount = null
+    this.limit_switch = true
   }
 }
 

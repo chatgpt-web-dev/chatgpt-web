@@ -32,6 +32,9 @@ async function auth(req, res, next) {
 async function getUserId(req: Request): Promise<string | undefined> {
   let token: string
   try {
+    // no Authorization info is received withput login
+    if (!(req.header('Authorization') as string))
+      return null // '6406d8c50aedd633885fa16f'
     token = req.header('Authorization').replace('Bearer ', '')
     const config = await getCacheConfig()
     const info = jwt.verify(token, config.siteConfig.loginSalt.trim()) as AuthJwtPayload

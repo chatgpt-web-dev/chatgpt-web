@@ -186,11 +186,11 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   })
 }
 
-// 增加useAmount信息
+// 增加useAmount信息 limit_switch
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
-    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark, useAmount: userInfo.useAmount },
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark, useAmount: userInfo.useAmount, limit_switch: userInfo.limit_switch },
   })
 }
 

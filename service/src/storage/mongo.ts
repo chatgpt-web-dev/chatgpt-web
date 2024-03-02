@@ -246,8 +246,9 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   }
   await chatCol.updateOne(query, update)
 }
-// createUser、updateUserInfo中加入useAmount
-export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number): Promise<UserInfo> {
+
+// createUser、updateUserInfo中加入useAmount limit_switch
+export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
@@ -255,6 +256,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
   userInfo.roles = roles
   userInfo.remark = remark
   userInfo.useAmount = useAmount
+  userInfo.limit_switch = limit_switch
   await userCol.insertOne(userInfo)
   return userInfo
 }
@@ -355,16 +357,16 @@ export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
-// 增加了useAmount信息
-export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number) {
+// 增加了useAmount信息 and limit_switch
+export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number, limit_switch?: boolean) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }
   if (user.password !== password && user.password) {
     const newPassword = md5(password)
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark, useAmount } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), password: newPassword, remark, useAmount, limit_switch } })
   }
   else {
-    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark, useAmount } })
+    await userCol.updateOne(query, { $set: { roles, verifyTime: new Date().toLocaleString(), remark, useAmount, limit_switch } })
   }
 }
 

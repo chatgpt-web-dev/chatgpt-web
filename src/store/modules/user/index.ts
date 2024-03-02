@@ -9,11 +9,12 @@ export const useUserStore = defineStore('user-store', {
     async updateUserInfo(update: boolean, userInfo: Partial<UserInfo>) {
       this.userInfo = { ...this.userInfo, ...userInfo }
       this.recordState()
-      if (update)
+      if (update) {
         await fetchUpdateUserInfo(userInfo.name ?? '', userInfo.avatar ?? '', userInfo.description ?? '')
         // 更新用户信息和额度写一起了，如果传了额度则更新
         if (userInfo.useAmount)
           await fetchUpdateUserAmt(userInfo.useAmount)
+      }
     },
     async updateSetting(sync: boolean) {
       await fetchUpdateAdvanced(sync, this.userInfo.advanced)
