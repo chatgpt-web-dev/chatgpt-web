@@ -1,5 +1,5 @@
 # build front-end
-FROM node:lts-alpine AS frontend
+FROM node:20-alpine AS frontend
 
 ARG GIT_COMMIT_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ARG RELEASE_VERSION=v0.0.0
@@ -22,7 +22,7 @@ COPY . /app
 RUN pnpm run build
 
 # build backend
-FROM node:lts-alpine as backend
+FROM node:20-alpine as backend
 
 RUN npm install pnpm -g
 
@@ -39,7 +39,7 @@ COPY /service /app
 RUN pnpm build
 
 # service
-FROM node:lts-alpine
+FROM node:20-alpine
 
 RUN npm install pnpm -g
 
