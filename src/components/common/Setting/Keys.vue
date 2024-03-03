@@ -93,6 +93,7 @@ const columns = [
     title: 'Action',
     key: '_id',
     width: 220,
+    fixed: 'right',
     render(row: KeyConfig) {
       const actions: any[] = []
       actions.push(h(

@@ -96,7 +96,7 @@ const columns = [
     title: 'limit switch',
     key: 'limit_switch',
     resizable: true,
-    width: 80,
+    width: 100,
     minWidth: 30,
     maxWidth: 100,
     render(row: any) {
@@ -117,6 +117,7 @@ const columns = [
     title: 'Action',
     key: '_id',
     width: 220,
+    fixed: 'right',
     render(row: any) {
       const actions: any[] = []
       actions.push(h(
@@ -290,7 +291,7 @@ onMounted(async () => {
           :pagination="pagination"
           :max-height="444"
           striped
-          :scroll-x="1260"
+          :scroll-x="1800"
           @update:page="handleGetUsers"
         />
       </NSpace>

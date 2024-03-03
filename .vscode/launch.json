@@ -15,7 +15,7 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Service Server",
-      "runtimeExecutable": "${workspaceFolder}/service/node_modules/.bin/esno",
+      "runtimeExecutable": "${workspaceFolder}/service/node_modules/.bin/tsx",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/service/src/index.ts",
       "outFiles": ["${workspaceFolder}/service/**/*.js"],
