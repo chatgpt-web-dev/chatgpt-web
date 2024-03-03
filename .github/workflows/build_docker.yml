@@ -38,6 +38,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:${{ github.ref_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:latest
+            chatgptweb/chatgpt-web:${{ github.ref_name }}
+            chatgptweb/chatgpt-web:latest
           build-args: |
             GIT_COMMIT_HASH=${{ github.sha }}
             RELEASE_VERSION=${{ github.ref_name }}
