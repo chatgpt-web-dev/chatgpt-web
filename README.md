@@ -1,10 +1,7 @@
 # ChatGPT Web
 
-<div style="font-size: 1.5rem;">
-  <a href="./README.md">中文</a> |
-  <a href="./README.en.md">English</a>
-</div>
-</br>
+[中文](./README.md) | [English](./README.en.md)
+
 
 ## 说明
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), 新增了部分特色功能:**
