@@ -5,10 +5,10 @@
 
 ## 说明
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
 > 
-> 由于原项目作者不愿意引入对数据库的依赖 故制作该 Hard Fork 独立开发 [详见讨论](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
+> 由于原项目作者不愿意引入对数据库的依赖 故制作该永久分叉独立开发 [详见讨论](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
 > 
 > 再次感谢 [Chanzhaoyu](https://github.com/Chanzhaoyu) 大佬对开源的贡献 🙏
 
@@ -29,7 +29,7 @@
 [✓] 多 Key 随机
 
 [✓] 对话数量限制 & 设置不同用户对话数量 & 兑换数量
-</br>
+
 
 > [!CAUTION]
 > 声明：此项目只发布于 Github，基于 MIT 协议，免费且作为开源学习使用。并且不会有任何形式的卖号、付费服务、讨论群、讨论组等行为。谨防受骗。
@@ -399,4 +399,4 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
 </div>
 
 ## License
-MIT © [Kerwin1202](./license)
+[MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)

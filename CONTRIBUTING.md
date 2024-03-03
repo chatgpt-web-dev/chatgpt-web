@@ -46,4 +46,4 @@ Commit messages 请遵循[conventional-changelog 标准](https://www.conventiona
 
 ## License
 
-[MIT](./license)
+[MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)
