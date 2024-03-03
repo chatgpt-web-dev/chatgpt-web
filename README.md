@@ -236,14 +236,14 @@ http://localhost:3002/
 
 #### Docker compose
 
-[Hub 地址](https://hub.docker.com/repository/docker/kerwin1202/chatgpt-web/general)
+[Hub 地址](https://hub.docker.com/r/chatgptweb/chatgpt-web)
 
 ```yml
 version: '3'
 
 services:
   app:
-    image: kerwin1202/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
+    image: chatgptweb/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
     container_name: chatgptweb
     restart: unless-stopped
     ports:
