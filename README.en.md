@@ -4,7 +4,15 @@
 
 
 ## Introduction
-> **This project is forked from [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web), some unique features have been added:**
+
+> [!IMPORTANT]
+> **This project is forked from [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
+> 
+> As the original project author does not agree to introduce a dependency on the database, this Hard Fork was created for independent development [discussion for details](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
+> 
+> Thank you again, the great [Chanzhaoyu](https://github.com/Chanzhaoyu), for your contributions to the open-source project 🙏
+
+Some unique features have been added:
 
 [✓] Register & Login & Reset Password & 2FA
 
@@ -22,7 +30,9 @@
 
 [✓] Conversation round limit & setting different limits by user & giftcards
 
-</br>
+
+> [!CAUTION]
+> This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
 
 ## Screenshots
 > Disclaimer: This project is only released on GitHub, under the MIT License, free and for open-source learning purposes. There will be no account selling, paid services, discussion groups, or forums. Beware of fraud.
@@ -349,13 +359,21 @@ Please read the [Contributing Guidelines](./CONTRIBUTING.en.md) before contribut
 
 Thanks to all the contributors!
 
-<a href="https://github.com/Chanzhaoyu/chatgpt-web/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Chanzhaoyu/chatgpt-web" />
+<a href="https://github.com/chatgpt-web-dev/chatgpt-web/graphs/contributors">
+  <img alt="Contributors Image" src="https://contrib.rocks/image?repo=chatgpt-web-dev/chatgpt-web" width="550" />
 </a>
+
+## Star History
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date&theme=dark" />
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date" />
+  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=chatgpt-web-dev/chatgpt-web&type=Date" width="550" />
+</picture>
 
 ## Sponsorship
 
 If you find this project helpful, please give me a star.
 
 ## License
-MIT © [Kerwin1202](./license)
+[MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)
