@@ -1,10 +1,7 @@
 # ChatGPT Web
 
-<div style="font-size: 1.5rem;">
-  <a href="./README.md">中文</a> |
-  <a href="./README.en.md">English</a>
-</div>
-</br>
+[中文](./README.md) | [English](./README.en.md)
+
 
 ## 说明
 
@@ -30,6 +27,8 @@
 [✓] 用户管理
 
 [✓] 多 Key 随机
+
+[✓] 对话数量限制 & 设置不同用户对话数量 & 兑换数量
 </br>
 
 > [!CAUTION]
@@ -44,6 +43,9 @@
 ![cover3](./docs/prompt.jpg)
 ![cover3](./docs/user-manager.jpg)
 ![cover3](./docs/key-manager.jpg)
+![userlimit](./docs/add_redeem_and_limit.png)
+![setmanuallimit](./docs/manual_set_limit.png)
+![giftcarddb](./docs/giftcard_db_design.png)
 
 - [ChatGPT Web](#chatgpt-web)
 	- [介绍](#介绍)
@@ -224,13 +226,16 @@ pnpm dev
 #### Docker build & Run
 
 ```bash
-docker build -t chatgpt-web .
+GIT_COMMIT_HASH=`git rev-parse HEAD`
+RELEASE_VERSION=`git branch --show-current`
+docker build --build-arg GIT_COMMIT_HASH=${GIT_COMMIT_HASH} --build-arg RELEASE_VERSION=${RELEASE_VERSION} -t chatgpt-web .
 
 # 前台运行
-docker run --name chatgpt-web --rm -it -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key chatgpt-web
+# 如果在宿主机运行 mongodb 则使用 MONGODB_URL=mongodb://host.docker.internal:27017/chatgpt
+docker run --name chatgpt-web --rm -it -p 3002:3002 --env OPENAI_API_KEY=your_api_key --env MONGODB_URL=your_mongodb_url chatgpt-web
 
 # 后台运行
-docker run --name chatgpt-web -d -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key chatgpt-web
+docker run --name chatgpt-web -d -p 127.0.0.1:3002:3002 --env OPENAI_API_KEY=your_api_key --env MONGODB_URL=your_mongodb_url chatgpt-web
 
 # 运行地址
 http://localhost:3002/
@@ -238,14 +243,14 @@ http://localhost:3002/
 
 #### Docker compose
 
-[Hub 地址](https://hub.docker.com/repository/docker/kerwin1202/chatgpt-web/general)
+[Hub 地址](https://hub.docker.com/r/chatgptweb/chatgpt-web)
 
 ```yml
 version: '3'
 
 services:
   app:
-    image: kerwin1202/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
+    image: chatgptweb/chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
     container_name: chatgptweb
     restart: unless-stopped
     ports:
