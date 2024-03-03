@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { DataTableColumns } from 'naive-ui'
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NInputNumber, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
 import { Status, UserInfo, UserRole, userRoleOptions } from './model'
@@ -15,163 +16,169 @@ const handleSaving = ref(false)
 const userRef = ref(new UserInfo([UserRole.User]))
 
 const users = ref([])
-const columns = [
-  {
-    title: 'Email',
-    key: 'email',
-    resizable: true,
-    width: 200,
-    minWidth: 80,
-    maxWidth: 200,
-  },
-  {
-    title: 'Register Time',
-    key: 'createTime',
-    resizable: true,
-    width: 200,
-    minWidth: 80,
-    maxWidth: 200,
-  },
-  {
-    title: 'Verify Time',
-    key: 'verifyTime',
-    resizable: true,
-    width: 200,
-    minWidth: 80,
-    maxWidth: 200,
-  },
-  {
-    title: 'Roles',
-    key: 'status',
-    resizable: true,
-    width: 200,
-    minWidth: 80,
-    maxWidth: 200,
-    render(row: any) {
-      const roles = row.roles.map((role: UserRole) => {
-        return h(
-          NTag,
+
+const createColumns = (): DataTableColumns => {
+  return [
+    {
+      title: 'Email',
+      key: 'email',
+      resizable: true,
+      width: 200,
+      minWidth: 80,
+      maxWidth: 200,
+    },
+    {
+      title: 'Register Time',
+      key: 'createTime',
+      resizable: true,
+      width: 200,
+      minWidth: 80,
+      maxWidth: 200,
+    },
+    {
+      title: 'Verify Time',
+      key: 'verifyTime',
+      resizable: true,
+      width: 200,
+      minWidth: 80,
+      maxWidth: 200,
+    },
+    {
+      title: 'Roles',
+      key: 'status',
+      resizable: true,
+      width: 200,
+      minWidth: 80,
+      maxWidth: 200,
+      render(row: any) {
+        const roles = row.roles.map((role: UserRole) => {
+          return h(
+            NTag,
+            {
+              style: {
+                marginRight: '6px',
+              },
+              type: 'info',
+              bordered: false,
+            },
+            {
+              default: () => UserRole[role],
+            },
+          )
+        })
+        return roles
+      },
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      width: 80,
+      render(row: any) {
+        return Status[row.status]
+      },
+    },
+    {
+      title: 'Remark',
+      key: 'remark',
+      resizable: true,
+      width: 200,
+      minWidth: 80,
+      maxWidth: 200,
+    },
+    // 新增额度信息
+    {
+      title: 'Amts',
+      key: 'useAmount',
+      resizable: true,
+      width: 80,
+      minWidth: 30,
+      maxWidth: 100,
+    },
+    // switch off amt limit
+    {
+      title: 'limit switch',
+      key: 'limit_switch',
+      resizable: true,
+      width: 100,
+      minWidth: 30,
+      maxWidth: 100,
+      render(row: any) {
+          return h(NSwitch, {
+          defaultValue: row.limit_switch,
+          round: false,
+          disabled: true,
+        })
+      },
+    },
+    // 新增额度信息
+    {
+      title: 'Amts',
+      key: 'useAmount',
+      width: 80,
+    },
+    {
+      title: 'Action',
+      key: '_id',
+      width: 220,
+      fixed: 'right',
+      render(row: any) {
+        const actions: any[] = []
+        actions.push(h(
+          NButton,
           {
+            size: 'small',
+            type: 'error',
             style: {
               marginRight: '6px',
             },
-            type: 'info',
-            bordered: false,
+            onClick: () => handleUpdateUserStatus(row._id, Status.Deleted),
           },
-          {
-            default: () => UserRole[role],
-          },
-        )
-      })
-      return roles
-    },
-  },
-  {
-    title: 'Status',
-    key: 'status',
-    width: 80,
-    render(row: any) {
-      return Status[row.status]
-    },
-  },
-  {
-    title: 'Remark',
-    key: 'remark',
-    resizable: true,
-    width: 200,
-    minWidth: 80,
-    maxWidth: 200,
-  },
-  // 新增额度信息
-  {
-    title: 'Amts',
-    key: 'useAmount',
-    resizable: true,
-    width: 80,
-    minWidth: 30,
-    maxWidth: 100,
-  },
-  // switch off amt limit
-  {
-    title: 'limit switch',
-    key: 'limit_switch',
-    resizable: true,
-    width: 100,
-    minWidth: 30,
-    maxWidth: 100,
-    render(row: any) {
-        return h(NSwitch, {
-        defaultValue: row.limit_switch,
-        round: false,
-        disabled: true,
-      })
-    },
-  },
-  // 新增额度信息
-  {
-    title: 'Amts',
-    key: 'useAmount',
-    width: 80,
-  },
-  {
-    title: 'Action',
-    key: '_id',
-    width: 220,
-    fixed: 'right',
-    render(row: any) {
-      const actions: any[] = []
-      actions.push(h(
-        NButton,
-        {
-          size: 'small',
-          type: 'error',
-          style: {
-            marginRight: '6px',
-          },
-          onClick: () => handleUpdateUserStatus(row._id, Status.Deleted),
-        },
-        { default: () => t('common.delete') },
-      ))
-      if (row.status === Status.Normal) {
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            type: 'primary',
-            style: {
-              marginRight: '8px',
+          { default: () => t('common.delete') },
+        ))
+        if (row.status === Status.Normal) {
+          actions.push(h(
+            NButton,
+            {
+              size: 'small',
+              type: 'primary',
+              style: {
+                marginRight: '8px',
+              },
+              onClick: () => handleEditUser(row),
             },
-            onClick: () => handleEditUser(row),
-          },
-          { default: () => t('chat.editUser') },
-        ))
-      }
-      if (row.status === Status.PreVerify || row.status === Status.AdminVerify) {
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            type: 'info',
-            onClick: () => handleUpdateUserStatus(row._id, Status.Normal),
-          },
-          { default: () => t('chat.verifiedUser') },
-        ))
-      }
-      if (row.secretKey) {
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            type: 'warning',
-            onClick: () => handleDisable2FA(row._id),
-          },
-          { default: () => t('chat.disable2FA') },
-        ))
-      }
-      return actions
+            { default: () => t('chat.editUser') },
+          ))
+        }
+        if (row.status === Status.PreVerify || row.status === Status.AdminVerify) {
+          actions.push(h(
+            NButton,
+            {
+              size: 'small',
+              type: 'info',
+              onClick: () => handleUpdateUserStatus(row._id, Status.Normal),
+            },
+            { default: () => t('chat.verifiedUser') },
+          ))
+        }
+        if (row.secretKey) {
+          actions.push(h(
+            NButton,
+            {
+              size: 'small',
+              type: 'warning',
+              onClick: () => handleDisable2FA(row._id),
+            },
+            { default: () => t('chat.disable2FA') },
+          ))
+        }
+        return actions
+      },
     },
-  },
-]
+  ]
+}
+
+const columns = createColumns()
+
 const pagination = reactive ({
   page: 1,
   pageSize: 25,
