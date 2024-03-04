@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NInputNumber, NPopconfirm, NSelect, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NPopconfirm, NSelect, useMessage } from 'naive-ui'
 import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
@@ -172,13 +172,13 @@ function handleImportButtonClick(): void {
           <NInput v-model:value="description" placeholder="" />
         </div>
       </div>
-      <div class="flex items-center space-x-4">
+      <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
         <div class="flex-1">
-          <NInputNumber v-model:value="useAmount" placeholder="" readonly />
+          <div v-text="useAmount" />
         </div>
       </div>
-      <div class="flex items-center space-x-4">
+      <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[100px]">{{ $t('setting.redeemCardNo') }}</span>
         <div class="flex-1">
           <NInput v-model:value="redeemCardNo" placeholder="" />

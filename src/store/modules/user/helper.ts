@@ -12,6 +12,7 @@ export interface UserInfo {
   config: UserConfig
   roles: UserRole[]
   advanced: SettingsState
+  limit?: boolean
   useAmount?: number // chat usage amount
   redeemCardNo?: string // add giftcard info
 }

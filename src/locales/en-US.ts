@@ -81,6 +81,7 @@ export default {
   },
   setting: {
     limit_switch: 'Open Usage Limitation',
+    usageCountLimit: 'Enable Usage Count Limit',
     redeemCardNo: 'Redeem CardNo',
     useAmount: 'No. of questions',
     setting: 'Setting',

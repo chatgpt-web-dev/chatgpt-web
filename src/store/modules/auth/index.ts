@@ -21,6 +21,7 @@ interface SessionResponse {
     key: string
     value: string
   }[]
+  usageCountLimit: boolean
   userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; config: UserConfig }
 }
 
