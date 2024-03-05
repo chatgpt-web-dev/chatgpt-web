@@ -42,7 +42,7 @@ export async function getOriginConfig() {
         : '',
       process.env.HTTPS_PROXY,
       new SiteConfig(
-        process.env.SITE_TITLE || 'ChatGpt Web',
+        process.env.SITE_TITLE || 'ChatGPT Web',
         isNotEmptyString(process.env.AUTH_SECRET_KEY),
         process.env.AUTH_SECRET_KEY,
         process.env.REGISTER_ENABLED === 'true',
