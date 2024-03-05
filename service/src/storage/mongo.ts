@@ -248,11 +248,14 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
 }
 
 // createUser、updateUserInfo中加入useAmount limit_switch
-export async function createUser(email: string, password: string, roles?: UserRole[], remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
+export async function createUser(email: string, password: string, roles?: UserRole[], status?: Status, remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
+  if (status !== null)
+    userInfo.status = status
+
   userInfo.roles = roles
   userInfo.remark = remark
   userInfo.useAmount = useAmount
