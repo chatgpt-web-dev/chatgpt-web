@@ -761,6 +761,10 @@ router.post('/user-login', authLimiter, async (req, res) => {
   }
 })
 
+router.post('/user-logout', auth, async (req, res) => {
+  res.send({ status: 'Success', message: '退出登录成功 | Logout successful', data: null })
+})
+
 router.post('/user-send-reset-mail', authLimiter, async (req, res) => {
   try {
     const { username } = req.body as { username: string }
