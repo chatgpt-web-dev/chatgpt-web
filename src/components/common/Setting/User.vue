@@ -85,36 +85,26 @@ const createColumns = (): DataTableColumns => {
       minWidth: 80,
       maxWidth: 200,
     },
-    // 新增额度信息
-    {
-      title: 'Amts',
-      key: 'useAmount',
-      resizable: true,
-      width: 80,
-      minWidth: 30,
-      maxWidth: 100,
-    },
     // switch off amt limit
     {
-      title: 'limit switch',
+      title: 'Limit Enabled',
       key: 'limit_switch',
       resizable: true,
       width: 100,
       minWidth: 30,
       maxWidth: 100,
       render(row: any) {
-          return h(NSwitch, {
-          defaultValue: row.limit_switch,
-          round: false,
-          disabled: true,
-        })
+        return h('div', row.limit_switch ? 'True' : 'False')
       },
     },
     // 新增额度信息
     {
-      title: 'Amts',
+      title: 'Amounts',
       key: 'useAmount',
+      resizable: true,
       width: 80,
+      minWidth: 30,
+      maxWidth: 100,
     },
     {
       title: 'Action',

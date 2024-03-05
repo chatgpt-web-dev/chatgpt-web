@@ -22,7 +22,9 @@ export const useUserStore = defineStore('user-store', {
     },
     // 对应页面加载时的读取，为空送10个
     async readUserAmt() {
-      this.userInfo.useAmount = (await (fetchUserAmt())).data ?? 10
+      const data = (await fetchUserAmt()).data
+      this.userInfo.limit = data?.limit
+      this.userInfo.useAmount = data?.amount ?? 10
     },
 
     async resetSetting() {

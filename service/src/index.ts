@@ -372,7 +372,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
 
   let { roomId, uuid, regenerate, prompt, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
-  const userId = req.headers.userId as string
+  const userId = req.headers.userId.toString()
+  const config = await getCacheConfig()
   const room = await getChatRoom(userId, roomId)
   if (room == null)
     globalThis.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
@@ -383,19 +384,19 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let message: ChatInfo
   let user = await getUserById(userId)
   try {
-    const config = await getCacheConfig()
-    const userId = req.headers.userId.toString()
-    // 在调用前判断对话额度是否够用
-    const useAmount = user ? (user.useAmount ?? 0) : 0
-
-    // if use the fixed fakeuserid(some probability of duplicated with real ones), redefine user which is send to chatReplyProcess
-    if (userId === '6406d8c50aedd633885fa16f')
+    // If use the fixed fakeuserid(some probability of duplicated with real ones), redefine user which is send to chatReplyProcess
+    if (userId === '6406d8c50aedd633885fa16f') {
       user = { _id: userId, roles: [UserRole.User], useAmount: 999, advanced: { maxContextCount: 999 }, limit_switch: false } as UserInfo
-
-    // report if useamount is 0, 6406d8c50aedd633885fa16f is the fakeuserid in nologin situation
-    if (userId !== '6406d8c50aedd633885fa16f' && Number(useAmount) <= 0 && user.limit_switch) {
-      res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
-      return
+    }
+    else {
+      // If global usage count limit is enabled, check can use amount before process chat.
+      if (config.siteConfig?.usageCountLimit) {
+        const useAmount = user ? (user.useAmount ?? 0) : 0
+        if (Number(useAmount) <= 0 && user.limit_switch) {
+          res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
+          return
+        }
+      }
     }
 
     if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
@@ -496,8 +497,10 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
       // update personal useAmount moved here
       // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
-      if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
-        await updateAmountMinusOne(userId)
+      if (config.siteConfig?.usageCountLimit) {
+        if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
+          await updateAmountMinusOne(userId)
+      }
     }
     catch (error) {
       globalThis.console.error(error)
@@ -683,6 +686,7 @@ router.post('/session', async (req, res) => {
           title: config.siteConfig.siteTitle,
           chatModels,
           allChatModels: chatModelOptions,
+          usageCountLimit: config.siteConfig?.usageCountLimit,
           userInfo,
         },
       })
@@ -830,10 +834,11 @@ router.get('/user-getamtinfo', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
     const user = await getUserById(userId)
-    if (user.limit_switch)
-      res.send({ status: 'Success', message: null, data: user.useAmount })
-    else
-      res.send({ status: 'Success', message: null, data: 99999 })
+    const data = {
+      amount: user.useAmount,
+      limit: user.limit_switch,
+    }
+    res.send({ status: 'Success', message: null, data })
   }
   catch (error) {
     console.error(error)

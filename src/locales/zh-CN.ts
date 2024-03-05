@@ -81,6 +81,7 @@ export default {
   },
   setting: {
     limit_switch: '打开次数限制',
+    usageCountLimit: '使用次数限制',
     redeemCardNo: '兑换码卡号',
     useAmount: '可提问次数',
     setting: '设置',
