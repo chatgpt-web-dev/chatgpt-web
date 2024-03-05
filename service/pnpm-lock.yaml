@@ -45,8 +45,8 @@ dependencies:
     specifier: ^3.3.0
     version: 3.3.0
   nodemailer:
-    specifier: ^6.9.1
-    version: 6.9.1
+    specifier: ^6.9.9
+    version: 6.9.9
   request-ip:
     specifier: ^3.3.0
     version: 3.3.0
@@ -2717,8 +2717,8 @@ packages:
       formdata-polyfill: 4.0.10
     dev: false
 
-  /nodemailer@6.9.1:
-    resolution: {integrity: sha512-qHw7dOiU5UKNnQpXktdgQ1d3OFgRAekuvbJLcdG5dnEo/GtcTHRYM7+UfJARdOFU9WUQO8OiIamgWPmiSFHYAA==}
+  /nodemailer@6.9.9:
+    resolution: {integrity: sha512-dexTll8zqQoVJEZPwQAKzxxtFn0qTnjdQTchoU6Re9BUUGBJiOy3YMn/0ShTW6J5M0dfQ1NeDeRTTl4oIWgQMA==}
     engines: {node: '>=6.0.0'}
     dev: false
 
