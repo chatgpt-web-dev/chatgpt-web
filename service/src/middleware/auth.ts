@@ -11,8 +11,12 @@ async function auth(req, res, next) {
   if (config.siteConfig.authProxyEnabled) {
     try {
       const username = req.header('X-Email')
+      if (!username) {
+        res.send({ status: 'Unauthorized', message: 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+        return
+      }
       const user = await getUser(username)
-      req.headers.userId = user._id
+      req.headers.userId = user._id.toString()
       next()
     }
     catch (error) {
@@ -46,12 +50,7 @@ async function auth(req, res, next) {
 async function getUserId(req: Request): Promise<string | undefined> {
   let token: string
   try {
-    // no Authorization info is received withput login
-    if (!(req.header('Authorization') as string))
-      return null // '6406d8c50aedd633885fa16f'
-    token = req.header('Authorization').replace('Bearer ', '')
     const config = await getCacheConfig()
-
     if (config.siteConfig.authProxyEnabled) {
       const username = req.header('X-Email')
       let user = await getUser(username)
@@ -61,6 +60,11 @@ async function getUserId(req: Request): Promise<string | undefined> {
       }
       return user._id.toString()
     }
+
+    // no Authorization info is received without login
+    if (!(req.header('Authorization') as string))
+      return null // '6406d8c50aedd633885fa16f'
+    token = req.header('Authorization').replace('Bearer ', '')
 
     const info = jwt.verify(token, config.siteConfig.loginSalt.trim()) as AuthJwtPayload
     return info.userId

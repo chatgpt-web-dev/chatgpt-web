@@ -682,6 +682,7 @@ router.post('/session', async (req, res) => {
         message: '',
         data: {
           auth: hasAuth,
+          authProxyEnabled,
           allowRegister,
           model: config.apiModel,
           title: config.siteConfig.siteTitle,
@@ -761,7 +762,7 @@ router.post('/user-login', authLimiter, async (req, res) => {
   }
 })
 
-router.post('/user-logout', auth, async (req, res) => {
+router.post('/user-logout', async (req, res) => {
   res.send({ status: 'Success', message: '退出登录成功 | Logout successful', data: null })
 })
 
