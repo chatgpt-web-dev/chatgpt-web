@@ -398,5 +398,15 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
 	</div>
 </div>
 
+---
+
+感谢 [DigitalOcean](https://www.digitalocean.com/) 赞助提供开源积分用于运行基础设施服务器
+
+<p>
+  <a href="https://www.digitalocean.com/">
+    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="201px" alt="digitalocean">
+  </a>
+</p>
+
 ## License
 [MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)
