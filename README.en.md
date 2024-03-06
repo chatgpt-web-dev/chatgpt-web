@@ -375,5 +375,15 @@ Thanks to all the contributors!
 
 If you find this project helpful, please give me a star.
 
+---
+
+Thanks to [DigitalOcean](https://www.digitalocean.com/) for sponsoring providing open-source credits used to run our infrastructure servers.
+
+<p>
+  <a href="https://www.digitalocean.com/">
+    <img alt="digitalocean" src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="201px">
+  </a>
+</p>
+
 ## License
 [MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)
