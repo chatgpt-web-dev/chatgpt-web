@@ -30,6 +30,7 @@ Some unique features have been added:
 
 [✓] Conversation round limit & setting different limits by user & giftcards
 
+[✓] Implement SSO login through the auth proxy feature (need to integrate a third-party authentication reverse proxy, it can support login protocols such as LDAP/OIDC/SAML)
 
 > [!CAUTION]
 > This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
@@ -352,6 +353,22 @@ A: One possible reason is that after Nginx reverse proxying, buffering is turned
 Q: The content returned is incomplete?
 
 A: There is a length limit for the content returned by the API each time. You can modify the `VITE_GLOB_OPEN_LONG_REPLY` field in the `.env` file under the root directory, set it to `true`, and rebuild the front-end to enable the long reply feature, which can return the full content. It should be noted that using this feature may bring more API usage fees.
+
+## Auth Proxy Mode
+
+> [!WARNING]  
+> This feature is only provided for Operations Engineer with relevant experience to deploy during the integration of the enterprise's internal account management system. Improper configuration may lead to security risks.
+
+Set env `AUTH_PROXY_ENABLED=true` can enable auth proxy mode.
+
+After activating this feature, it is necessary to ensure that chatgpt-web can only be accessed through a reverse proxy.
+
+Authentication is carried out by the reverse proxy, which then forwards the request with the `X-Email` header to identify the user identity.
+
+Recommended for current IdP to use LDAP protocol, using [authelia](https://www.authelia.com)
+
+Recommended for current IdP to use OIDC protocol, using [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
+
 
 ## Contributing
 

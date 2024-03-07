@@ -30,6 +30,8 @@
 
 [✓] 对话数量限制 & 设置不同用户对话数量 & 兑换数量
 
+[✓] 通过 auth proxy 功能实现sso登录 (配合第三方身份验证反向代理 可实现支持 LDAP/OIDC/SAML 等协议登录)
+
 
 > [!CAUTION]
 > 声明：此项目只发布于 Github，基于 MIT 协议，免费且作为开源学习使用。并且不会有任何形式的卖号、付费服务、讨论群、讨论组等行为。谨防受骗。
@@ -348,6 +350,22 @@ PS: 不进行打包，直接在服务器上运行 `pnpm start` 也可
 ```shell
 pnpm build
 ```
+
+## Auth Proxy Mode
+
+> [!WARNING]  
+> 该功能仅适用于有相关经验的运维人员在集成企业内部账号管理系统时部署 配置不当可能会导致安全风险
+
+设置环境变量 `AUTH_PROXY_ENABLED=true` 即可开启 auth proxy 模式
+
+在开启该功能后 需确保 chatgpt-web 只能通过反向代理访问
+
+由反向代理进行进行身份验证 并再转发请求时携带请求头`X-Email`标识用户身份
+
+推荐当前 Idp 使用 LDAP 协议的 可以选择使用 [authelia](https://www.authelia.com)
+
+当前 Idp 使用 OIDC 协议的 可以选择使用 [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
+
 
 ## 常见问题
 Q: 为什么 `Git` 提交总是报错？
