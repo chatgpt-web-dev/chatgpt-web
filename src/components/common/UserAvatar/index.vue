@@ -15,7 +15,7 @@ const authStore = useAuthStore()
 const { isMobile } = useBasicLayout()
 const showPermission = ref(false)
 
-const needPermission = computed(() => !!authStore.session?.auth && !authStore.token && (isMobile.value || showPermission.value))
+const needPermission = computed(() => !!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled && (isMobile.value || showPermission.value))
 
 const userInfo = computed(() => userStore.userInfo)
 
