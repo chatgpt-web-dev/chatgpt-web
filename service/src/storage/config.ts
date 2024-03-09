@@ -180,3 +180,5 @@ export async function getApiKeys() {
   })
   return result
 }
+
+export const authProxyHeaderName = process.env.AUTH_PROXY_HEADER_NAME ?? 'X-Email'
