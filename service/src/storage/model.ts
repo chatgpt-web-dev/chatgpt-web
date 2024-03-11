@@ -191,12 +191,14 @@ export class SiteConfig {
   constructor(
     public siteTitle?: string,
     public loginEnabled?: boolean,
+    public authProxyEnabled?: boolean,
     public loginSalt?: string,
     public registerEnabled?: boolean,
     public registerReview?: boolean,
     public registerMails?: string,
     public siteDomain?: string,
     public chatModels?: string,
+    public usageCountLimit?: boolean,
   ) { }
 }
 

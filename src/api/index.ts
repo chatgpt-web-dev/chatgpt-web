@@ -89,6 +89,13 @@ export function fetchLogin<T = any>(username: string, password: string, token?: 
   })
 }
 
+export function fetchLogout<T = any>() {
+  return post<T>({
+    url: '/user-logout',
+    data: { },
+  })
+}
+
 export function fetchSendResetMail<T = any>(username: string) {
   return post<T>({
     url: '/user-send-reset-mail',

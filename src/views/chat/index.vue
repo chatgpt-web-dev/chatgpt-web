@@ -695,7 +695,7 @@ onUnmounted(() => {
               style="width: 250px"
               :value="currentChatModel"
               :options="authStore.session?.chatModels"
-              :disabled="!!authStore.session?.auth && !authStore.token"
+              :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
               @update-value="(val) => handleSyncChatModel(val)"
             />
             <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
@@ -706,7 +706,7 @@ onUnmounted(() => {
                 <NInput
                   ref="inputRef"
                   v-model:value="prompt"
-                  :disabled="!!authStore.session?.auth && !authStore.token"
+                  :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
                   type="textarea"
                   :placeholder="placeholder"
                   :autosize="{ minRows: isMobile ? 1 : 4, maxRows: isMobile ? 4 : 8 }"

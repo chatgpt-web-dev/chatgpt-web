@@ -1,12 +1,30 @@
 import jwt from 'jsonwebtoken'
 import type { Request } from 'express'
 import { getCacheConfig } from '../storage/config'
-import { getUserById } from '../storage/mongo'
-import { Status } from '../storage/model'
+import { createUser, getUser, getUserById } from '../storage/mongo'
+import { Status, UserRole } from '../storage/model'
 import type { AuthJwtPayload } from '../types'
 
 async function auth(req, res, next) {
   const config = await getCacheConfig()
+
+  if (config.siteConfig.authProxyEnabled) {
+    try {
+      const username = req.header('X-Email')
+      if (!username) {
+        res.send({ status: 'Unauthorized', message: 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+        return
+      }
+      const user = await getUser(username)
+      req.headers.userId = user._id.toString()
+      next()
+    }
+    catch (error) {
+      res.send({ status: 'Unauthorized', message: error.message ?? 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+    }
+    return
+  }
+
   if (config.siteConfig.loginEnabled) {
     try {
       const token = req.header('Authorization').replace('Bearer ', '')
@@ -32,11 +50,22 @@ async function auth(req, res, next) {
 async function getUserId(req: Request): Promise<string | undefined> {
   let token: string
   try {
-    // no Authorization info is received withput login
+    const config = await getCacheConfig()
+    if (config.siteConfig.authProxyEnabled) {
+      const username = req.header('X-Email')
+      let user = await getUser(username)
+      if (user == null) {
+        const isRoot = username.toLowerCase() === process.env.ROOT_USER
+        user = await createUser(username, '', isRoot ? [UserRole.Admin] : [UserRole.User], Status.Normal, 'Created by auth proxy.')
+      }
+      return user._id.toString()
+    }
+
+    // no Authorization info is received without login
     if (!(req.header('Authorization') as string))
       return null // '6406d8c50aedd633885fa16f'
     token = req.header('Authorization').replace('Bearer ', '')
-    const config = await getCacheConfig()
+
     const info = jwt.verify(token, config.siteConfig.loginSalt.trim()) as AuthJwtPayload
     return info.userId
   }

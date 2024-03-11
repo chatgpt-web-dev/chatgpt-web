@@ -18,7 +18,7 @@ const loadingRoom = ref(false)
 const dataSources = computed(() => chatStore.history)
 
 onMounted(async () => {
-  if (authStore.session == null || !authStore.session.auth || authStore.token)
+  if (authStore.session == null || !authStore.session.auth || authStore.token || authStore.session?.authProxyEnabled)
     await handleSyncChatRoom()
 })
 
