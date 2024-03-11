@@ -76,7 +76,7 @@ onMounted(() => {
             <NInput
               :value="config && config.testCode"
               placeholder="6-digit dynamic code"
-              @input="(val) => { if (config) config.testCode = val }"
+              @input="(val: string) => { if (config) config.testCode = val }"
             />
           </div>
         </div>
@@ -115,7 +115,7 @@ onMounted(() => {
                     <NInput
                       :value="config && config.testCode"
                       placeholder=""
-                      @input="(val) => { if (config) config.testCode = val }"
+                      @input="(val: string) => { if (config) config.testCode = val }"
                     /><br><br>
                     <NButton
                       :loading="saving" type="primary" :disabled="!config || !config.testCode || config.testCode.length !== 6"

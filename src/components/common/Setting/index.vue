@@ -8,6 +8,7 @@ import About from './About.vue'
 import Site from './Site.vue'
 import Mail from './Mail.vue'
 import Audit from './Audit.vue'
+import Gift from './Gift.vue'
 import User from './User.vue'
 import Key from './Keys.vue'
 import Password from './Password.vue'
@@ -132,6 +133,13 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
           </template>
           <Key />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="GiftCardConfig" tab="GiftCardConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="mdi-gift" />
+            <span class="ml-2">{{ $t('setting.uploadgifts') }}</span>
+          </template>
+          <Gift />
         </NTabPane>
       </NTabs>
     </div>

@@ -205,7 +205,7 @@ function handleImportButtonClick(): void {
             :value="userInfo.config.chatModel"
             :options="authStore.session?.chatModels"
             :disabled="!!authStore.session?.auth && !authStore.token"
-            @update-value="(val) => updateUserChatModel(val)"
+            @update-value="(val: string) => updateUserChatModel(val)"
           />
         </div>
       </div>
@@ -267,7 +267,7 @@ function handleImportButtonClick(): void {
             style="width: 140px"
             :value="language"
             :options="languageOptions"
-            @update-value="value => appStore.setLanguage(value)"
+            @update-value="(value: Language) => appStore.setLanguage(value)"
           />
         </div>
       </div>

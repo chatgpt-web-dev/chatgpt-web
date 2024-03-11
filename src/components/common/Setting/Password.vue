@@ -46,7 +46,7 @@ onMounted(() => {
               type="password"
               :value="config && config.oldPassword"
               :placeholder="$t('setting.oldPassword')"
-              @input="(val) => { if (config) config.oldPassword = val }"
+              @input="(val: string) => { if (config) config.oldPassword = val }"
             />
           </div>
         </div>
@@ -57,7 +57,7 @@ onMounted(() => {
               type="password"
               :value="config && config.newPassword"
               :placeholder="$t('setting.newPassword')"
-              @input="(val) => { if (config) config.newPassword = val }"
+              @input="(val: string) => { if (config) config.newPassword = val }"
             />
           </div>
         </div>
@@ -69,7 +69,7 @@ onMounted(() => {
               :value="config && config.confirmPassword"
               :disabled="!config || !config.newPassword"
               :placeholder="$t('setting.confirmNewPassword')"
-              @input="(val) => { if (config) config.confirmPassword = val }"
+              @input="(val: string) => { if (config) config.confirmPassword = val }"
             />
           </div>
         </div>

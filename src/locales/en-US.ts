@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
   },
   setting: {
+    overRide: 'Enable Override',
+    uploadgifts: 'Upload Redemption Code',
     limit_switch: 'Open Usage Limitation',
     usageCountLimit: 'Enable Usage Count Limit',
     redeemCardNo: 'Redeem CardNo',

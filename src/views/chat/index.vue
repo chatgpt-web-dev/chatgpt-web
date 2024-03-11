@@ -696,7 +696,7 @@ onUnmounted(() => {
               :value="currentChatModel"
               :options="authStore.session?.chatModels"
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
-              @update-value="(val) => handleSyncChatModel(val)"
+              @update-value="(val: string) => handleSyncChatModel(val)"
             />
             <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
           </div>
