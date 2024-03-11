@@ -360,7 +360,8 @@ pnpm build
 
 在开启该功能后 需确保 chatgpt-web 只能通过反向代理访问
 
-由反向代理进行进行身份验证 并再转发请求时携带请求头`X-Email`标识用户身份
+由反向代理进行进行身份验证 并再转发请求时携带请求头标识用户身份
+默认请求头为 `X-Email` 并可以通过设置环境变量 `AUTH_PROXY_HEADER_NAME` 自定义配置
 
 推荐当前 Idp 使用 LDAP 协议的 可以选择使用 [authelia](https://www.authelia.com)
 
