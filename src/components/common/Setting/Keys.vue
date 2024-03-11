@@ -2,7 +2,7 @@
 import type { DataTableColumns } from 'naive-ui'
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
-import { KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
+import { APIMODEL, KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
 import { fetchGetKeys, fetchUpdateApiKeyStatus, fetchUpsertApiKey } from '@/api'
 import { t } from '@/locales'
 import { useAuthStore } from '@/store'
@@ -229,7 +229,7 @@ onMounted(async () => {
           ref="table"
           remote
           :loading="loading"
-          :row-key="(rowData) => rowData._id"
+          :row-key="(rowData:KeyConfig) => rowData._id"
           :columns="columns"
           :data="keys"
           :pagination="pagination"
@@ -251,7 +251,7 @@ onMounted(async () => {
               style="width: 100%"
               :value="keyConfig.keyModel"
               :options="apiModelOptions"
-              @update-value="value => keyConfig.keyModel = value"
+              @update-value="(value: APIMODEL) => keyConfig.keyModel = value"
             />
           </div>
           <p v-if="!isMobile">
@@ -285,7 +285,7 @@ onMounted(async () => {
               multiple
               :value="keyConfig.chatModels"
               :options="authStore.session?.allChatModels"
-              @update-value="value => keyConfig.chatModels = value"
+              @update-value="(value: string[]) => keyConfig.chatModels = value"
             />
           </div>
         </div>
@@ -297,7 +297,7 @@ onMounted(async () => {
               multiple
               :value="keyConfig.userRoles"
               :options="userRoleOptions"
-              @update-value="value => keyConfig.userRoles = value"
+              @update-value="(value: UserRole[]) => keyConfig.userRoles = value"
             />
           </div>
         </div>
@@ -307,7 +307,7 @@ onMounted(async () => {
             <NSwitch
               :round="false"
               :value="keyConfig.status === Status.Normal"
-              @update:value="(val) => { keyConfig.status = val ? Status.Normal : Status.Disabled }"
+              @update:value="(val: boolean) => { keyConfig.status = val ? Status.Normal : Status.Disabled }"
             />
           </div>
         </div>

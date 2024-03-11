@@ -282,7 +282,7 @@ onMounted(async () => {
           ref="table"
           remote
           :loading="loading"
-          :row-key="(rowData) => rowData._id"
+          :row-key="(rowData:UserInfo) => rowData._id"
           :columns="columns"
           :data="users"
           :pagination="pagination"
@@ -326,7 +326,7 @@ onMounted(async () => {
               multiple
               :value="userRef.roles"
               :options="userRoleOptions"
-              @update-value="value => userRef.roles = value"
+              @update-value="(value: UserRole[]) => userRef.roles = value"
             />
           </div>
         </div>
@@ -354,7 +354,7 @@ onMounted(async () => {
             <NSwitch
               v-model:value="userRef.limit_switch"
               :round="false"
-              @update:value="(val) => { if (userRef) userRef.limit_switch = val }"
+              @update:value="(val: boolean) => { if (userRef) userRef.limit_switch = val }"
             />
           </div>
         </div>

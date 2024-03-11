@@ -55,7 +55,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.siteTitle" placeholder=""
-              @input="(val) => { if (config) config.siteTitle = val }"
+              @input="(val: string | undefined) => { if (config) config.siteTitle = val }"
             />
           </div>
         </div>
@@ -64,7 +64,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.siteDomain" placeholder=""
-              @input="(val) => { if (config) config.siteDomain = val }"
+              @input="(val: string | undefined) => { if (config) config.siteDomain = val }"
             />
           </div>
         </div>
@@ -75,7 +75,7 @@ onMounted(() => {
               :round="false"
               :disabled="config && config.loginEnabled"
               :value="config && config.loginEnabled"
-              @update:value="(val) => { if (config) config.loginEnabled = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.loginEnabled = val }"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.loginSalt" :placeholder="$t('setting.loginSaltTip')"
-              @input="(val) => { if (config) config.loginSalt = val }"
+              @input="(val: string | undefined) => { if (config) config.loginSalt = val }"
             />
           </div>
         </div>
@@ -94,7 +94,7 @@ onMounted(() => {
             <NSwitch
               :round="false"
               :value="config && config.registerEnabled"
-              @update:value="(val) => { if (config) config.registerEnabled = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.registerEnabled = val }"
             />
           </div>
         </div>
@@ -104,7 +104,7 @@ onMounted(() => {
             <NSwitch
               :round="false"
               :value="config && config.registerReview"
-              @update:value="(val) => { if (config) config.registerReview = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.registerReview = val }"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.registerMails" :placeholder="$t('setting.registerReviewTip')"
-              @input="(val) => { if (config) config.registerMails = val }"
+              @input="(val: string | undefined) => { if (config) config.registerMails = val }"
             />
           </div>
         </div>
@@ -125,7 +125,7 @@ onMounted(() => {
               placeholder="英文逗号分割 | English comma separated"
               type="textarea"
               :autosize="{ minRows: 1, maxRows: 4 }"
-              @input="(val) => { if (config) config.chatModels = val }"
+              @input="(val: string | undefined) => { if (config) config.chatModels = val }"
             />
           </div>
         </div>
@@ -135,7 +135,7 @@ onMounted(() => {
             <NSwitch
               :round="false"
               :value="config && config.usageCountLimit"
-              @update:value="(val) => { if (config) config.usageCountLimit = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.usageCountLimit = val }"
             />
           </div>
         </div>

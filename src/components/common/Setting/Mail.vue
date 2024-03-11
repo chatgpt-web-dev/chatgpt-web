@@ -63,7 +63,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.smtpHost" placeholder=""
-              @input="(val) => { if (config) config.smtpHost = val }"
+              @input="(val: string | undefined) => { if (config) config.smtpHost = val }"
             />
           </div>
         </div>
@@ -73,7 +73,7 @@ onMounted(() => {
             <NInput
               :value="config && config.smtpPort !== undefined ? String(config.smtpPort) : undefined"
               placeholder=""
-              @input="(val) => { if (config) config.smtpPort = typeof val === 'string' ? Number(val) : undefined }"
+              @input="(val: any) => { if (config) config.smtpPort = typeof val === 'string' ? Number(val) : undefined }"
             />
           </div>
         </div>
@@ -83,7 +83,7 @@ onMounted(() => {
             <NSwitch
               :round="false"
               :value="config && config.smtpTsl"
-              @update:value="(val) => { if (config) config.smtpTsl = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.smtpTsl = val }"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.smtpUserName" placeholder=""
-              @input="(val) => { if (config) config.smtpUserName = val }"
+              @input="(val: string | undefined) => { if (config) config.smtpUserName = val }"
             />
           </div>
         </div>
@@ -101,7 +101,7 @@ onMounted(() => {
           <div class="flex-1">
             <NInput
               :value="config && config.smtpPassword" placeholder=""
-              @input="(val) => { if (config) config.smtpPassword = val }"
+              @input="(val: string | undefined) => { if (config) config.smtpPassword = val }"
             />
           </div>
         </div>
