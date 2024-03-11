@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { Status, UserRole } from '../storage/model'
 import { getUser, getUserById } from '../storage/mongo'
-import { getCacheConfig } from '../storage/config'
+import { authProxyHeaderName, getCacheConfig } from '../storage/config'
 import type { AuthJwtPayload } from '../types'
 
 dotenv.config()
@@ -12,7 +12,7 @@ async function rootAuth(req, res, next) {
 
   if (config.siteConfig.authProxyEnabled) {
     try {
-      const username = req.header('X-Email')
+      const username = req.header(authProxyHeaderName)
       const user = await getUser(username)
       req.headers.userId = user._id
       if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin))
@@ -21,7 +21,7 @@ async function rootAuth(req, res, next) {
         next()
     }
     catch (error) {
-      res.send({ status: 'Unauthorized', message: error.message ?? 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+      res.send({ status: 'Unauthorized', message: error.message ?? `Please config auth proxy (usually is nginx) add set proxy header ${authProxyHeaderName}.`, data: null })
     }
     return
   }

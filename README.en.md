@@ -363,7 +363,8 @@ Set env `AUTH_PROXY_ENABLED=true` can enable auth proxy mode.
 
 After activating this feature, it is necessary to ensure that chatgpt-web can only be accessed through a reverse proxy.
 
-Authentication is carried out by the reverse proxy, which then forwards the request with the `X-Email` header to identify the user identity.
+Authentication is carried out by the reverse proxy, which then forwards the request with the header to identify the user identity.
+Default header name is `X-Email`, can custom config use set env `AUTH_PROXY_HEADER_NAME`.
 
 Recommended for current IdP to use LDAP protocol, using [authelia](https://www.authelia.com)
 

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import type { Request } from 'express'
-import { getCacheConfig } from '../storage/config'
+import { authProxyHeaderName, getCacheConfig } from '../storage/config'
 import { createUser, getUser, getUserById } from '../storage/mongo'
 import { Status, UserRole } from '../storage/model'
 import type { AuthJwtPayload } from '../types'
@@ -10,9 +10,9 @@ async function auth(req, res, next) {
 
   if (config.siteConfig.authProxyEnabled) {
     try {
-      const username = req.header('X-Email')
+      const username = req.header(authProxyHeaderName)
       if (!username) {
-        res.send({ status: 'Unauthorized', message: 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+        res.send({ status: 'Unauthorized', message: `Please config auth proxy (usually is nginx) add set proxy header ${authProxyHeaderName}.`, data: null })
         return
       }
       const user = await getUser(username)
@@ -20,7 +20,7 @@ async function auth(req, res, next) {
       next()
     }
     catch (error) {
-      res.send({ status: 'Unauthorized', message: error.message ?? 'Please config auth proxy (usually is nginx) add set proxy header X-Email.', data: null })
+      res.send({ status: 'Unauthorized', message: error.message ?? `Please config auth proxy (usually is nginx) add set proxy header ${authProxyHeaderName}.`, data: null })
     }
     return
   }
@@ -52,7 +52,11 @@ async function getUserId(req: Request): Promise<string | undefined> {
   try {
     const config = await getCacheConfig()
     if (config.siteConfig.authProxyEnabled) {
-      const username = req.header('X-Email')
+      const username = req.header(authProxyHeaderName)
+      if (!username) {
+        globalThis.console.error(`Please config auth proxy (usually is nginx) add set proxy header ${authProxyHeaderName}.`)
+        return null
+      }
       let user = await getUser(username)
       if (user == null) {
         const isRoot = username.toLowerCase() === process.env.ROOT_USER
