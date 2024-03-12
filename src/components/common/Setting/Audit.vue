@@ -69,7 +69,7 @@ onMounted(() => {
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.customizeEnabled"
-              @update:value="(val) => { if (config) config.customizeEnabled = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.customizeEnabled = val }"
             />
           </div>
         </div>
@@ -81,7 +81,7 @@ onMounted(() => {
               placeholder="一行一个敏感词 | One word per line"
               type="textarea"
               :autosize="{ minRows: 1, maxRows: 4 }"
-              @input="(val) => { if (config) config.sensitiveWords = val }"
+              @input="(val: string | undefined) => { if (config) config.sensitiveWords = val }"
             />
           </div>
         </div>
@@ -90,7 +90,7 @@ onMounted(() => {
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.enabled"
-              @update:value="(val) => { if (config) config.enabled = val }"
+              @update:value="(val: boolean | undefined) => { if (config) config.enabled = val }"
             />
           </div>
         </div>
@@ -101,7 +101,7 @@ onMounted(() => {
               style="width: 140px"
               :value="config && config.provider"
               :options="serviceOptions"
-              @update-value="(val) => { if (config) config.provider = val as TextAuditServiceProvider }"
+              @update-value="(val: string) => { if (config) config.provider = val as TextAuditServiceProvider }"
             />
           </div>
         </div>
@@ -111,7 +111,7 @@ onMounted(() => {
             <NInput
               :value="config && config.options && config.options.apiKey"
               placeholder=""
-              @input="(val) => { if (config && config.options) config.options.apiKey = val }"
+              @input="(val: string) => { if (config && config.options) config.options.apiKey = val }"
             />
           </div>
         </div>
@@ -121,7 +121,7 @@ onMounted(() => {
             <NInput
               :value="config && config.options && config.options.apiSecret"
               placeholder=""
-              @input="(val) => { if (config && config.options) config.options.apiSecret = val }"
+              @input="(val: string) => { if (config && config.options) config.options.apiSecret = val }"
             />
           </div>
         </div>
@@ -131,7 +131,7 @@ onMounted(() => {
             <NInput
               :value="config && config.options && config.options.label"
               :placeholder="$t('setting.auditBaiduLabelTip')"
-              @input="(val) => { if (config && config.options) config.options.label = val }"
+              @input="(val: string | undefined) => { if (config && config.options) config.options.label = val }"
             />
           </div>
           <p v-if="config && config.provider === 'baidu'">

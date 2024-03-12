@@ -136,7 +136,7 @@ onMounted(() => {
             :filter="filter"
             placeholder="Email or remark"
             :options="usersOptions"
-            @update-value="(value) => { user = value; fetchStatistics() }"
+            @update-value="(value: string | null) => { user = value; fetchStatistics() }"
           />
           <div class="flex-1">
             <NDatePicker

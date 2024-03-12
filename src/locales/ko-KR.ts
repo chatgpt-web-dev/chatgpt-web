@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
   },
   setting: {
+    overRide: '덮어쓰기 활성화',
+    uploadgifts: '교환 코드 업로드',
     limit_switch: '오픈 횟수 제한',
     redeemCardNo: '질문 허용 횟수',
     useAmount: '질문 허용 횟수',
