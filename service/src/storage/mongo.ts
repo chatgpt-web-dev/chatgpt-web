@@ -251,15 +251,31 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
 export async function createUser(email: string, password: string, roles?: UserRole[], status?: Status, remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
+	const config = await getCacheConfig()
+
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
-  if (status !== null)
+  if (status != null)
+    //console.log("注册用户的状态为：" + status)
     userInfo.status = status
 
   userInfo.roles = roles
   userInfo.remark = remark
-  userInfo.useAmount = useAmount
-  userInfo.limit_switch = limit_switch
+	if (useAmount != null) {
+		userInfo.useAmount = useAmount;
+	} else {
+		const globalAmount = Number(config.siteConfig.globalAmount);
+		if (!isNaN(globalAmount)) {
+			userInfo.useAmount = globalAmount;
+		} else {
+			// 如果无法转换为数字类型，执行其他操作
+			console.log('globalAmount 无法转换为数字类型');
+			userInfo.useAmount = 10;
+			// 其他操作...
+		}
+	}
+	if (limit_switch != null)
+  	userInfo.limit_switch = limit_switch
   await userCol.insertOne(userInfo)
   return userInfo
 }

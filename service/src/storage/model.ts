@@ -198,6 +198,7 @@ export class SiteConfig {
     public registerMails?: string,
     public siteDomain?: string,
     public chatModels?: string,
+		public globalAmount?: string,
     public usageCountLimit?: boolean,
   ) { }
 }

@@ -129,7 +129,18 @@ onMounted(() => {
             />
           </div>
         </div>
-        <div class="flex items-center space-x-4">
+<!--		增加新注册用户的全局数量设置		-->
+				<div class="flex items-center space-x-4">
+					<span class="flex-shrink-0 w-[100px]">{{ $t('setting.globalAmount') }}</span>
+					<div class="flex-1">
+						<NInput
+							:value="config && config.globalAmount"
+							placeholder="only number is accepted"
+							@input="(val) => { if (config) config.globalAmount = val }"
+						/>
+					</div>
+				</div>
+				<div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.usageCountLimit') }}</span>
           <div class="flex-1">
             <NSwitch
