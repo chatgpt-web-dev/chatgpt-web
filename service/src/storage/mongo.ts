@@ -96,7 +96,7 @@ export async function updateChat(chatId: string, response: string, messageId: st
   }
 
   if (previousResponse)
-    // @ts-expect-error previousResponse
+    // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
     update.$set.previousResponse = previousResponse
 
   await chatCol.updateOne(query, update)
@@ -255,8 +255,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
-  if (status != null)
-    //console.log("注册用户的状态为：" + status)
+  if (status)
     userInfo.status = status
 
   userInfo.roles = roles
