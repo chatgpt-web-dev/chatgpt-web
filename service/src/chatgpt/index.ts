@@ -1,3 +1,4 @@
+import * as console from 'node:console'
 import * as dotenv from 'dotenv'
 import 'isomorphic-fetch'
 import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
@@ -9,6 +10,7 @@ import jwt_decode from 'jwt-decode'
 import dayjs from 'dayjs'
 import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
 import { Status } from '../storage/model'
+import { convertImageUrl } from '../utils/image'
 import type { TextAuditService } from '../utils/textAudit'
 import { textAuditServices } from '../utils/textAudit'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
@@ -130,7 +132,31 @@ async function chatReplyProcess(options: RequestOptions) {
       throw new Error('无法在一个房间同时使用 AccessToken 以及 Api，请联系管理员，或新开聊天室进行对话 | Unable to use AccessToken and Api at the same time in the same room, please contact the administrator or open a new chat room for conversation')
   }
 
-  const { message, lastContext, process, systemMessage, temperature, top_p } = options
+  const { message, uploadFileKeys, lastContext, process, systemMessage, temperature, top_p } = options
+
+  let content: string | {
+    type: string
+    text?: string
+    image_url?: {
+      url: string
+    }
+  }[] = message
+  if (uploadFileKeys && uploadFileKeys.length > 0) {
+    content = [
+      {
+        type: 'text',
+        text: message,
+      },
+    ]
+    for (const uploadFileKey of uploadFileKeys) {
+      content.push({
+        type: 'image_url',
+        image_url: {
+          url: await convertImageUrl(uploadFileKey),
+        },
+      })
+    }
+  }
 
   try {
     const timeoutMs = (await getCacheConfig()).timeoutMs
@@ -153,7 +179,7 @@ async function chatReplyProcess(options: RequestOptions) {
     const abort = new AbortController()
     options.abortSignal = abort.signal
     processThreads.push({ userId, abort, messageId })
-    const response = await api.sendMessage(message, {
+    const response = await api.sendMessage(content, {
       ...options,
       onProgress: (partialResponse) => {
         process?.(partialResponse)
@@ -370,12 +396,35 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
     }
     else {
       if (isPrompt) { // prompt
+        let content: string | {
+          type: string
+          text?: string
+          image_url?: {
+            url: string
+          }
+        }[] = chatInfo.prompt
+        if (chatInfo.images) {
+          content = [
+            {
+              type: 'text',
+              text: chatInfo.prompt,
+            },
+          ]
+          for (const image of chatInfo.images) {
+            content.push({
+              type: 'image_url',
+              image_url: {
+                url: await convertImageUrl(image),
+              },
+            })
+          }
+        }
         return {
           id,
           conversationId: chatInfo.options.conversationId,
           parentMessageId,
           role: 'user',
-          text: chatInfo.prompt,
+          text: content,
         }
       }
       else {

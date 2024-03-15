@@ -12,6 +12,7 @@ import { copyToClip } from '@/utils/copy'
 interface Props {
   dateTime?: string
   text?: string
+  images?: string[]
   inversion?: boolean
   error?: boolean
   loading?: boolean
@@ -179,6 +180,7 @@ async function handlePreviousResponse(next: number) {
           :inversion="inversion"
           :error="error"
           :text="text"
+          :images="images"
           :loading="loading"
           :as-raw-text="asRawText"
         />

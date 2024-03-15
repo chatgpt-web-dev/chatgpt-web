@@ -12,6 +12,7 @@ interface Props {
   inversion?: boolean
   error?: boolean
   text?: string
+  images?: string[]
   loading?: boolean
   asRawText?: boolean
 }
@@ -108,6 +109,7 @@ onUnmounted(() => {
         <span v-if="loading" class="dark:text-white w-[4px] h-[20px] block animate-blink" />
       </div>
       <div v-else class="whitespace-pre-wrap" v-text="text" />
+      <img v-for="(v, i) of images" :key="i" :src="`/uploads/${v}`" alt="" width="160px">
     </div>
   </div>
 </template>

@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
-    "chatgpt": "^5.2.4",
+    "chatgpt": "git+https://github.com/chatgpt-web-dev/chatgpt-api#e8fca6bf34350881b1e9243610941bc4b00ce891",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.3",
@@ -39,6 +39,7 @@
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^3.1.2",
     "mongodb": "^5.9.2",
+    "multer": "1.4.5-lts.1",
     "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.9",
     "request-ip": "^3.3.0",
@@ -48,9 +49,10 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.43.1",
-    "@types/express": "^4.17.17",
+    "@types/express": "^4.17.21",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/jsonwebtoken": "^9.0.5",
+    "@types/multer": "^1.4.11",
     "@types/node": "^18.14.6",
     "@types/nodemailer": "^6.4.14",
     "@types/request-ip": "^0.0.41",

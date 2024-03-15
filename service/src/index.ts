@@ -58,6 +58,7 @@ import { hasAnyRole, isEmail, isNotEmptyString } from './utils/is'
 import { sendNoticeMail, sendResetPasswordMail, sendTestMail, sendVerifyMail, sendVerifyMailAdmin } from './utils/mail'
 import { checkUserResetPassword, checkUserVerify, checkUserVerifyAdmin, getUserResetPasswordUrl, getUserVerifyUrl, getUserVerifyUrlAdmin, md5 } from './utils/security'
 import { isAdmin, rootAuth } from './middleware/rootAuth'
+import { router as uploadRouter } from './routes/upload'
 
 dotenv.config()
 
@@ -66,6 +67,8 @@ const router = express.Router()
 
 app.use(express.static('public'))
 app.use(express.json())
+
+app.use('/uploads', express.static('uploads'))
 
 app.all('*', (_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
@@ -212,6 +215,7 @@ router.get('/chat-history', auth, async (req, res) => {
           uuid: c.uuid,
           dateTime: new Date(c.dateTime).toLocaleString(),
           text: c.prompt,
+          images: c.images,
           inversion: true,
           error: false,
           conversationOptions: null,
@@ -371,7 +375,7 @@ router.post('/chat-clear', auth, async (req, res) => {
 router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Content-type', 'application/octet-stream')
 
-  let { roomId, uuid, regenerate, prompt, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
+  let { roomId, uuid, regenerate, prompt, uploadFileKeys, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
   const userId = req.headers.userId.toString()
   const config = await getCacheConfig()
   const room = await getChatRoom(userId, roomId)
@@ -408,10 +412,11 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 
     message = regenerate
       ? await getChat(roomId, uuid)
-      : await insertChat(uuid, prompt, roomId, options as ChatOptions)
+      : await insertChat(uuid, prompt, uploadFileKeys, roomId, options as ChatOptions)
     let firstChunk = true
     result = await chatReplyProcess({
       message: prompt,
+      uploadFileKeys,
       lastContext: options,
       process: (chat: ChatMessage) => {
         lastResponse = chat
@@ -1299,6 +1304,8 @@ router.post('/statistics/by-day', auth, async (req, res) => {
     res.send(error)
   }
 })
+
+app.use('', uploadRouter)
 
 app.use('', router)
 app.use('/api', router)
