@@ -3,6 +3,7 @@ import type { ChatRoom, UserInfo } from 'src/storage/model'
 
 export interface RequestOptions {
   message: string
+  uploadFileKeys?: string[]
   lastContext?: { conversationId?: string; parentMessageId?: string }
   process?: (chat: ChatMessage) => void
   systemMessage?: string

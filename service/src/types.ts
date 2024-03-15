@@ -6,6 +6,7 @@ export interface RequestProps {
   uuid: number
   regenerate: boolean
   prompt: string
+  uploadFileKeys?: string[]
   options?: ChatContext
   systemMessage: string
   temperature?: number

@@ -4,7 +4,7 @@ import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, 
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import type { MessageReactive } from 'naive-ui'
-import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, useDialog, useMessage } from 'naive-ui'
+import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, NUpload, UploadFileInfo, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -54,6 +54,8 @@ const showPrompt = ref(false)
 const nowSelectChatModel = ref<string | null>(null)
 const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatHistory.value?.chatModel ?? userStore.userInfo.config.chatModel)
 
+const isVisionModel = computed(() => currentChatModel.value && currentChatModel.value?.includes('vision'))
+
 let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
@@ -74,6 +76,8 @@ function handleSubmit() {
   onConversation()
 }
 
+const uploadFileKeysRef = ref<string[]>([])
+
 async function onConversation() {
   let message = prompt.value
 
@@ -86,6 +90,9 @@ async function onConversation() {
   if (nowSelectChatModel.value && currentChatHistory.value)
     currentChatHistory.value.chatModel = nowSelectChatModel.value
 
+  const uploadFileKeys = isVisionModel.value ? uploadFileKeysRef.value : []
+  uploadFileKeysRef.value = []
+
   controller = new AbortController()
 
   const chatUuid = Date.now()
@@ -95,6 +102,7 @@ async function onConversation() {
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
       text: message,
+      images: uploadFileKeys,
       inversion: true,
       error: false,
       conversationOptions: null,
@@ -134,6 +142,7 @@ async function onConversation() {
         roomId: +uuid,
         uuid: chatUuid,
         prompt: message,
+        uploadFileKeys,
         options,
         signal: controller.signal,
         onDownloadProgress: ({ event }) => {
@@ -592,6 +601,25 @@ function formatTooltip(value: number) {
   return `${t('setting.maxContextCount')}: ${value}`
 }
 
+// https://github.com/tusen-ai/naive-ui/issues/4887
+function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) {
+  if (options.file.status === 'finished') {
+    const response = (options.event?.target as XMLHttpRequest).response
+    uploadFileKeysRef.value.push(`${response.data.fileKey}`)
+  }
+}
+
+function handleDeleteUploadFile() {
+  uploadFileKeysRef.value.pop()
+}
+
+const uploadHeaders = computed(() => {
+  const token = useAuthStore().token
+  return {
+    Authorization: `Bearer ${token}`,
+  }
+})
+
 onMounted(() => {
   firstLoading.value = true
   handleSyncChat()
@@ -643,6 +671,7 @@ onUnmounted(() => {
                   :key="index"
                   :date-time="item.dateTime"
                   :text="item.text"
+                  :images="item.images"
                   :inversion="item.inversion"
                   :response-count="item.responseCount"
                   :usage="item && item.usage || undefined"
@@ -669,7 +698,36 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <NSpace vertical>
+          <div v-if="isVisionModel && uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
+            <NSpace>
+              <img v-for="(v, i) of uploadFileKeysRef" :key="i" :src="`/uploads/${v}`" class="max-h-10">
+              <HoverButton @click="handleDeleteUploadFile">
+                <span class="text-xl text-[#4f555e] dark:text-white">
+                  <SvgIcon icon="ri:delete-back-2-fill" />
+                </span>
+              </HoverButton>
+            </NSpace>
+          </div>
+
           <div class="flex items-center space-x-2">
+            <div>
+              <NUpload
+                :disabled="!isVisionModel"
+                action="/api/upload-image"
+                list-type="image"
+                class="flex items-center justify-center h-10 transition hover:bg-neutral-100 dark:hover:bg-[#414755]"
+                style="flex-flow:row nowrap;min-width:2.5em;padding:.5em;border-radius:.5em;"
+                :headers="uploadHeaders"
+                :show-file-list="false"
+                response-type="json"
+                accept="image/*"
+                @finish="handleFinish"
+              >
+                <span class="text-xl text-[#4f555e] dark:text-white">
+                  <SvgIcon icon="ri:image-edit-line" />
+                </span>
+              </NUpload>
+            </div>
             <HoverButton @click="handleClear">
               <span class="text-xl text-[#4f555e] dark:text-white">
                 <SvgIcon icon="ri:delete-bin-line" />
