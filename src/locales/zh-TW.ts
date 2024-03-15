@@ -80,7 +80,7 @@ export default {
     disable2FAConfirm: '您确定要为此用户禁用两步验证吗？?',
   },
   setting: {
-		globalAmount: '新用户全局次数设置',
+    globalAmount: '新用户全局次数设置',
     limit_switch: '開啟次數限制',
     redeemCardNo: '兌換碼卡號',
     useAmount: '可提問次數',
