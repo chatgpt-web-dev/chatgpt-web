@@ -1306,6 +1306,7 @@ router.post('/statistics/by-day', auth, async (req, res) => {
 })
 
 app.use('', uploadRouter)
+app.use('/api', uploadRouter)
 
 app.use('', router)
 app.use('/api', router)
