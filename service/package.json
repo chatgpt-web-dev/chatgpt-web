@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
-    "chatgpt": "git+https://github.com/chatgpt-web-dev/chatgpt-api#e8fca6bf34350881b1e9243610941bc4b00ce891",
+    "chatgpt": "npm:@chatgptweb/chatgpt-api@5.3.0",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
     "express": "^4.18.3",

@@ -9,8 +9,8 @@ dependencies:
     specifier: ^1.6.7
     version: 1.6.7
   chatgpt:
-    specifier: git+https://github.com/chatgpt-web-dev/chatgpt-api#e8fca6bf34350881b1e9243610941bc4b00ce891
-    version: git@github.com+chatgpt-web-dev/chatgpt-api/e8fca6bf34350881b1e9243610941bc4b00ce891
+    specifier: npm:@chatgptweb/chatgpt-api@5.3.0
+    version: /@chatgptweb/chatgpt-api@5.3.0
   dayjs:
     specifier: ^1.11.7
     version: 1.11.7
@@ -229,6 +229,22 @@ packages:
       '@babel/helper-validator-identifier': 7.19.1
       chalk: 2.4.2
       js-tokens: 4.0.0
+
+  /@chatgptweb/chatgpt-api@5.3.0:
+    resolution: {integrity: sha512-p7WBUBQ9TY8NSNHAwkCddCy+ajavRNEv2V6rO3jWTb1LycmI2qhoKoYxvVjD8hguSYv5VmN/xUKfi6EVCdBBLA==}
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      cac: 6.7.14
+      conf: 11.0.1
+      eventsource-parser: 1.0.0
+      js-tiktoken: 1.0.7
+      keyv: 4.5.2
+      p-timeout: 6.1.1
+      quick-lru: 6.1.1
+      read-pkg-up: 9.1.0
+      uuid: 9.0.0
+    dev: false
 
   /@es-joy/jsdoccomment@0.41.0:
     resolution: {integrity: sha512-aKUhyn1QI5Ksbqcr3fFJj16p99QdjUxXAEuFst1Z47DRyoiMwivIH9MV/ARcJOCXVjPfjITciej8ZD2O/6qUmw==}
@@ -3619,24 +3635,4 @@ packages:
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: false
-
-  git@github.com+chatgpt-web-dev/chatgpt-api/e8fca6bf34350881b1e9243610941bc4b00ce891:
-    resolution: {commit: e8fca6bf34350881b1e9243610941bc4b00ce891, repo: git@github.com:chatgpt-web-dev/chatgpt-api.git, type: git}
-    name: chatgpt
-    version: 5.2.5
-    engines: {node: '>=14'}
-    hasBin: true
-    prepare: true
-    requiresBuild: true
-    dependencies:
-      cac: 6.7.14
-      conf: 11.0.1
-      eventsource-parser: 1.0.0
-      js-tiktoken: 1.0.7
-      keyv: 4.5.2
-      p-timeout: 6.1.1
-      quick-lru: 6.1.1
-      read-pkg-up: 9.1.0
-      uuid: 9.0.0
     dev: false
