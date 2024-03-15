@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSpin, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NInput, NInputNumber, NSpin, NSwitch, useMessage } from 'naive-ui'
 import type { ConfigState } from './model'
 import { SiteConfig } from './model'
 import { fetchChatConfig, fetchUpdateSite } from '@/api'
@@ -11,14 +11,13 @@ const ms = useMessage()
 const loading = ref(false)
 const saving = ref(false)
 
-const config = ref<SiteConfig>()
-config.value = new SiteConfig()
+const config = ref(new SiteConfig())
 
 async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
-    config.value = data.siteConfig
+    config.value = data.siteConfig ? data.siteConfig : new SiteConfig()
   }
   finally {
     loading.value = false
@@ -133,10 +132,8 @@ onMounted(() => {
         <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.globalAmount') }}</span>
           <div class="flex-1">
-            <NInput
-              :value="config && config.globalAmount"
-              placeholder="only number is accepted"
-              @input="(val) => { if (config) config.globalAmount = val }"
+            <NInputNumber
+              v-model:value="config.globalAmount" placeholder=""
             />
           </div>
         </div>

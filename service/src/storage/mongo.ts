@@ -262,21 +262,10 @@ export async function createUser(email: string, password: string, roles?: UserRo
   userInfo.remark = remark
   if (limit_switch != null)
     userInfo.limit_switch = limit_switch
-  if (useAmount != null) {
+  if (useAmount != null)
     userInfo.useAmount = useAmount
-  }
-  else {
-    const globalAmount = Number(config.siteConfig.globalAmount)
-    if (!Number.isNaN(globalAmount)) {
-      userInfo.useAmount = globalAmount
-    }
-    else {
-      // 如果无法转换为数字类型，执行其他操作
-      // console.log('globalAmount 无法转换为数字类型');
-      userInfo.useAmount = 10
-      // 其他操作...
-    }
-  }
+  else
+    userInfo.useAmount = config?.siteConfig?.globalAmount ?? 10
   await userCol.insertOne(userInfo)
   return userInfo
 }
