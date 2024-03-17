@@ -77,8 +77,8 @@ export async function updateGiftCards(data: GiftCard[], overRide = true) {
   return insertResult
 }
 
-export async function insertChat(uuid: number, text: string, roomId: number, options?: ChatOptions) {
-  const chatInfo = new ChatInfo(roomId, uuid, text, options)
+export async function insertChat(uuid: number, text: string, images: string[], roomId: number, options?: ChatOptions) {
+  const chatInfo = new ChatInfo(roomId, uuid, text, images, options)
   await chatCol.insertOne(chatInfo)
   return chatInfo
 }
@@ -106,7 +106,7 @@ export async function updateChat(chatId: string, response: string, messageId: st
   }
 
   if (previousResponse)
-    // @ts-expect-error previousResponse
+    // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
     update.$set.previousResponse = previousResponse
 
   await chatCol.updateOne(query, update)
@@ -207,7 +207,7 @@ export async function deleteAllChatRooms(userId: string) {
   await chatCol.updateMany({ userId, status: Status.Normal }, { $set: { status: Status.Deleted } })
 }
 
-export async function getChats(roomId: number, lastId?: number) {
+export async function getChats(roomId: number, lastId?: number): Promise<ChatInfo[]> {
   if (!lastId)
     lastId = new Date().getTime()
   const query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
@@ -263,7 +263,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
   const userInfo = new UserInfo(email, password)
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
-  if (status !== null)
+  if (status)
     userInfo.status = status
 
   userInfo.roles = roles
