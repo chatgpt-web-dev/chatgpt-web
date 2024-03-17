@@ -229,7 +229,7 @@ onMounted(async () => {
           ref="table"
           remote
           :loading="loading"
-          :row-key="(rowData:KeyConfig) => rowData._id"
+          :row-key="(rowData:KeyConfig) => rowData._id!"
           :columns="columns"
           :data="keys"
           :pagination="pagination"
