@@ -80,6 +80,9 @@ export default {
     disable2FAConfirm: '您确定要为此用户禁用两步验证吗？?',
   },
   setting: {
+    announceConfig: '网站公告',
+    announceEnabled: '公告开关',
+    announceWords: '公告内容',
     globalAmount: '新用户全局次数设置',
     limit_switch: '打开次数限制',
     usageCountLimit: '使用次数限制',

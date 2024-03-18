@@ -186,6 +186,7 @@ export class Config {
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
     public advancedConfig?: AdvancedConfig,
+    public announceConfig?: AnnounceConfig,
   ) { }
 }
 
@@ -202,6 +203,13 @@ export class SiteConfig {
     public chatModels?: string,
     public globalAmount?: number,
     public usageCountLimit?: boolean,
+  ) { }
+}
+
+export class AnnounceConfig {
+  constructor(
+    public enabled: boolean,
+    public announceWords: string,
   ) { }
 }
 
