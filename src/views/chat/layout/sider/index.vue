@@ -85,10 +85,12 @@ async function fetchAnnounce() {
     // 从数据库获取公告配置
     const { data } = await fetchAnnouncement()
     config.value = data
-    if (config.value.enabled)
-      showNotice.value = true
-    checkDoNotShowToday()
-    return config.value
+    if (config.value) {
+      if (config.value.enabled)
+        showNotice.value = true
+      checkDoNotShowToday()
+      return config.value
+    }
   }
   catch (error) {
     console.error('Error fetching the announcement:', error)
