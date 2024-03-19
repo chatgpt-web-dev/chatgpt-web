@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import fileType from 'file-type'
+import * as fileType from 'file-type'
 
 fs.mkdir('uploads').then(() => {
   globalThis.console.log('Directory uploads created')
