@@ -720,7 +720,7 @@ onUnmounted(() => {
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 response-type="json"
-                accept="image/*"
+                accept="image/png, image/jpeg, image/webp, image/gif"
                 @finish="handleFinish"
               >
                 <span class="text-xl text-[#4f555e] dark:text-white">
