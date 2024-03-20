@@ -251,6 +251,8 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
 export async function createUser(email: string, password: string, roles?: UserRole[], status?: Status, remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
+  const config = await getCacheConfig()
+
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
   if (status)
@@ -258,8 +260,12 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
   userInfo.roles = roles
   userInfo.remark = remark
-  userInfo.useAmount = useAmount
-  userInfo.limit_switch = limit_switch
+  if (limit_switch != null)
+    userInfo.limit_switch = limit_switch
+  if (useAmount != null)
+    userInfo.useAmount = useAmount
+  else
+    userInfo.useAmount = config?.siteConfig?.globalAmount ?? 10
   await userCol.insertOne(userInfo)
   return userInfo
 }
