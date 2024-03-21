@@ -29,6 +29,7 @@ export class SiteConfig {
   registerMails?: string
   siteDomain?: string
   chatModels?: string
+  globalAmount?: number
   usageCountLimit?: boolean
 }
 
