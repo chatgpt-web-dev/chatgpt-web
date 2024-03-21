@@ -2,6 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
+import type { TiktokenModel } from 'gpt-token'
 import { textTokens } from 'gpt-token'
 import speakeasy from 'speakeasy'
 import { TwoFAConfig } from './types'
@@ -454,8 +455,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         result.data.detail = {}
       result.data.detail.usage = new UsageResponse()
       // if no usage data, calculate using Tiktoken library
-      result.data.detail.usage.prompt_tokens = textTokens(prompt, model)
-      result.data.detail.usage.completion_tokens = textTokens(result.data.text, model)
+      result.data.detail.usage.prompt_tokens = textTokens(prompt, model as TiktokenModel)
+      result.data.detail.usage.completion_tokens = textTokens(result.data.text, model as TiktokenModel)
       result.data.detail.usage.total_tokens = result.data.detail.usage.prompt_tokens + result.data.detail.usage.completion_tokens
       result.data.detail.usage.estimated = true
     }
