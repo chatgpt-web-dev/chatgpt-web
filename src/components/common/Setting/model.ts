@@ -13,6 +13,7 @@ export class ConfigState {
   siteConfig?: SiteConfig
   mailConfig?: MailConfig
   auditConfig?: AuditConfig
+  announceConfig?: AnnounceConfig
 }
 
 export class UserConfig {
@@ -61,6 +62,11 @@ export class AuditConfig {
   textType?: TextAudioType
   customizeEnabled?: boolean
   sensitiveWords?: string
+}
+
+export class AnnounceConfig {
+  enabled?: boolean
+  announceWords?: string
 }
 
 export enum Status {

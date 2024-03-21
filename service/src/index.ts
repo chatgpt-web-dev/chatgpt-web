@@ -11,7 +11,7 @@ import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AnnounceConfig, AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
 import { AdvancedConfig, Status, UsageResponse, UserRole } from './storage/model'
 import {
   clearChat,
@@ -1169,6 +1169,30 @@ router.post('/mail-test', rootAuth, async (req, res) => {
     const user = await getUserById(userId)
     await sendTestMail(user.email, config)
     res.send({ status: 'Success', message: '发送成功 | Successfully', data: null })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/setting-announce', rootAuth, async (req, res) => {
+  try {
+    const config = req.body as AnnounceConfig
+    const thisConfig = await getOriginConfig()
+    thisConfig.announceConfig = config
+    const result = await updateConfig(thisConfig)
+    clearConfigCache()
+    res.send({ status: 'Success', message: '操作成功 | Successfully', data: result.announceConfig })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/announcement', async (req, res) => {
+  try {
+    const result = await getCacheConfig()
+    res.send({ status: 'Success', message: '操作成功 | Successfully', data: result.announceConfig })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
