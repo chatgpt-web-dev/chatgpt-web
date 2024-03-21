@@ -102,8 +102,13 @@ export async function updateChat(chatId: string, response: string, messageId: st
   await chatCol.updateOne(query, update)
 }
 
-export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, usage: UsageResponse) {
-  const chatUsage = new ChatUsage(userId, roomId, chatId, messageId, usage)
+export async function insertChatUsage(userId: ObjectId,
+  roomId: number,
+  chatId: ObjectId,
+  messageId: string,
+  model: string,
+  usage: UsageResponse) {
+  const chatUsage = new ChatUsage(userId, roomId, chatId, messageId, model, usage)
   await usageCol.insertOne(chatUsage)
   return chatUsage
 }

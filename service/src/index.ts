@@ -2,6 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
+import type { TiktokenModel } from 'gpt-token'
 import { textTokens } from 'gpt-token'
 import speakeasy from 'speakeasy'
 import { TwoFAConfig } from './types'
@@ -383,6 +384,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     globalThis.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
   if (room != null && isNotEmptyString(room.prompt))
     systemMessage = room.prompt
+  const model = room.chatModel
+
   let lastResponse
   let result
   let message: ChatInfo
@@ -451,9 +454,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       if (!result.data.detail)
         result.data.detail = {}
       result.data.detail.usage = new UsageResponse()
-      // 因为 token 本身不计算, 所以这里默认以 gpt 3.5 的算做一个伪统计
-      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo')
-      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo')
+      // if no usage data, calculate using Tiktoken library
+      result.data.detail.usage.prompt_tokens = textTokens(prompt, model as TiktokenModel)
+      result.data.detail.usage.completion_tokens = textTokens(result.data.text, model as TiktokenModel)
       result.data.detail.usage.total_tokens = result.data.detail.usage.prompt_tokens + result.data.detail.usage.completion_tokens
       result.data.detail.usage.estimated = true
     }
@@ -498,6 +501,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
           roomId,
           message._id,
           result.data.id,
+          model,
           result.data.detail?.usage as UsageResponse)
       }
       // update personal useAmount moved here
