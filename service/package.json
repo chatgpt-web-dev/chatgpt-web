@@ -20,7 +20,8 @@
     "dev": "tsx watch ./src/index.ts",
     "prod": "node --import tsx/esm ./build/index.js",
     "prod-node18": "node --loader tsx/esm ./build/index.js",
-    "build": "pnpm clean && tsc",
+    "build": "pnpm clean && tsc && pnpm copy",
+    "copy": "copyfiles -u 1 src/utils/templates/* build",
     "clean": "rimraf build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -58,8 +59,9 @@
     "@types/nodemailer": "^6.4.14",
     "@types/request-ip": "^0.0.41",
     "@types/speakeasy": "^2.0.10",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.56.0",
-    "rimraf": "^4.3.0",
+    "rimraf": "^5.0.5",
     "typescript": "~5.3.3"
   }
 }
