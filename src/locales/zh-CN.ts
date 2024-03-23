@@ -182,6 +182,7 @@ export default {
     info2FAStep3Tip2: '1. 登录后，在 两步验证 页面使用两步验证码关闭。',
     info2FAStep3Tip3: '2. 联系管理员来关闭两步验证。',
     maxContextCount: '最大上下文数量',
+    fastDelMsg: '快速删除消息',
   },
   store: {
     siderButton: '提示词商店',

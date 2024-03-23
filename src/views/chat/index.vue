@@ -54,6 +54,8 @@ const showPrompt = ref(false)
 const nowSelectChatModel = ref<string | null>(null)
 const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatHistory.value?.chatModel ?? userStore.userInfo.config.chatModel)
 
+const currentNavIndexRef = ref<number>(-1)
+
 const isVisionModel = computed(() => currentChatModel.value && currentChatModel.value?.includes('vision'))
 
 let loadingms: MessageReactive
@@ -438,19 +440,28 @@ function handleExport() {
   })
 }
 
-function handleDelete(index: number) {
+function handleDelete(index: number, fast: boolean) {
   if (loading.value)
     return
 
-  dialog.warning({
-    title: t('chat.deleteMessage'),
-    content: t('chat.deleteMessageConfirm'),
-    positiveText: t('common.yes'),
-    negativeText: t('common.no'),
-    onPositiveClick: () => {
-      chatStore.deleteChatByUuid(+uuid, index)
-    },
-  })
+if (fast === true) {
+    chatStore.deleteChatByUuid(+uuid, index)
+  }
+  else {
+    dialog.warning({
+      title: t('chat.deleteMessage'),
+      content: t('chat.deleteMessageConfirm'),
+      positiveText: t('common.yes'),
+      negativeText: t('common.no'),
+      onPositiveClick: () => {
+        chatStore.deleteChatByUuid(+uuid, index)
+      },
+    })
+  }
+}
+
+function updateCurrentNavIndex(index: number, newIndex: number) {
+  currentNavIndexRef.value = newIndex
 }
 
 function handleClear() {
@@ -669,6 +680,8 @@ onUnmounted(() => {
                 <Message
                   v-for="(item, index) of dataSources"
                   :key="index"
+                  :index="index"
+                  :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
                   :text="item.text"
                   :images="item.images"
@@ -678,7 +691,8 @@ onUnmounted(() => {
                   :error="item.error"
                   :loading="item.loading"
                   @regenerate="onRegenerate(index)"
-                  @delete="handleDelete(index)"
+                  @update-current-nav-index="(itemId: number) => updateCurrentNavIndex(index, itemId)"
+                  @delete="(fast) => handleDelete(index, fast)"
                   @response-history="(ev) => onResponseHistory(index, ev)"
                 />
                 <div class="sticky bottom-0 left-0 flex justify-center">

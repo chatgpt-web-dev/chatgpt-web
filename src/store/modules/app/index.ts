@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AppState, Language, Theme } from './helper'
+import type { AppState, FastDelMsg, Language, Theme } from './helper'
 import { getLocalSetting, setLocalSetting } from './helper'
 import { store } from '@/store/helper'
 
@@ -19,6 +19,13 @@ export const useAppStore = defineStore('app-store', {
     setLanguage(language: Language) {
       if (this.language !== language) {
         this.language = language
+        this.recordState()
+      }
+    },
+
+    setFastDelMsg(fastDelMsg: FastDelMsg) {
+      if (this.fastDelMsg !== fastDelMsg) {
+        this.fastDelMsg = fastDelMsg
         this.recordState()
       }
     },
