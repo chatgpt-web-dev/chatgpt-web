@@ -179,6 +179,7 @@ export default {
     info2FAStep3Tip2: '1. After logging in, use the two-step verification on the Two-Step Verification page to disable it.',
     info2FAStep3Tip3: '2. Contact the administrator to disable two-step verification.',
     maxContextCount: '최대 컨텍스트 수량',
+    fastDelMsg: '빠르게 메시지 삭제',
   },
   store: {
     siderButton: '프롬프트 스토어',

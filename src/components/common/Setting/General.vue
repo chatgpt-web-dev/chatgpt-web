@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NPopconfirm, NSelect, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSwitch, useMessage } from 'naive-ui'
 import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
@@ -268,6 +268,16 @@ function handleImportButtonClick(): void {
             :value="language"
             :options="languageOptions"
             @update-value="value => appStore.setLanguage(value)"
+          />
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.fastDelMsg') }}</span>
+        <div class="flex-1">
+          <NSwitch
+            :round="false"
+            :value="appStore.fastDelMsg"
+            @update-value="value => appStore.setFastDelMsg(value)"
           />
         </div>
       </div>

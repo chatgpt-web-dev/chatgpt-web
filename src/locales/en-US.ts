@@ -182,6 +182,7 @@ export default {
     info2FAStep3Tip2: '1. After logging in, use the two-step verification on the Two-Step Verification page to disable it.',
     info2FAStep3Tip3: '2. Contact the administrator to disable two-step verification.',
     maxContextCount: 'Max Context Count',
+    fastDelMsg: 'Fast Delete Message',
   },
   store: {
     siderButton: 'Prompt Store',
