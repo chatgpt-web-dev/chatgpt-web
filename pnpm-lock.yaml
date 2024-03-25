@@ -69,8 +69,8 @@ devDependencies:
     specifier: ^3.1.2
     version: 3.1.2
   katex:
-    specifier: ^0.16.4
-    version: 0.16.4
+    specifier: ^0.16.10
+    version: 0.16.10
   less:
     specifier: ^4.1.3
     version: 4.1.3
@@ -2277,7 +2277,7 @@ packages:
   /@traptitech/markdown-it-katex@3.6.0:
     resolution: {integrity: sha512-CnJzTWxsgLGXFdSrWRaGz7GZ1kUUi8g3E9HzJmeveX1YwVJavrKYqysktfHZQsujdnRqV5O7g8FPKEA/aeTkOQ==}
     dependencies:
-      katex: 0.16.4
+      katex: 0.16.10
     dev: true
 
   /@tsconfig/node10@1.0.9:
@@ -5275,8 +5275,8 @@ packages:
     resolution: {integrity: sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A==}
     dev: true
 
-  /katex@0.16.4:
-    resolution: {integrity: sha512-WudRKUj8yyBeVDI4aYMNxhx5Vhh2PjpzQw1GRu/LVGqL4m1AxwD1GcUp0IMbdJaf5zsjtj8ghP0DOQRYhroNkw==}
+  /katex@0.16.10:
+    resolution: {integrity: sha512-ZiqaC04tp2O5utMsl2TEZTXxa6WSC4yo0fv5ML++D3QZv/vx2Mct0mTlRx3O+uUkjfuAgOkzsCmq5MiUEsDDdA==}
     hasBin: true
     dependencies:
       commander: 8.3.0
