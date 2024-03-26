@@ -258,8 +258,7 @@ async function fetchBalance() {
     return Promise.resolve(cachedBalance.toFixed(3))
 
   // 计算起始日期和结束日期
-  const startDate = new Date(now - 90 * 24 * 60 * 60 * 1000)
-  const endDate = new Date(now + 24 * 60 * 60 * 1000)
+  const [startDate, endDate] = formatDate()
 
   const config = await getCacheConfig()
   const OPENAI_API_KEY = config.apiKey
@@ -277,7 +276,7 @@ async function fetchBalance() {
   // 查普通账单
   // const urlBalance = `${API_BASE_URL}/dashboard/billing/credit_grants`
   // 查使用量
-  const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`
+  const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${startDate}&end_date=${endDate}`
 
   const headers = {
     'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -333,12 +332,13 @@ async function fetchBalance() {
   }
 }
 
-function formatDate(date) {
-  const year = date.getFullYear()
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const day = date.getDate().toString().padStart(2, '0')
-
-  return `${year}-${month}-${day}`
+function formatDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const formattedFirstDay = `${year}-${month.toString().padStart(2, '0')}-01`;
+  const formattedToday = `${year}-${month.toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+  return [formattedFirstDay, formattedToday];
 }
 
 async function chatConfig() {
