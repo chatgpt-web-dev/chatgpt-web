@@ -52,10 +52,46 @@ const wrapClass = computed(() => {
   ]
 })
 
+function getVideoPreviewer({ type, vid }: { type: 'bilibili' | 'youtube'; vid: string }) {
+  let previewer = ''
+  if (type === 'bilibili') {
+    previewer = `<iframe src="//player.bilibili.com/player.html?bvid=${vid}&autoplay=false" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>`
+  }
+  else if (type === 'youtube') {
+    previewer = `<iframe src="https://www.youtube.com/embed/${vid}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+  }
+  else {
+    // 更新其他视频网站的在线预览
+  }
+  return `<div style="margin-bottom:16px;maring-right:16px;">${previewer}</div>`
+}
+
+function generateVideoPreviewerText(text: string) {
+  if (!text)
+    return ''
+  // 这里截取视频网站和vid
+  const reg = /(www\.youtube\.com\/watch\?v\=[^\s\)]+)|(www\.bilibili\.com\/video\/[^\s\)]+)/g
+  const links = text.match(reg)
+  return links
+    ? links?.map((link) => {
+      if (link.includes('youtube')) {
+        const pattern = /watch\?v\=([^\s\&\)]+)/
+        const matchResult = link.match(pattern)
+        return matchResult ? getVideoPreviewer({ type: 'youtube', vid: matchResult[1] }) : ''
+      }
+      else {
+        const pattern = /video\/(([^\s\/\?\)]+))/
+        const matchResult = link.match(pattern)
+        return matchResult ? getVideoPreviewer({ type: 'bilibili', vid: matchResult[1] }) : ''
+      }
+    }).join('\n')
+    : ''
+}
+
 const text = computed(() => {
   const value = props.text ?? ''
   if (!props.asRawText)
-    return mdi.render(value)
+    return mdi.render(value) + generateVideoPreviewerText(value)
   return value
 })
 
