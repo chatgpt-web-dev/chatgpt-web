@@ -32,7 +32,7 @@
     "chatgpt": "npm:@chatgptweb/chatgpt-api@5.3.0",
     "dayjs": "^1.11.7",
     "dotenv": "^16.0.3",
-    "express": "^4.18.3",
+    "express": "^4.19.2",
     "express-rate-limit": "^6.7.0",
     "file-type": "^19.0.0",
     "gpt-token": "^0.0.5",
