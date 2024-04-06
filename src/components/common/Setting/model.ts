@@ -162,3 +162,9 @@ export class TwoFAConfig {
     this.testCode = ''
   }
 }
+
+export interface GiftCard {
+  cardno: string
+  amount: number
+  redeemed: number
+}

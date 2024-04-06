@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
   },
   setting: {
+    overRide: '덮어쓰기 활성화',
+    uploadgifts: '교환 코드 업로드',
     announceConfig: '网站公告',
     announceEnabled: 'Open Announcement',
     announceWords: 'Announcement Content',
