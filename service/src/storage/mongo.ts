@@ -71,7 +71,8 @@ export async function updateAmountMinusOne(userId: string) {
 export async function updateGiftCards(data: GiftCard[], overRide = true) {
   if (overRide) {
     // i am not sure is there a drop option for the node driver reference https://mongodb.github.io/node-mongodb-native/6.4/
-    await redeemCol.deleteMany({})
+    // await redeemCol.deleteMany({})
+    await redeemCol.drop()
   }
   const insertResult = await redeemCol.insertMany(data)
   return insertResult
