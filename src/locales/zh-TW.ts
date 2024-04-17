@@ -80,6 +80,8 @@ export default {
     disable2FAConfirm: '您确定要为此用户禁用两步验证吗？?',
   },
   setting: {
+    overRide: '開啟覆寫',
+    uploadgifts: '上傳兌換碼',
     announceConfig: '网站公告',
     announceEnabled: '打开公告',
     announceWords: '公告内容',

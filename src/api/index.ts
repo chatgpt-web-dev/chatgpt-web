@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AnnounceConfig, AuditConfig, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword } from '@/components/common/Setting/model'
+import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword } from '@/components/common/Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import type { SettingsState } from '@/store/modules/user/helper'
 
@@ -150,6 +150,13 @@ export function decode_redeemcard<T = any>(redeemCardNo: string) {
   return post<T>({
     url: '/redeem-card',
     data: { redeemCardNo },
+  })
+}
+
+export function fetchUpdateGiftCards<T = any>(data: GiftCard[], overRideSwitch: boolean) {
+  return post<T>({
+    url: '/giftcard-update',
+    data: { data, overRideSwitch },
   })
 }
 

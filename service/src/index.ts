@@ -11,7 +11,7 @@ import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AnnounceConfig, AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AnnounceConfig, AuditConfig, ChatInfo, ChatOptions, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
 import { AdvancedConfig, Status, UsageResponse, UserRole } from './storage/model'
 import {
   clearChat,
@@ -39,6 +39,7 @@ import {
   updateChat,
   updateConfig,
   updateGiftCard,
+  updateGiftCards,
   updateRoomChatModel,
   updateRoomPrompt,
   updateRoomUsingContext,
@@ -882,6 +883,18 @@ router.post('/redeem-card', auth, async (req, res) => {
     else {
       throw new Error('该兑换码无效，请检查是否输错 | RedeemCode not exist or Misspelled.')
     }
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+// update giftcard database
+router.post('/giftcard-update', rootAuth, async (req, res) => {
+  try {
+    const { data, overRideSwitch } = req.body as { data: GiftCard[];overRideSwitch: boolean }
+    await updateGiftCards(data, overRideSwitch)
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
