@@ -99,7 +99,7 @@ export async function getOriginConfig() {
 
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
-      'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully.Respond using markdown.',
+      'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully.Respond using markdown (latex start with $).',
       0.8,
       1,
       20,
