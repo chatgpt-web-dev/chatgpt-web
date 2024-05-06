@@ -148,6 +148,16 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.showWatermark') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false"
+              :value="config && config.showWatermark"
+              @update:value="(val) => { if (config) config.showWatermark = val }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]" />
           <NButton :loading="saving" type="primary" @click="updateSiteInfo(config)">
             {{ $t('common.save') }}

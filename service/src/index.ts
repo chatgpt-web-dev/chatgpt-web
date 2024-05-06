@@ -645,6 +645,7 @@ router.post('/session', async (req, res) => {
             title: config.siteConfig.siteTitle,
             chatModels,
             allChatModels: chatModelOptions,
+            showWatermark: config.siteConfig?.showWatermark,
           },
         })
         return
@@ -699,6 +700,7 @@ router.post('/session', async (req, res) => {
           chatModels,
           allChatModels: chatModelOptions,
           usageCountLimit: config.siteConfig?.usageCountLimit,
+          showWatermark: config.siteConfig?.showWatermark,
           userInfo,
         },
       })
@@ -716,6 +718,7 @@ router.post('/session', async (req, res) => {
         title: config.siteConfig.siteTitle,
         chatModels: chatModelOptions, // if userId is null which means in nologin mode, open all model options, otherwise user can only choose gpt-3.5-turbo
         allChatModels: chatModelOptions,
+        showWatermark: config.siteConfig?.showWatermark,
         userInfo,
       },
     })

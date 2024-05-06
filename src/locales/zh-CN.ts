@@ -88,6 +88,7 @@ export default {
     globalAmount: '新用户全局次数设置',
     limit_switch: '打开次数限制',
     usageCountLimit: '使用次数限制',
+    showWatermark: '显示水印',
     redeemCardNo: '兑换码卡号',
     useAmount: '可提问次数',
     setting: '设置',

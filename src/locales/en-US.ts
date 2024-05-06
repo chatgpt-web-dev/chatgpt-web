@@ -88,6 +88,7 @@ export default {
     globalAmount: 'Global Usage Amount for New User',
     limit_switch: 'Open Usage Limitation',
     usageCountLimit: 'Enable Usage Count Limit',
+    showWatermark: 'Show Watermark',
     redeemCardNo: 'Redeem CardNo',
     useAmount: 'No. of questions',
     setting: 'Setting',
