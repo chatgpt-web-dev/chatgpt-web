@@ -205,6 +205,7 @@ export class SiteConfig {
     public chatModels?: string,
     public globalAmount?: number,
     public usageCountLimit?: boolean,
+    public showWatermark?: boolean,
   ) { }
 }
 

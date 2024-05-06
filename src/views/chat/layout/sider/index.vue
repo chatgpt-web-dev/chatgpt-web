@@ -5,7 +5,7 @@ import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useAuthStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { GithubSite, PromptStore } from '@/components/common'
+import { GithubSite, PromptStore, Watermark } from '@/components/common'
 import { fetchAnnouncement } from '@/api'
 import { AnnounceConfig } from '@/components/common/Setting/model'
 
@@ -156,6 +156,7 @@ onMounted(async () => {
       </div>
     </div>
   </NModal>
+  <Watermark v-if="authStore.session?.showWatermark" />
 </template>
 
 <style scoped>

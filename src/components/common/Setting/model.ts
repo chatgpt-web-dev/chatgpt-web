@@ -32,6 +32,7 @@ export class SiteConfig {
   chatModels?: string
   globalAmount?: number
   usageCountLimit?: boolean
+  showWatermark?: boolean
 }
 
 export class MailConfig {
