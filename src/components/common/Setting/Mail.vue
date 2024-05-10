@@ -106,6 +106,15 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.smtpFrom') }}</span>
+          <div class="flex-1">
+            <NInput
+              :value="config && config.smtpFrom" placeholder=""
+              @input="(val) => { if (config) config.smtpFrom = val }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]" />
           <div class="flex flex-wrap items-center gap-4">
             <NButton :loading="saving" type="primary" @click="updateMailInfo()">

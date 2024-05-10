@@ -128,6 +128,7 @@ export default {
     smtpTsl: 'Tsl',
     smtpUserName: '账号',
     smtpPassword: '密码/专用密码',
+    smtpFrom: '发件人邮箱',
     siteTitle: '网站标题',
     siteDomain: '域名 不含/',
     registerEnabled: '新用户',
