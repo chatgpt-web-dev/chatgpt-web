@@ -59,7 +59,7 @@ export async function sendTestMail(toMail: string, config: MailConfig) {
 
 async function sendMail(toMail: string, subject: string, html: string, config: MailConfig) {
   const mailOptions = {
-    from: config.smtpUserName,
+    from: config.smtpFrom || config.smtpUserName,
     to: toMail,
     subject,
     html,

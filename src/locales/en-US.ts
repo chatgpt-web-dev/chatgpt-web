@@ -128,6 +128,7 @@ export default {
     smtpTsl: 'Tsl',
     smtpUserName: 'UserName',
     smtpPassword: 'Password',
+    smtpFrom: 'From',
     siteTitle: 'Title',
     siteDomain: 'Domain',
     registerEnabled: 'Register Enabled',

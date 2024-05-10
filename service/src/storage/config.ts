@@ -54,7 +54,10 @@ export async function getOriginConfig() {
         !Number.isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
         process.env.SMTP_TSL === 'true',
         process.env.SMTP_USERNAME,
-        process.env.SMTP_PASSWORD))
+        process.env.SMTP_PASSWORD,
+        process.env.SMTP_FROM || process.env.SMTP_USERNAME,
+      ),
+    )
   }
   else {
     if (config.siteConfig.loginEnabled === undefined)

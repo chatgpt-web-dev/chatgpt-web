@@ -41,6 +41,7 @@ export class MailConfig {
   smtpTsl?: boolean
   smtpUserName?: string
   smtpPassword?: string
+  smtpFrom?: string
 }
 export type TextAuditServiceProvider = 'baidu' //  | 'ali'
 

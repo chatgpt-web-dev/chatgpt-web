@@ -223,6 +223,7 @@ export class MailConfig {
     public smtpTsl: boolean,
     public smtpUserName: string,
     public smtpPassword: string,
+    public smtpFrom?: string,
   ) { }
 }
 
