@@ -3,13 +3,15 @@ import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
 import { textTokens } from 'gpt-token'
-import type { RequestProps } from './types'
+import speakeasy from 'speakeasy'
+import { TwoFAConfig } from './types'
+import type { AuthJwtPayload, RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { abortChatProcess, chatConfig, chatReplyProcess, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AuditConfig, CHATMODEL, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo, UserPrompt } from './storage/model'
-import { Status, UsageResponse, UserRole, chatModelOptions } from './storage/model'
+import type { AuditConfig, ChatInfo, ChatOptions, Config, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo, UserPrompt } from './storage/model'
+import { AdvancedConfig, Status, UsageResponse, UserRole } from './storage/model'
 import {
   clearChat,
   clearUserPrompt,
@@ -19,6 +21,7 @@ import {
   deleteChat,
   deleteChatRoom,
   deleteUserPrompt,
+  disableUser2FA,
   existsChatRoom,
   getChat,
   getChatRoom,
@@ -41,9 +44,12 @@ import {
   updateRoomPrompt,
   updateRoomUsingContext,
   updateUser,
+  updateUser2FA,
+  updateUserAdvancedConfig,
   updateUserChatModel,
   updateUserInfo,
   updateUserPassword,
+  updateUserPasswordWithVerifyOld,
   updateUserStatus,
   upsertKey,
   upsertUserPrompt,
@@ -53,7 +59,7 @@ import { authLimiter, limiter } from './middleware/limiter'
 import { hasAnyRole, isEmail, isNotEmptyString } from './utils/is'
 import { sendNoticeMail, sendResetPasswordMail, sendTestMail, sendVerifyMail, sendVerifyMailAdmin } from './utils/mail'
 import { checkUserResetPassword, checkUserVerify, checkUserVerifyAdmin, getUserResetPasswordUrl, getUserVerifyUrl, getUserVerifyUrlAdmin, md5 } from './utils/security'
-import { rootAuth } from './middleware/rootAuth'
+import { isAdmin, rootAuth } from './middleware/rootAuth'
 
 dotenv.config()
 
@@ -133,8 +139,8 @@ router.get('/chatrooms-count', auth, async (req, res) => {
 router.post('/room-create', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { title, roomId } = req.body as { title: string; roomId: number }
-    const room = await createChatRoom(userId, title, roomId)
+    const { title, roomId, chatModel } = req.body as { title: string; roomId: number; chatModel: string }
+    const room = await createChatRoom(userId, title, roomId, chatModel)
     res.send({ status: 'Success', message: null, data: room })
   }
   catch (error) {
@@ -147,8 +153,11 @@ router.post('/room-rename', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
     const { title, roomId } = req.body as { title: string; roomId: number }
-    const room = await renameChatRoom(userId, title, roomId)
-    res.send({ status: 'Success', message: null, data: room })
+    const success = await renameChatRoom(userId, title, roomId)
+    if (success)
+      res.send({ status: 'Success', message: null, data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
   }
   catch (error) {
     console.error(error)
@@ -175,7 +184,7 @@ router.post('/room-prompt', auth, async (req, res) => {
 router.post('/room-chatmodel', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { chatModel, roomId } = req.body as { chatModel: CHATMODEL; roomId: number }
+    const { chatModel, roomId } = req.body as { chatModel: string; roomId: number }
     const success = await updateRoomChatModel(userId, roomId, chatModel)
     if (success)
       res.send({ status: 'Success', message: 'Saved successfully', data: null })
@@ -209,11 +218,14 @@ router.post('/room-delete', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { roomId } = req.body as { roomId: number }
     if (!roomId || !await existsChatRoom(userId, roomId)) {
-      res.send({ status: 'Fail', message: 'Unknow room', data: null })
+      res.send({ status: 'Fail', message: 'Unknown room', data: null })
       return
     }
-    await deleteChatRoom(userId, roomId)
-    res.send({ status: 'Success', message: null })
+    const success = await deleteChatRoom(userId, roomId)
+    if (success)
+      res.send({ status: 'Success', message: null, data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
   }
   catch (error) {
     console.error(error)
@@ -229,7 +241,6 @@ router.get('/chat-history', auth, async (req, res) => {
     const all = req.query.all as string
     if ((!roomId || !await existsChatRoom(userId, roomId)) && (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)) {
       res.send({ status: 'Success', message: null, data: [] })
-      // res.send({ status: 'Fail', message: 'Unknow room', data: null })
       return
     }
 
@@ -237,10 +248,7 @@ router.get('/chat-history', auth, async (req, res) => {
       const config = await getCacheConfig()
       if (config.siteConfig.loginEnabled) {
         try {
-          const token = req.header('Authorization').replace('Bearer ', '')
-          const info = jwt.verify(token, config.siteConfig.loginSalt.trim())
-          req.headers.userId = info.userId
-          const user = await getUserById(info.userId)
+          const user = await getUserById(userId)
           if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin)) {
             res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
             return
@@ -255,7 +263,7 @@ router.get('/chat-history', auth, async (req, res) => {
       }
     }
 
-    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : parseInt(lastId), all)
+    const chats = await getChats(roomId, !isNotEmptyString(lastId) ? null : Number.parseInt(lastId), all)
     const result = []
     chats.forEach((c) => {
       if (c.status !== Status.InversionDeleted) {
@@ -322,7 +330,6 @@ router.get('/chat-response-history', auth, async (req, res) => {
     const index = +req.query.index
     if (!roomId || !await existsChatRoom(userId, roomId)) {
       res.send({ status: 'Success', message: null, data: [] })
-      // res.send({ status: 'Fail', message: 'Unknow room', data: null })
       return
     }
     const chat = await getChat(roomId, uuid)
@@ -379,7 +386,7 @@ router.post('/chat-delete', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { roomId, uuid, inversion } = req.body as { roomId: number; uuid: number; inversion: boolean }
     if (!roomId || !await existsChatRoom(userId, roomId)) {
-      res.send({ status: 'Fail', message: 'Unknow room', data: null })
+      res.send({ status: 'Fail', message: 'Unknown room', data: null })
       return
     }
     await deleteChat(roomId, uuid, inversion)
@@ -408,7 +415,7 @@ router.post('/chat-clear', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { roomId } = req.body as { roomId: number }
     if (!roomId || !await existsChatRoom(userId, roomId)) {
-      res.send({ status: 'Fail', message: 'Unknow room', data: null })
+      res.send({ status: 'Fail', message: 'Unknown room', data: null })
       return
     }
     await clearChat(roomId)
@@ -427,7 +434,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   const userId = req.headers.userId as string
   const room = await getChatRoom(userId, roomId)
   if (room == null)
-    global.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
+    globalThis.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
   if (room != null && isNotEmptyString(room.prompt))
     systemMessage = room.prompt
   let lastResponse
@@ -485,8 +492,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         result.data.detail = {}
       result.data.detail.usage = new UsageResponse()
       // 因为 token 本身不计算, 所以这里默认以 gpt 3.5 的算做一个伪统计
-      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo-0613')
-      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo-0613')
+      result.data.detail.usage.prompt_tokens = textTokens(prompt, 'gpt-3.5-turbo')
+      result.data.detail.usage.completion_tokens = textTokens(result.data.text, 'gpt-3.5-turbo')
       result.data.detail.usage.total_tokens = result.data.detail.usage.prompt_tokens + result.data.detail.usage.completion_tokens
       result.data.detail.usage.estimated = true
     }
@@ -535,7 +542,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
     }
     catch (error) {
-      global.console.error(error)
+      globalThis.console.error(error)
     }
   }
 })
@@ -615,9 +622,7 @@ router.post('/user-register', authLimiter, async (req, res) => {
 router.post('/config', rootAuth, async (req, res) => {
   try {
     const userId = req.headers.userId.toString()
-
-    const user = await getUserById(userId)
-    if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin))
+    if (!isAdmin(userId))
       throw new Error('无权限 | No permission.')
 
     const response = await chatConfig()
@@ -641,17 +646,34 @@ router.post('/session', async (req, res) => {
       key: string
       value: string
     }[] = []
-    let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig }
+
+    const chatModelOptions = config.siteConfig.chatModels.split(',').map((model: string) => {
+      let label = model
+      if (model === 'text-davinci-002-render-sha-mobile')
+        label = 'gpt-3.5-mobile'
+      return {
+        label,
+        key: model,
+        value: model,
+      }
+    })
+
+    let userInfo: { name: string; description: string; temperature: number; top_p: number; presencePenalty: number; avatar: string; systemRole: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
     if (userId != null) {
       const user = await getUserById(userId)
       userInfo = {
         name: user.name,
         description: user.description,
+        temperature: user.temperature,
+        top_p: user.top_p,
+        presencePenalty: user.presencePenalty,
+        systemRole: user.systemRole,
         avatar: user.avatar,
         userId: user._id.toString(),
         root: user.roles.includes(UserRole.Admin),
         roles: user.roles,
         config: user.config,
+        advanced: user.advanced,
       }
 
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
@@ -702,7 +724,7 @@ router.post('/session', async (req, res) => {
 
 router.post('/user-login', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body as { username: string; password: string }
+    const { username, password, token } = req.body as { username: string; password: string; token?: string }
     if (!username || !password || !isEmail(username))
       throw new Error('用户名或密码为空 | Username or password is empty')
 
@@ -715,17 +737,32 @@ router.post('/user-login', authLimiter, async (req, res) => {
       throw new Error('请等待管理员开通 | Please wait for the admin to activate')
     if (user.status !== Status.Normal)
       throw new Error('账户状态异常 | Account status abnormal.')
+    if (user.secretKey) {
+      if (token) {
+        const verified = speakeasy.totp.verify({
+          secret: user.secretKey,
+          encoding: 'base32',
+          token,
+        })
+        if (!verified)
+          throw new Error('验证码错误 | Two-step verification code error')
+      }
+      else {
+        res.send({ status: 'Success', message: '需要两步验证 | Two-step verification required', data: { need2FA: true } })
+        return
+      }
+    }
 
     const config = await getCacheConfig()
-    const token = jwt.sign({
+    const jwtToken = jwt.sign({
       name: user.name ? user.name : user.email,
       avatar: user.avatar,
       description: user.description,
-      userId: user._id,
+      userId: user._id.toString(),
       root: user.roles.includes(UserRole.Admin),
       config: user.config,
-    }, config.siteConfig.loginSalt.trim())
-    res.send({ status: 'Success', message: '登录成功 | Login successfully', data: { token } })
+    } as AuthJwtPayload, config.siteConfig.loginSalt.trim())
+    res.send({ status: 'Success', message: '登录成功 | Login successfully', data: { token: jwtToken } })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
@@ -771,13 +808,13 @@ router.post('/user-reset-password', authLimiter, async (req, res) => {
 
 router.post('/user-info', auth, async (req, res) => {
   try {
-    const { name, avatar, description } = req.body as UserInfo
+    const { name, avatar, description, temperature, top_p, presencePenalty, systemRole } = req.body as UserInfo
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)
     if (user == null || user.status !== Status.Normal)
       throw new Error('用户不存在 | User does not exist.')
-    await updateUserInfo(userId, { name, avatar, description } as UserInfo)
+    await updateUserInfo(userId, { name, avatar, description, temperature, top_p, presencePenalty, systemRole } as UserInfo)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {
@@ -787,7 +824,7 @@ router.post('/user-info', auth, async (req, res) => {
 
 router.post('/user-chat-model', auth, async (req, res) => {
   try {
-    const { chatModel } = req.body as { chatModel: CHATMODEL }
+    const { chatModel } = req.body as { chatModel: string }
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)
@@ -829,16 +866,119 @@ router.post('/user-status', rootAuth, async (req, res) => {
 
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
-    const { userId, email, password, roles } = req.body as { userId?: string; email: string; password: string; roles: UserRole[] }
+    const { userId, email, password, roles, remark } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string }
     if (userId) {
-      await updateUser(userId, roles, password)
+      await updateUser(userId, roles, password, remark)
     }
     else {
       const newPassword = md5(password)
-      const user = await createUser(email, newPassword, roles)
+      const user = await createUser(email, newPassword, roles, remark)
       await updateUserStatus(user._id.toString(), Status.Normal)
     }
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-password', auth, async (req, res) => {
+  try {
+    let { oldPassword, newPassword, confirmPassword } = req.body as { oldPassword: string; newPassword: string; confirmPassword: string }
+    if (!oldPassword || !newPassword || !confirmPassword)
+      throw new Error('密码不能为空 | Password cannot be empty')
+    if (newPassword !== confirmPassword)
+      throw new Error('两次密码不一致 | The two passwords are inconsistent')
+    if (newPassword === oldPassword)
+      throw new Error('新密码不能与旧密码相同 | The new password cannot be the same as the old password')
+    if (newPassword.length < 6)
+      throw new Error('密码长度不能小于6位 | The password length cannot be less than 6 digits')
+
+    const userId = req.headers.userId.toString()
+    oldPassword = md5(oldPassword)
+    newPassword = md5(newPassword)
+    const result = await updateUserPasswordWithVerifyOld(userId, oldPassword, newPassword)
+    if (result.matchedCount <= 0)
+      throw new Error('旧密码错误 | Old password error')
+    if (result.modifiedCount <= 0)
+      throw new Error('更新失败 | Update error')
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.get('/user-2fa', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId.toString()
+    const user = await getUserById(userId)
+
+    const data = new TwoFAConfig()
+    if (user.secretKey) {
+      data.enaled = true
+    }
+    else {
+      const secret = speakeasy.generateSecret({ length: 20, name: `CHATGPT-WEB:${user.email}` })
+      data.otpauthUrl = secret.otpauth_url
+      data.enaled = false
+      data.secretKey = secret.base32
+      data.userName = user.email
+    }
+    res.send({ status: 'Success', message: '获取成功 | Get successfully', data })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-2fa', auth, async (req, res) => {
+  try {
+    const { secretKey, token } = req.body as { secretKey: string; token: string }
+    const userId = req.headers.userId.toString()
+
+    const verified = speakeasy.totp.verify({
+      secret: secretKey,
+      encoding: 'base32',
+      token,
+    })
+    if (!verified)
+      throw new Error('验证失败 | Verification failed')
+    await updateUser2FA(userId, secretKey)
+    res.send({ status: 'Success', message: '开启成功 | Enable 2FA successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-disable-2fa', auth, async (req, res) => {
+  try {
+    const { token } = req.body as { token: string }
+    const userId = req.headers.userId.toString()
+    const user = await getUserById(userId)
+    if (!user || !user.secretKey)
+      throw new Error('未开启 2FA | 2FA not enabled')
+    const verified = speakeasy.totp.verify({
+      secret: user.secretKey,
+      encoding: 'base32',
+      token,
+    })
+    if (!verified)
+      throw new Error('验证失败 | Verification failed')
+    await disableUser2FA(userId)
+    res.send({ status: 'Success', message: '关闭 2FA 成功 | Disable 2FA successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-disable-2fa-admin', rootAuth, async (req, res) => {
+  try {
+    const { userId } = req.body as { userId: string }
+    await disableUser2FA(userId)
+    res.send({ status: 'Success', message: '关闭 2FA 成功 | Disable 2FA successfully' })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
@@ -1001,6 +1141,55 @@ router.post('/audit-test', rootAuth, async (req, res) => {
   }
 })
 
+router.post('/setting-advanced', auth, async (req, res) => {
+  try {
+    const config = req.body as {
+      systemMessage: string
+      temperature: number
+      top_p: number
+      maxContextCount: number
+      sync: boolean
+    }
+    if (config.sync) {
+      if (!isAdmin(req.headers.userId as string)) {
+        res.send({ status: 'Fail', message: '无权限 | No permission', data: null })
+        return
+      }
+      const thisConfig = await getOriginConfig()
+      thisConfig.advancedConfig = new AdvancedConfig(
+        config.systemMessage,
+        config.temperature,
+        config.top_p,
+        config.maxContextCount,
+      )
+      await updateConfig(thisConfig)
+      clearConfigCache()
+    }
+    const userId = req.headers.userId.toString()
+    await updateUserAdvancedConfig(userId, new AdvancedConfig(
+      config.systemMessage,
+      config.temperature,
+      config.top_p,
+      config.maxContextCount,
+    ))
+    res.send({ status: 'Success', message: '操作成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/setting-reset-advanced', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId.toString()
+    await updateUserAdvancedConfig(userId, null)
+    res.send({ status: 'Success', message: '操作成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 router.get('/setting-keys', rootAuth, async (req, res) => {
   try {
     const result = await getApiKeys()
@@ -1039,8 +1228,11 @@ router.post('/setting-key-upsert', rootAuth, async (req, res) => {
 
 router.post('/statistics/by-day', auth, async (req, res) => {
   try {
-    const userId = req.headers.userId
-    const { start, end } = req.body as { start: number; end: number }
+    let { userId, start, end } = req.body as { userId?: string; start: number; end: number }
+    if (!userId)
+      userId = req.headers.userId as string
+    else if (!isAdmin(req.headers.userId as string))
+      throw new Error('无权限 | No permission')
 
     const data = await getUserStatisticsByDay(new ObjectId(userId as string), start, end)
     res.send({ status: 'Success', message: '', data })
@@ -1076,8 +1268,8 @@ router.post('/prompt-upsert', auth, async (req, res) => {
     if (userPrompt._id !== undefined)
       userPrompt._id = new ObjectId(userPrompt._id)
     userPrompt.userId = userId
-    await upsertUserPrompt(userPrompt)
-    res.send({ status: 'Success', message: '成功 | Successfully' })
+    const newUserPrompt = await upsertUserPrompt(userPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully', data: { _id: newUserPrompt._id.toHexString() } })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })

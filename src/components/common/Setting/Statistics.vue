@@ -1,15 +1,20 @@
 <script setup lang='ts'>
+import type { Ref } from 'vue'
 import { nextTick, onMounted, reactive, ref } from 'vue'
-import { NCol, NDatePicker, NIcon, NNumberAnimation, NRow, NSpin, NStatistic } from 'naive-ui'
+import { NCol, NDatePicker, NIcon, NNumberAnimation, NRow, NSelect, NSpin, NStatistic } from 'naive-ui'
 import type { ChartData, ChartOptions } from 'chart.js'
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import dayjs from 'dayjs'
+import type { UserInfo } from './model'
 import { t } from '@/locales'
-import { fetchUserStatistics } from '@/api'
+import { fetchGetUsers, fetchUserStatistics } from '@/api'
 import { SvgIcon } from '@/components/common'
+import { useUserStore } from '@/store'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+
+const userStore = useUserStore()
 
 const chartData: ChartData<'bar'> = reactive({
   labels: [],
@@ -38,6 +43,10 @@ const summary = ref({
   completionTokens: 0,
   totalTokens: 0,
 })
+
+const usersOptions: Ref<{ label: string; filter: string; value: string }[]> = ref([])
+const user: Ref<string | null> = ref(null)
+
 const loading = ref(false)
 const range: any = ref([
   dayjs().subtract(30, 'day').startOf('day').valueOf(),
@@ -66,6 +75,7 @@ async function fetchStatistics() {
   try {
     loading.value = true
     const { data } = await fetchUserStatistics(
+      user.value as string,
       dayjs(range.value[0]).startOf('day').valueOf(),
       dayjs(range.value[1]).endOf('day').valueOf(),
     )
@@ -91,8 +101,25 @@ async function fetchStatistics() {
   }
 }
 
+async function fetchUsers() {
+  const result = await fetchGetUsers(1, 10000)
+  result.data.users.forEach((user: UserInfo) => {
+    usersOptions.value.push({
+      label: `${user.email}`,
+      value: `${user._id}`,
+      filter: `${user.email} ${user.remark}`,
+    })
+  })
+}
+
+function filter(pattern: string, option: object): boolean {
+  const a = option as { label: string; filter: string; value: string }
+  return !a.filter ? false : a.filter.includes(pattern)
+}
+
 onMounted(() => {
   fetchStatistics()
+  fetchUsers()
 })
 </script>
 
@@ -101,7 +128,16 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.statisticsPeriod') }}</span>
+          <NSelect
+            v-if="userStore.userInfo.root"
+            v-model:value="user"
+            style="width: 250px"
+            filterable
+            :filter="filter"
+            placeholder="Email or remark"
+            :options="usersOptions"
+            @update-value="(value) => { user = value; fetchStatistics() }"
+          />
           <div class="flex-1">
             <NDatePicker
               v-model:value="range"

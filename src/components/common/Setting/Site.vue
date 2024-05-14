@@ -118,6 +118,18 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.chatModels') }}</span>
+          <div class="flex-1">
+            <NInput
+              :value="config && config.chatModels"
+              placeholder="英文逗号分割 | English comma separated"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 4 }"
+              @input="(val) => { if (config) config.chatModels = val }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]" />
           <NButton :loading="saving" type="primary" @click="updateSiteInfo(config)">
             {{ $t('common.save') }}

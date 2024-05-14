@@ -1,7 +1,19 @@
 import { defineStore } from 'pinia'
 import { getLocalState, setLocalState } from './helper'
+import { useUserStore } from '@/store'
 import { router } from '@/router'
-import { fetchClearChat, fetchCreateChatRoom, fetchDeleteChat, fetchDeleteChatRoom, fetchGetChatHistory, fetchGetChatRooms, fetchRenameChatRoom, fetchUpdateChatRoomUsingContext } from '@/api'
+import {
+  fetchClearChat,
+  fetchCreateChatRoom,
+  fetchDeleteChat,
+  fetchDeleteChatRoom,
+  fetchGetChatHistory,
+  fetchGetChatRooms,
+  fetchRenameChatRoom,
+  fetchUpdateChatRoomChatModel,
+  fetchUpdateChatRoomUsingContext,
+  fetchUpdateUserChatModel,
+} from '@/api'
 
 export const useChatStore = defineStore('chat-store', {
   state: (): Chat.ChatState => getLocalState(),
@@ -39,7 +51,7 @@ export const useChatStore = defineStore('chat-store', {
         this.chat.unshift({ uuid: r.uuid, data: [] })
       }
       if (uuid == null) {
-        await this.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, usingContext: true })
+        await this.addNewHistory()
       }
       else {
         this.active = uuid
@@ -94,12 +106,30 @@ export const useChatStore = defineStore('chat-store', {
       this.recordState()
     },
 
+    async setChatModel(chatModel: string, roomId: number) {
+      await fetchUpdateChatRoomChatModel(chatModel, roomId)
+      const userStore = useUserStore()
+      userStore.userInfo.config.chatModel = chatModel
+      await fetchUpdateUserChatModel(chatModel)
+    },
+
     async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
-      await fetchCreateChatRoom(history.title, history.uuid)
+      await fetchCreateChatRoom(history.title, history.uuid, history.chatModel)
       this.history.unshift(history)
       this.chat.unshift({ uuid: history.uuid, data: chatData })
       this.active = history.uuid
-      this.reloadRoute(history.uuid)
+      await this.reloadRoute(history.uuid)
+    },
+
+    async addNewHistory() {
+      const userStore = useUserStore()
+      await this.addHistory({
+        title: 'New Chat',
+        uuid: Date.now(),
+        isEdit: false,
+        usingContext: true,
+        chatModel: userStore.userInfo.config.chatModel,
+      })
     },
 
     updateHistory(uuid: number, edit: Partial<Chat.History>) {
@@ -118,7 +148,7 @@ export const useChatStore = defineStore('chat-store', {
       this.chat.splice(index, 1)
 
       if (this.history.length === 0) {
-        await this.addHistory({ title: 'New Chat', uuid: Date.now(), isEdit: false, usingContext: true })
+        await this.addNewHistory()
         return
       }
 

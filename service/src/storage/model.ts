@@ -26,6 +26,10 @@ export enum UserRole {
 export class UserInfo {
   _id: ObjectId
   name: string
+  temperature: number
+  top_p: number
+  presencePenalty: number
+  systemRole: string
   email: string
   password: string
   status: Status
@@ -36,6 +40,9 @@ export class UserInfo {
   updateTime?: string
   config?: UserConfig
   roles?: UserRole[]
+  remark?: string
+  secretKey?: string // 2fa
+  advanced?: AdvancedConfig
   constructor(email: string, password: string) {
     this.name = email
     this.email = email
@@ -45,33 +52,13 @@ export class UserInfo {
     this.verifyTime = null
     this.updateTime = new Date().toLocaleString()
     this.roles = [UserRole.User]
+    this.remark = null
   }
 }
 
 export class UserConfig {
-  chatModel: CHATMODEL
+  chatModel: string
 }
-
-// https://platform.openai.com/docs/models/overview
-// 除此之外，gpt-4-0314、gpt-4-32k-0314、gpt-3.5-turbo-0301 模型将在 9 月 13 日被弃用。
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-dalle'
-
-export const CHATMODELS: CHATMODEL[] = [
-  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-dalle',
-]
-
-export const chatModelOptions = [
-  'gpt-3.5-turbo', 'gpt-3.5-turbo-0301', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-16k', 'gpt-3.5-turbo-16k-0613', 'gpt-4', 'gpt-4-0314', 'gpt-4-32k', 'gpt-4-32k-0314', 'gpt-4-0613', 'gpt-4-32k-0613', 'text-davinci-002-render-sha-mobile', 'text-embedding-ada-002', 'gpt-4-mobile', 'gpt-4-browsing', 'gpt-4-dalle',
-].map((model: string) => {
-  let label = model
-  if (model === 'text-davinci-002-render-sha-mobile')
-    label = 'gpt-3.5-mobile'
-  return {
-    label,
-    key: model,
-    value: model,
-  }
-})
 
 export class ChatRoom {
   _id: ObjectId
@@ -83,15 +70,15 @@ export class ChatRoom {
   status: Status = Status.Normal
   // only access token used
   accountId?: string
-  chatModel: CHATMODEL
-  constructor(userId: string, title: string, roomId: number) {
+  chatModel: string
+  constructor(userId: string, title: string, roomId: number, chatModel: string) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
     this.usingContext = true
     this.accountId = null
-    this.chatModel = null
+    this.chatModel = chatModel
   }
 }
 
@@ -183,6 +170,7 @@ export class Config {
     public siteConfig?: SiteConfig,
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
+    public advancedConfig?: AdvancedConfig,
   ) { }
 }
 
@@ -195,6 +183,7 @@ export class SiteConfig {
     public registerReview?: boolean,
     public registerMails?: string,
     public siteDomain?: string,
+    public chatModels?: string,
   ) { }
 }
 
@@ -219,6 +208,15 @@ export class AuditConfig {
   ) { }
 }
 
+export class AdvancedConfig {
+  constructor(
+    public systemMessage: string,
+    public temperature: number,
+    public top_p: number,
+    public maxContextCount: number,
+  ) { }
+}
+
 export enum TextAudioType {
   None = 0,
   Request = 1 << 0, // 二进制 01
@@ -230,11 +228,12 @@ export class KeyConfig {
   _id: ObjectId
   key: string
   keyModel: APIMODEL
-  chatModels: CHATMODEL[]
+  chatModels: string[]
   userRoles: UserRole[]
   status: Status
   remark: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: CHATMODEL[], userRoles: UserRole[], remark: string) {
+  baseUrl?: string
+  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
     this.chatModels = chatModels

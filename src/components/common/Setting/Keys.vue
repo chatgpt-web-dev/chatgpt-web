@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
-import type { CHATMODEL } from './model'
 import { KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
 import { fetchGetKeys, fetchUpdateApiKeyStatus, fetchUpsertApiKey } from '@/api'
 import { t } from '@/locales'
@@ -24,22 +23,27 @@ const columns = [
     title: 'Key',
     key: 'key',
     resizable: true,
-    width: 200,
-    minWidth: 100,
-    maxWidth: 200,
+    width: 120,
+    minWidth: 50,
+    maxWidth: 120,
     ellipsis: true,
   },
   {
     title: 'Api Model',
     key: 'keyModel',
-    width: 190,
+    width: 150,
+  },
+  {
+    title: 'Base url',
+    key: 'baseUrl',
+    width: 150,
   },
   {
     title: 'Chat Model',
     key: 'chatModels',
-    width: 320,
+    width: 300,
     render(row: any) {
-      const tags = row.chatModels.map((chatModel: CHATMODEL) => {
+      const tags = row.chatModels.map((chatModel: string) => {
         return h(
           NTag,
           {
@@ -60,7 +64,7 @@ const columns = [
   {
     title: 'User Roles',
     key: 'userRoles',
-    width: 200,
+    width: 180,
     render(row: any) {
       const tags = row.userRoles.map((userRole: UserRole) => {
         return h(
@@ -83,7 +87,7 @@ const columns = [
   {
     title: 'Remark',
     key: 'remark',
-    width: 220,
+    width: 150,
   },
   {
     title: 'Action',
@@ -254,6 +258,15 @@ onMounted(async () => {
             <NInput
               v-model:value="keyConfig.key" type="textarea"
               :autosize="{ minRows: 3, maxRows: 4 }" placeholder=""
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.apiBaseUrl') }}</span>
+          <div class="flex-1">
+            <NInput
+              v-model:value="keyConfig.baseUrl"
+              style="width: 100%" placeholder=""
             />
           </div>
         </div>

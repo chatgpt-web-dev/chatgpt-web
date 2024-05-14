@@ -15,13 +15,11 @@ export class ConfigState {
   auditConfig?: AuditConfig
 }
 
-// https://platform.openai.com/docs/models/overview
-export type CHATMODEL = 'gpt-3.5-turbo' | 'gpt-3.5-turbo-0301' | 'gpt-3.5-turbo-0613' | 'gpt-3.5-turbo-16k' | 'gpt-3.5-turbo-16k-0613' | 'gpt-4' | 'gpt-4-0314' | 'gpt-4-32k' | 'gpt-4-32k-0314' | 'gpt-4-0613' | 'gpt-4-32k-0613' | 'text-davinci-002-render-sha-mobile' | 'text-embedding-ada-002' | 'gpt-4-mobile' | 'gpt-4-browsing' | 'gpt-4-dalle'
-
 export class UserConfig {
-  chatModel?: CHATMODEL
+  chatModel?: string
 }
 
+// https://platform.openai.com/docs/models/overview
 export class SiteConfig {
   siteTitle?: string
   loginEnabled?: boolean
@@ -30,6 +28,7 @@ export class SiteConfig {
   registerReview?: boolean
   registerMails?: string
   siteDomain?: string
+  chatModels?: string
 }
 
 export class MailConfig {
@@ -88,11 +87,12 @@ export class KeyConfig {
   _id?: string
   key: string
   keyModel: APIMODEL
-  chatModels: CHATMODEL[]
+  chatModels: string[]
   userRoles: UserRole[]
   status: Status
   remark: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: CHATMODEL[], userRoles: UserRole[], remark: string) {
+  baseUrl?: string
+  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
     this.chatModels = chatModels
@@ -135,7 +135,29 @@ export class UserInfo {
   email?: string
   password?: string
   roles: UserRole[]
+  remark?: string
   constructor(roles: UserRole[]) {
     this.roles = roles
+  }
+}
+
+export class UserPassword {
+  oldPassword?: string
+  newPassword?: string
+  confirmPassword?: string
+}
+
+export class TwoFAConfig {
+  enaled: boolean
+  userName: string
+  secretKey: string
+  otpauthUrl: string
+  testCode: string
+  constructor() {
+    this.enaled = false
+    this.userName = ''
+    this.secretKey = ''
+    this.otpauthUrl = ''
+    this.testCode = ''
   }
 }

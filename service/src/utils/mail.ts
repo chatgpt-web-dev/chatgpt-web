@@ -1,8 +1,13 @@
-import * as fs from 'fs'
-import * as path from 'path'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as url from 'node:url'
+
 import nodemailer from 'nodemailer'
+
 import type { MailConfig } from '../storage/model'
 import { getCacheConfig } from '../storage/config'
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 export async function sendVerifyMail(toMail: string, verifyUrl: string) {
   const config = (await getCacheConfig())

@@ -15,13 +15,12 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "outDir": "build",
-    "noEmit": true
   },
   "exclude": [
     "node_modules",
     "build"
   ],
   "include": [
-    "**/*.ts"
+    "src/**/*.ts"
   ]
 }

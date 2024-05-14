@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import type { TextAuditServiceProvider } from 'src/utils/textAudit'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
-import { AuditConfig, CHATMODELS, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
+import { AdvancedConfig, AuditConfig, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
 
 dotenv.config()
@@ -27,7 +27,7 @@ export async function getOriginConfig() {
   let config = await getConfig()
   if (config == null) {
     config = new Config(new ObjectId(),
-      !isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000,
+      !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000,
       process.env.OPENAI_API_KEY,
       process.env.OPENAI_API_DISABLE_DEBUG === 'true',
       process.env.OPENAI_ACCESS_TOKEN,
@@ -50,7 +50,7 @@ export async function getOriginConfig() {
         process.env.REGISTER_MAILS,
         process.env.SITE_DOMAIN),
       new MailConfig(process.env.SMTP_HOST,
-        !isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
+        !Number.isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
         process.env.SMTP_TSL === 'true',
         process.env.SMTP_USERNAME,
         process.env.SMTP_PASSWORD))
@@ -93,6 +93,19 @@ export async function getOriginConfig() {
       '',
     )
   }
+
+  if (!config.advancedConfig) {
+    config.advancedConfig = new AdvancedConfig(
+      'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully.Respond using markdown.',
+      0.8,
+      1,
+      20,
+    )
+  }
+
+  if (!isNotEmptyString(config.siteConfig.chatModels))
+    config.siteConfig.chatModels = 'gpt-3.5-turbo,gpt-3.5-turbo-1106,gpt-3.5-turbo-16k,gpt-3.5-turbo-16k-0613,gpt-4,gpt-4-0613,gpt-4-32k,gpt-4-32k-0613,text-davinci-002-render-sha-mobile,text-embedding-ada-002,gpt-4-mobile,gpt-4-browsing,gpt-4-1106-preview,gpt-4-vision-preview,gemini-pro'
+
   return config
 }
 
@@ -140,8 +153,8 @@ export function clearApiKeyCache() {
 
 export async function getApiKeys() {
   const result = await getKeys()
+  const config = await getCacheConfig()
   if (result.keys.length <= 0) {
-    const config = await getCacheConfig()
     if (config.apiModel === 'ChatGPTAPI')
       result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
 
@@ -157,7 +170,7 @@ export async function getApiKeys() {
       key.userRoles.push(UserRole.Guest)
     }
     if (key.chatModels == null || key.chatModels.length <= 0) {
-      CHATMODELS.forEach((chatModel) => {
+      config.siteConfig.chatModels.split(',').forEach((chatModel) => {
         key.chatModels.push(chatModel)
       })
     }

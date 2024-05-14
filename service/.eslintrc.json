@@ -1,5 +1,13 @@
 {
   "root": true,
-  "ignorePatterns": ["build"],
-  "extends": ["@antfu"]
+  "ignorePatterns": ["build", "tsconfig.json"],
+  "extends": ["@antfu"],
+  "rules": {
+    "n/prefer-global/process": ["error", "always"],
+    "no-undef": "error"
+  },
+  "globals": {
+    "__dirname": "off",
+    "__filename": "off"
+  }
 }

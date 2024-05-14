@@ -1,6 +1,4 @@
 declare namespace Chat {
-  import { CHATMODEL } from "@/components/common/Setting/model"
-
   interface Chat {
     uuid?: number
     dateTime: string
@@ -27,7 +25,7 @@ declare namespace Chat {
     all?: boolean
     prompt?: string
     usingContext: boolean
-    chatModel?: CHATMODEL
+    chatModel?: string
   }
 
   interface ChatState {
