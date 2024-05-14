@@ -1,12 +1,15 @@
 <script setup lang='ts'>
-import type { CSSProperties } from 'vue'
-import { computed, ref, watch } from 'vue'
-import { NButton, NLayoutSider } from 'naive-ui'
+import { CSSProperties, computed, onMounted, ref, watch } from 'vue'
+import { NButton, NLayoutSider, NModal } from 'naive-ui'
 import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useAuthStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { PromptStore } from '@/components/common'
+import { GithubSite, PromptStore, Watermark } from '@/components/common'
+import { fetchAnnouncement } from '@/api'
+import { AnnounceConfig } from '@/components/common/Setting/model'
+
+const config = ref<AnnounceConfig>()
 
 const appStore = useAppStore()
 const authStore = useAuthStore()
@@ -56,6 +59,48 @@ watch(
     flush: 'post',
   },
 )
+
+const notice_text = ref('')
+const showNotice = ref(false)
+
+const closeModal = () => {
+  showNotice.value = false
+}
+
+const doNotShowToday = () => {
+  const today = new Date().toDateString()
+  localStorage.setItem('announcementLastClosed', today)
+  closeModal()
+}
+
+const checkDoNotShowToday = () => {
+  const today = new Date().toDateString()
+  const lastClosed = localStorage.getItem('announcementLastClosed')
+  if (lastClosed === today)
+    showNotice.value = false
+}
+
+async function fetchAnnounce() {
+  try {
+    // 从数据库获取公告配置
+    const { data } = await fetchAnnouncement()
+    config.value = data
+    if (config.value) {
+      if (config.value.enabled)
+        showNotice.value = true
+      checkDoNotShowToday()
+      return config.value
+    }
+  }
+  catch (error) {
+    console.error('Error fetching the announcement:', error)
+  }
+}
+
+onMounted(async () => {
+  const data = await fetchAnnounce()
+  notice_text.value = `${data?.announceWords}`
+})
 </script>
 
 <template>
@@ -73,7 +118,7 @@ watch(
     <div class="flex flex-col h-full" :style="mobileSafeArea">
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
-          <NButton dashed block :disabled="!!authStore.session?.auth && !authStore.token" @click="handleAdd">
+          <NButton dashed block :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled" @click="handleAdd">
             {{ $t('chat.newChatButton') }}
           </NButton>
         </div>
@@ -87,10 +132,41 @@ watch(
         </div>
       </main>
       <Footer />
+      <GithubSite class="flex-col-2 text-center m-0" />
     </div>
   </NLayoutSider>
   <template v-if="isMobile">
     <div v-show="!collapsed" class="fixed inset-0 z-40 bg-black/40" @click="handleUpdateCollapsed" />
   </template>
   <PromptStore v-model:visible="show" />
+  <NModal v-model:show="showNotice" :auto-focus="false" preset="card" :style="{ width: !isMobile ? '33%' : '90%' }">
+    <div class="p-4 space-y-5 min-h-[200px]">
+      <div class="w-full markdown-body" v-html="notice_text" />
+    </div>
+    <div class="buttons-container">
+      <div class="button-wrapper">
+        <NButton type="primary" @click="closeModal">
+          关闭公告
+        </NButton>
+      </div>
+      <div class="button-wrapper">
+        <NButton type="default" @click="doNotShowToday">
+          今日不再提示
+        </NButton>
+      </div>
+    </div>
+  </NModal>
+  <Watermark v-if="authStore.session?.showWatermark" />
 </template>
+
+<style scoped>
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.button-wrapper {
+  margin-left: 10px;
+}
+</style>

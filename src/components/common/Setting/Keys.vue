@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { DataTableColumns } from 'naive-ui'
 import { h, onMounted, reactive, ref } from 'vue'
 import { NButton, NDataTable, NInput, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
 import { KeyConfig, Status, UserRole, apiModelOptions, userRoleOptions } from './model'
@@ -18,96 +19,85 @@ const handleSaving = ref(false)
 const keyConfig = ref(new KeyConfig('', 'ChatGPTAPI', [], [], ''))
 
 const keys = ref([])
-const columns = [
-  {
-    title: 'Key',
-    key: 'key',
-    resizable: true,
-    width: 120,
-    minWidth: 50,
-    maxWidth: 120,
-    ellipsis: true,
-  },
-  {
-    title: 'Api Model',
-    key: 'keyModel',
-    width: 150,
-  },
-  {
-    title: 'Base url',
-    key: 'baseUrl',
-    width: 150,
-  },
-  {
-    title: 'Chat Model',
-    key: 'chatModels',
-    width: 300,
-    render(row: any) {
-      const tags = row.chatModels.map((chatModel: string) => {
-        return h(
-          NTag,
-          {
-            style: {
-              marginRight: '6px',
-            },
-            type: 'info',
-            bordered: false,
-          },
-          {
-            default: () => chatModel,
-          },
-        )
-      })
-      return tags
+const createColumns = (): DataTableColumns => {
+  return [
+    {
+      title: 'Key',
+      key: 'key',
+      resizable: true,
+      width: 120,
+      minWidth: 50,
+      maxWidth: 120,
+      ellipsis: true,
     },
-  },
-  {
-    title: 'User Roles',
-    key: 'userRoles',
-    width: 180,
-    render(row: any) {
-      const tags = row.userRoles.map((userRole: UserRole) => {
-        return h(
-          NTag,
-          {
-            style: {
-              marginRight: '6px',
-            },
-            type: 'info',
-            bordered: false,
-          },
-          {
-            default: () => UserRole[userRole],
-          },
-        )
-      })
-      return tags
+    {
+      title: 'Api Model',
+      key: 'keyModel',
+      width: 150,
     },
-  },
-  {
-    title: 'Remark',
-    key: 'remark',
-    width: 150,
-  },
-  {
-    title: 'Action',
-    key: '_id',
-    width: 220,
-    render(row: KeyConfig) {
-      const actions: any[] = []
-      actions.push(h(
-        NButton,
-        {
-          size: 'small',
-          style: {
-            marginRight: '6px',
-          },
-          type: 'error',
-          onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
-        },
-        { default: () => t('common.delete') },
-      ))
-      if (row.status === Status.Normal) {
+    {
+      title: 'Base url',
+      key: 'baseUrl',
+      width: 150,
+    },
+    {
+      title: 'Chat Model',
+      key: 'chatModels',
+      width: 300,
+      render(row: any) {
+        const tags = row.chatModels.map((chatModel: string) => {
+          return h(
+            NTag,
+            {
+              style: {
+                marginRight: '6px',
+              },
+              type: 'info',
+              bordered: false,
+            },
+            {
+              default: () => chatModel,
+            },
+          )
+        })
+        return tags
+      },
+    },
+    {
+      title: 'User Roles',
+      key: 'userRoles',
+      width: 180,
+      render(row: any) {
+        const tags = row.userRoles.map((userRole: UserRole) => {
+          return h(
+            NTag,
+            {
+              style: {
+                marginRight: '6px',
+              },
+              type: 'info',
+              bordered: false,
+            },
+            {
+              default: () => UserRole[userRole],
+            },
+          )
+        })
+        return tags
+      },
+    },
+    {
+      title: 'Remark',
+      key: 'remark',
+      width: 150,
+    },
+    {
+      title: 'Action',
+      key: '_id',
+      width: 220,
+      fixed: 'right',
+      render(row: any) {
+        const actions: any[] = []
         actions.push(h(
           NButton,
           {
@@ -115,16 +105,33 @@ const columns = [
             style: {
               marginRight: '6px',
             },
-            type: 'info',
-            onClick: () => handleEditKey(row),
+            type: 'error',
+            onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
           },
-          { default: () => t('common.edit') },
+          { default: () => t('common.delete') },
         ))
-      }
-      return actions
+        if (row.status === Status.Normal) {
+          actions.push(h(
+            NButton,
+            {
+              size: 'small',
+              style: {
+                marginRight: '6px',
+              },
+              type: 'info',
+              onClick: () => handleEditKey(row as KeyConfig),
+            },
+            { default: () => t('common.edit') },
+          ))
+        }
+        return actions
+      },
     },
-  },
-]
+  ]
+}
+
+const columns = createColumns()
+
 const pagination = reactive({
   page: 1,
   pageSize: 100,

@@ -1,13 +1,16 @@
 import { defineStore } from 'pinia'
 import jwt_decode from 'jwt-decode'
 import type { UserInfo } from '../user/helper'
+import { useChatStore } from '../chat'
+import { useUserStore } from '../user'
 import { getToken, removeToken, setToken } from './helper'
-import { store, useChatStore, useUserStore } from '@/store'
-import { fetchSession } from '@/api'
+import { store } from '@/store/helper'
+import { fetchLogout, fetchSession } from '@/api'
 import { UserConfig } from '@/components/common/Setting/model'
 
 interface SessionResponse {
   auth: boolean
+  authProxyEnabled: boolean
   model: 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI'
   allowRegister: boolean
   title: string
@@ -21,6 +24,8 @@ interface SessionResponse {
     key: string
     value: string
   }[]
+  usageCountLimit: boolean
+  showWatermark: boolean
   userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; config: UserConfig }
 }
 
@@ -79,6 +84,7 @@ export const useAuthStore = defineStore('auth-store', {
       const chatStore = useChatStore()
       await chatStore.clearLocalChat()
       removeToken()
+      await fetchLogout()
     },
   },
 })

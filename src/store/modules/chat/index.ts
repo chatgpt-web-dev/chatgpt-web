@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
+import { useUserStore } from '../user'
 import { getLocalState, setLocalState } from './helper'
-import { useUserStore } from '@/store'
 import { router } from '@/router'
 import {
   fetchClearChat,

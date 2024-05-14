@@ -1,8 +1,14 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AuditConfig, ConfigState, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
+import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import type { SettingsState } from '@/store/modules/user/helper'
+
+export function fetchAnnouncement<T = any>() {
+  return post<T>({
+    url: '/announcement',
+  })
+}
 
 export function fetchChatConfig<T = any>() {
   return post<T>({
@@ -16,6 +22,7 @@ export function fetchChatAPIProcess<T = any>(
     uuid: number
     regenerate?: boolean
     prompt: string
+    uploadFileKeys?: string[]
     options?: { conversationId?: string; parentMessageId?: string }
     signal?: GenericAbortSignal
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
@@ -28,6 +35,7 @@ export function fetchChatAPIProcess<T = any>(
     uuid: params.uuid,
     regenerate: params.regenerate || false,
     prompt: params.prompt,
+    uploadFileKeys: params.uploadFileKeys,
     options: params.options,
   }
 
@@ -89,6 +97,13 @@ export function fetchLogin<T = any>(username: string, password: string, token?: 
   })
 }
 
+export function fetchLogout<T = any>() {
+  return post<T>({
+    url: '/user-logout',
+    data: { },
+  })
+}
+
 export function fetchSendResetMail<T = any>(username: string) {
   return post<T>({
     url: '/user-send-reset-mail',
@@ -114,6 +129,34 @@ export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, descr
   return post<T>({
     url: '/user-info',
     data: { name, avatar, description, temperature, top_p, presencePenalty, systemRole },
+  })
+}
+
+// 提交用户兑换后额度
+export function fetchUpdateUserAmt<T = any>(useAmount: number) {
+  return post<T>({
+    url: '/user-updateamtinfo',
+    data: { useAmount },
+  })
+}
+// 获取用户目前额度（因为兑换加总在前端完成，因此先查询一次实际额度）
+export function fetchUserAmt<T = any>() {
+  return get<T>({
+    url: '/user-getamtinfo',
+  })
+}
+// 获取兑换码对应的额度
+export function decode_redeemcard<T = any>(redeemCardNo: string) {
+  return post<T>({
+    url: '/redeem-card',
+    data: { redeemCardNo },
+  })
+}
+
+export function fetchUpdateGiftCards<T = any>(data: GiftCard[], overRideSwitch: boolean) {
+  return post<T>({
+    url: '/giftcard-update',
+    data: { data, overRideSwitch },
   })
 }
 
@@ -165,10 +208,11 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   })
 }
 
+// 增加useAmount信息 limit_switch
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',
-    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark },
+    data: { userId: userInfo._id, roles: userInfo.roles, email: userInfo.email, password: userInfo.password, remark: userInfo.remark, useAmount: userInfo.useAmount, limit_switch: userInfo.limit_switch },
   })
 }
 
@@ -286,6 +330,13 @@ export function fetchTestAudit<T = any>(text: string, audit: AuditConfig) {
   return post<T>({
     url: '/audit-test',
     data: { audit, text },
+  })
+}
+
+export function fetchUpdateAnnounce<T = any>(announce: AnnounceConfig) {
+  return post<T>({
+    url: '/setting-announce',
+    data: announce,
   })
 }
 

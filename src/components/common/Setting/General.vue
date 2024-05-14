@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSlider, useMessage } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSlider, NSwitch, useMessage } from 'naive-ui'
 import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
@@ -9,11 +9,16 @@ import type { UserInfo } from '@/store/modules/user/helper'
 import { getCurrentDate } from '@/utils/functions'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
-import { fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
+import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const authStore = useAuthStore()
+
+// 页面加载时读取后端额度（因为扣减计算在后端完成，前端信息滞后）
+onMounted(() => {
+  userStore.readUserAmt()
+})
 
 const { isMobile } = useBasicLayout()
 
@@ -36,6 +41,10 @@ const presencePenalty = ref(userInfo.value.presencePenalty ?? 0.6)
 const name = ref(userInfo.value.name ?? '')
 
 const description = ref(userInfo.value.description ?? '')
+
+// 新创建额度和兑换相关响应式变量，为null的话默认送10次
+const useAmount = computed(() => userStore.userInfo.useAmount ?? 10)
+const redeemCardNo = ref('')
 
 const language = computed({
   get() {
@@ -73,7 +82,28 @@ const languageOptions: { label: string; key: Language; value: Language }[] = [
 
 async function updateUserInfo(options: Partial<UserInfo>) {
   await userStore.updateUserInfo(true, options)
-  ms.success(t('common.success'))
+  ms.success(`更新个人信息 ${t('common.success')}`)
+}
+// 更新并兑换，这里图页面设计方便暂时先放一起了，下方页面新增了两个输入框
+async function redeemandupdateUserInfo(options: { avatar: string; name: string; description: string; useAmount: number; redeemCardNo: string }) {
+  const { avatar, name, description, useAmount, redeemCardNo } = options
+  let add_amt = 0
+  let message = ''
+  try {
+    const res = await decode_redeemcard(redeemCardNo)
+    add_amt = Number(res.data)
+    message = res.message ?? ''
+  }
+  catch (error: any) {
+    add_amt = 0
+    message = error.message ?? ''
+  }
+  const new_useAmount = useAmount + add_amt
+  const new_options = { avatar, name, description, useAmount: new_useAmount }
+
+  await updateUserInfo(new_options)
+  userStore.readUserAmt()
+  ms.success(`兑换码：${message},本次充值${add_amt.toString()}次，总计${new_useAmount.toString()}次`)
 }
 
 async function updateUserChatModel(chatModel: string) {
@@ -150,11 +180,29 @@ function handleImportButtonClick(): void {
           <NInput v-model:value="description" placeholder="" />
         </div>
       </div>
+      <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
+        <div class="flex-1">
+          <div v-text="useAmount" />
+        </div>
+      </div>
+      <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.redeemCardNo') }}</span>
+        <div class="flex-1">
+          <NInput v-model:value="redeemCardNo" placeholder="" />
+        </div>
+      </div>
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[100px]">{{ $t('setting.avatarLink') }}</span>
         <div class="flex-1">
           <NInput v-model:value="avatar" placeholder="" />
         </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.saveUserInfo') }}</span>
+        <NButton type="primary" @click="redeemandupdateUserInfo({ avatar, name, description, useAmount, redeemCardNo })">
+          {{ $t('common.save') }}
+        </NButton>
       </div>
       <NDivider />
       <div class="flex items-center space-x-4">
@@ -225,6 +273,7 @@ function handleImportButtonClick(): void {
             </template>
             {{ $t('common.import') }}
           </NButton>
+
           <NPopconfirm placement="bottom" @positive-click="clearData">
             <template #trigger>
               <NButton size="small">
@@ -262,6 +311,16 @@ function handleImportButtonClick(): void {
             :value="language"
             :options="languageOptions"
             @update-value="value => appStore.setLanguage(value)"
+          />
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.fastDelMsg') }}</span>
+        <div class="flex-1">
+          <NSwitch
+            :round="false"
+            :value="appStore.fastDelMsg"
+            @update-value="value => appStore.setFastDelMsg(value)"
           />
         </div>
       </div>

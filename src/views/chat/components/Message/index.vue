@@ -8,10 +8,20 @@ import { useIconRender } from '@/hooks/useIconRender'
 import { t } from '@/locales'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { copyToClip } from '@/utils/copy'
+import { useAppStore } from '@/store'
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<Emit>()
+
+const appStore = useAppStore()
 
 interface Props {
+  index: number
+  currentNavIndex: number
   dateTime?: string
   text?: string
+  images?: string[]
   inversion?: boolean
   error?: boolean
   loading?: boolean
@@ -23,13 +33,10 @@ interface Props {
     estimated: boolean
   }
 }
-const props = defineProps<Props>()
-
-const emit = defineEmits<Emit>()
-
 interface Emit {
   (ev: 'regenerate'): void
-  (ev: 'delete'): void
+  (ev: 'delete', fast: boolean): void
+  (ev: 'updateCurrentNavIndex', itemId: number): void
   (ev: 'responseHistory', historyIndex: number): void
 }
 
@@ -84,7 +91,7 @@ function handleSelect(key: 'copyText' | 'delete' | 'toggleRenderType') {
       asRawText.value = !asRawText.value
       return
     case 'delete':
-      emit('delete')
+      emit('delete', false)
   }
 }
 
@@ -109,19 +116,58 @@ async function handlePreviousResponse(next: number) {
   indexRef.value += next
   emit('responseHistory', indexRef.value - 1)
 }
+
+function fastDelMsg() {
+  emit('updateCurrentNavIndex', -1)
+  emit('delete', true)
+}
+
+function toggleShowFastDelMsg(event: any, itemId: number) {
+     if (window?.getSelection()?.toString())
+        return
+      if (!isEventTargetValid(event))
+        return
+
+        if (props.currentNavIndex === itemId)
+          emit('updateCurrentNavIndex', -1)
+        else
+          emit('updateCurrentNavIndex', itemId)
+  }
+
+function isEventTargetValid(event: any) {
+    let element = event.target
+    while (element) {
+        if (element.classList && element.classList.contains('excludeFastDel'))
+            return false
+
+        element = element.parentElement
+    }
+    return true
+}
 </script>
 
 <template>
   <div
-    ref="messageRef"
-    class="flex w-full mb-6 overflow-hidden"
+    ref="messageRef" class="flex w-full mb-6 overflow-hidden"
     :class="[{ 'flex-row-reverse': inversion }]"
+    @click="toggleShowFastDelMsg($event, props.index)"
   >
-    <div
-      class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
-      :class="[inversion ? 'ml-2' : 'mr-2']"
-    >
-      <AvatarComponent :image="inversion" />
+    <div class="flex flex-col">
+      <div
+        class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
+        :class="[inversion ? 'ml-2' : 'mr-2']"
+      >
+        <AvatarComponent :image="inversion" />
+      </div>
+      <div
+        v-show="props.currentNavIndex === props.index && appStore.fastDelMsg"
+        class="flex-grow flex items-center justify-center overflow-hidden rounded-full"
+        :class="[inversion ? 'ml-2' : 'mr-2']"
+      >
+        <button class="focus:outline-none" style="opacity: 0.5;" @click="fastDelMsg">
+          <SvgIcon class="text-lg" icon="ri:delete-bin-line" />
+        </button>
+      </div>
     </div>
     <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
       <p v-if="inversion" class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
@@ -179,10 +225,11 @@ async function handlePreviousResponse(next: number) {
           :inversion="inversion"
           :error="error"
           :text="text"
+          :images="images"
           :loading="loading"
           :as-raw-text="asRawText"
         />
-        <div class="flex flex-col">
+        <div class="flex flex-col excludeFastDel">
           <button
             v-if="!inversion"
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
