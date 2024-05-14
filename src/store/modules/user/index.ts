@@ -10,7 +10,7 @@ export const useUserStore = defineStore('user-store', {
       this.userInfo = { ...this.userInfo, ...userInfo }
       this.recordState()
       if (update) {
-        await fetchUpdateUserInfo(userInfo.name ?? '', userInfo.avatar ?? '', userInfo.description ?? '')
+				await fetchUpdateUserInfo(userInfo.name ?? '', userInfo.avatar ?? '', userInfo.description ?? '', userInfo.temperature ?? 0.8, userInfo.top_p ?? 0.9, userInfo.presencePenalty ?? 0.6, userInfo.systemRole ?? '')
         // 更新用户信息和额度写一起了，如果传了额度则更新
         if (userInfo.useAmount)
           await fetchUpdateUserAmt(userInfo.useAmount)
