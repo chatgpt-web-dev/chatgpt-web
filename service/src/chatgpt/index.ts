@@ -403,7 +403,7 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
             url: string
           }
         }[] = chatInfo.prompt
-        if (chatInfo.images) {
+        if (chatInfo.images && chatInfo.images.length > 0) {
           content = [
             {
               type: 'text',
