@@ -8,7 +8,7 @@ const releaseVersion = import.meta.env.VITE_RELEASE_VERSION || 'v0.0.0'
     <span class="text-neutral-400">
       Powered by
     </span>
-    <a href="https://chatgpt-web.dev" target="_blank">
+    <a href="https://github.com/jamebal/chatgpt-web" target="_blank">
       <span class="text-blue-500">
         chatgpt-web
       </span>

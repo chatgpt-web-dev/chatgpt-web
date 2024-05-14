@@ -115,6 +115,7 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
 }
 const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
 async function chatReplyProcess(options: RequestOptions) {
+  console.log('options', options)
   const model = options.room.chatModel
   const key = await getRandomApiKey(options.user, model, options.room.accountId)
   const userId = options.user._id.toString()
@@ -415,7 +416,7 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
             url: string
           }
         }[] = chatInfo.prompt
-        if (chatInfo.images) {
+        if (chatInfo.images && chatInfo.images.length > 0) {
           content = [
             {
               type: 'text',

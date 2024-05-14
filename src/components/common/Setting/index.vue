@@ -108,13 +108,6 @@ const show = computed({
           </template>
           <ChatRecord />
         </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-user-5-line" />
-            <span class="ml-2">{{ $t('setting.userConfig') }}</span>
-          </template>
-          <User />
-        </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri-key-2-line" />
@@ -156,13 +149,6 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.userConfig') }}</span>
           </template>
           <User />
-        </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
-          </template>
-          <Key />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="GiftCardConfig" tab="GiftCardConfig">
           <template #tab>
