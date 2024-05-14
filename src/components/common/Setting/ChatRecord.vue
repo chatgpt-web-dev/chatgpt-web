@@ -8,6 +8,7 @@ import { SvgIcon } from '@/components/common'
 
 interface HistoryChat {
   uuid?: number
+	model?: string
   dateTime: string
   text: string
   inversion?: boolean
@@ -182,6 +183,7 @@ onMounted(async () => {
                 :key="index"
                 :date-time="item.dateTime"
                 :text="item.text"
+                :model="item.model"
                 :inversion="item.inversion"
                 :response-count="item.responseCount"
                 :usage="item && item.usage || undefined"

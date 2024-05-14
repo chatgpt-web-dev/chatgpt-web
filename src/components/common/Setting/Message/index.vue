@@ -7,6 +7,7 @@ import { t } from '@/locales'
 
 interface Props {
   dateTime?: string
+	model?: string
   text?: string
   inversion?: boolean
   error?: boolean
@@ -62,7 +63,7 @@ async function handlePreviousResponse(next: number) {
     </div>
     <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
       <p v-if="inversion" class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
-        {{ new Date(dateTime as string).toLocaleString() }}
+        {{ `${model} - ${new Date(dateTime as string).toLocaleString()}` }}
       </p>
       <p v-else class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
         <NSpace>

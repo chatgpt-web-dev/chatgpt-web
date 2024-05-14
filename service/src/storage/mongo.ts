@@ -79,8 +79,8 @@ export async function updateGiftCards(data: GiftCard[], overRide = true) {
   return insertResult
 }
 
-export async function insertChat(uuid: number, text: string, images: string[], roomId: number, options?: ChatOptions) {
-  const chatInfo = new ChatInfo(roomId, uuid, text, images, options)
+export async function insertChat(uuid: number, text: string, images: string[], roomId: number, model: string, options?: ChatOptions) {
+  const chatInfo = new ChatInfo(roomId, uuid, text, images, model, options)
   await chatCol.insertOne(chatInfo)
   return chatInfo
 }
@@ -93,11 +93,12 @@ export async function getChatByMessageId(messageId: string) {
   return await chatCol.findOne({ 'options.messageId': messageId })
 }
 
-export async function updateChat(chatId: string, response: string, messageId: string, conversationId: string, usage: UsageResponse, previousResponse?: []) {
+export async function updateChat(chatId: string, response: string, messageId: string, conversationId: string, model: string, usage: UsageResponse, previousResponse?: []) {
   const query = { _id: new ObjectId(chatId) }
   const update = {
     $set: {
       'response': response,
+      'model': model || '',
       'options.messageId': messageId,
       'options.conversationId': conversationId,
       'options.prompt_tokens': usage?.prompt_tokens,

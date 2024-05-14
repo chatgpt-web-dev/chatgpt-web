@@ -278,6 +278,7 @@ router.get('/chat-history', auth, async (req, res) => {
       if (c.status !== Status.InversionDeleted) {
         result.push({
           uuid: c.uuid,
+          model: c.model,
           dateTime: new Date(c.dateTime).toLocaleString(),
           text: c.prompt,
           images: c.images,
@@ -476,10 +477,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         return
       }
     }
-
-    message = regenerate
-      ? await getChat(roomId, uuid)
-      : await insertChat(uuid, prompt, uploadFileKeys, roomId, options as ChatOptions)
+    message = regenerate ? await getChat(roomId, uuid) : await insertChat(uuid, prompt, uploadFileKeys, roomId, model, options as ChatOptions)
     let firstChunk = true
     result = await chatReplyProcess({
       message: prompt,
@@ -549,6 +547,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
           result.data.text,
           result.data.id,
           result.data.conversationId,
+          model,
           result.data.detail?.usage as UsageResponse,
           previousResponse as [])
       }
@@ -557,6 +556,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
           result.data.text,
           result.data.id,
           result.data.conversationId,
+          model,
           result.data.detail?.usage as UsageResponse)
       }
 
@@ -590,7 +590,7 @@ router.post('/chat-abort', [auth, limiter], async (req, res) => {
       text,
       messageId,
       conversationId,
-      null)
+      null, null)
     res.send({ status: 'Success', message: 'OK', data: null })
   }
   catch (error) {
