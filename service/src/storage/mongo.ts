@@ -109,7 +109,7 @@ export async function updateChat(chatId: string, response: string, messageId: st
   }
 
   if (previousResponse)
-    // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
+  // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
     update.$set.previousResponse = previousResponse
 
   await chatCol.updateOne(query, update)
@@ -383,7 +383,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
   await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount, temperature: user.temperature, top_p: user.top_p, presencePenalty: user.presencePenalty, systemRole: user.systemRole } })
+    , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
 }
 
 // 兑换后更新用户对话额度（兑换计算目前在前端完成，将总数报给后端）
@@ -560,8 +560,7 @@ export async function getUserStatisticsByDay(userId: ObjectId, start: number, en
     // Convert the timestamp to a Date object
     const date = dayjs(i, 'x').format('YYYY-MM-DD')
 
-    const dateData = aggStatics.find(x => x._id === date)
-      || { _id: date, promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+    const dateData = aggStatics.find(x => x._id === date) || { _id: date, promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
     result.promptTokens += dateData.promptTokens
     result.completionTokens += dateData.completionTokens

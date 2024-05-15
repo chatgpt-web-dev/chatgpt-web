@@ -642,7 +642,7 @@ onMounted(() => {
   }
 })
 
-watch(() => chatStore.active, (newVal, oldVal) => {
+watch(() => chatStore.active, () => {
   handleSyncChat()
 })
 
@@ -726,7 +726,7 @@ onUnmounted(() => {
           <div class="flex items-center space-x-2">
             <div>
               <NUpload
-                :disabled="true"
+                :disabled="!isVisionModel"
                 action="/api/upload-image"
                 list-type="image"
                 class="flex items-center justify-center h-10 transition hover:bg-neutral-100 dark:hover:bg-[#414755]"

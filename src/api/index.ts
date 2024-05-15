@@ -125,11 +125,11 @@ export function fetchRegister<T = any>(username: string, password: string) {
   })
 }
 
-export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, description: string, temperature: number, top_p: number, presencePenalty: number, systemRole: string) {
-  return post<T>({
-    url: '/user-info',
-    data: { name, avatar, description, temperature, top_p, presencePenalty, systemRole },
-  })
+export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, description: string) {
+	return post<T>({
+		url: '/user-info',
+		data: { name, avatar, description },
+	})
 }
 
 // 提交用户兑换后额度

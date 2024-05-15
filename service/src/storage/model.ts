@@ -39,10 +39,6 @@ export class GiftCard {
 export class UserInfo {
   _id: ObjectId
   name: string
-  temperature: number
-  top_p: number
-  presencePenalty: number
-  systemRole: string
   email: string
   password: string
   status: Status

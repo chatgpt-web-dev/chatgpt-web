@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSlider, NSwitch, useMessage } from 'naive-ui'
+import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSwitch, useMessage } from 'naive-ui'
 import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'
@@ -29,14 +29,6 @@ const theme = computed(() => appStore.theme)
 const userInfo = computed(() => userStore.userInfo)
 
 const avatar = ref(userInfo.value.avatar ?? '')
-
-const systemRole = ref(userInfo.value.systemRole ?? '')
-
-const temperature = ref(userInfo.value.temperature ?? 0.8)
-
-const top_p = ref(userInfo.value.top_p ?? 0.9)
-
-const presencePenalty = ref(userInfo.value.presencePenalty ?? 0.6)
 
 const name = ref(userInfo.value.name ?? '')
 
@@ -217,41 +209,6 @@ function handleImportButtonClick(): void {
           />
         </div>
       </div>
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.systemRole') }}</span>
-        <div class="flex-1">
-          <NInput v-model:value="systemRole" type="textarea" placeholder="Customize global system roles" />
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">temperature</span>
-        <div class="flex-1">
-          <div>{{ temperature }}</div>
-          <NSlider v-model:value="temperature" :step="0.01" :max="1" :min="0.1" style="width: 50%" />
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">top_p</span>
-        <div class="flex-1">
-          <div>{{ top_p }}</div>
-          <NSlider v-model:value="top_p" :step="0.01" :max="1" :min="0.1" style="width: 50%" />
-        </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">presence_penalty</span>
-        <div class="flex-1">
-          <div>{{ presencePenalty }}</div>
-          <NSlider v-model:value="presencePenalty" :step="0.1" :max="2" :min="-2" style="width: 50%" />
-        </div>
-      </div>
-
-      <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.saveUserInfo') }}</span>
-        <NButton type="primary" @click="updateUserInfo({ avatar, systemRole, temperature, top_p, presencePenalty, name, description })">
-          {{ $t('common.save') }}
-        </NButton>
-      </div>
-
       <div
         class="flex items-center space-x-4"
         :class="isMobile && 'items-start'"

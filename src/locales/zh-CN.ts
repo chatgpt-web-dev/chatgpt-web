@@ -101,7 +101,6 @@ export default {
     mailConfig: '邮箱配置',
     auditConfig: '敏感词审核',
     avatarLink: '头像链接',
-    systemRole: '系统角色',
     name: '名称',
     description: '描述',
     role: '角色设定',

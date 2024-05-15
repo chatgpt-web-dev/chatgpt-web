@@ -537,7 +537,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
 
       if (result.data === undefined)
-        // eslint-disable-next-line no-unsafe-finally
+      // eslint-disable-next-line no-unsafe-finally
         return
 
       if (regenerate && message.options.messageId) {
@@ -693,7 +693,7 @@ router.post('/session', async (req, res) => {
       }
     })
 
-    let userInfo: { name: string; description: string; temperature: number; top_p: number; presencePenalty: number; avatar: string; systemRole: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
+    let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
     if (userId != null) {
       const user = await getUserById(userId)
       if (user === null) {
@@ -717,10 +717,6 @@ router.post('/session', async (req, res) => {
       userInfo = {
         name: user.name,
         description: user.description,
-        temperature: user.temperature,
-        top_p: user.top_p,
-        presencePenalty: user.presencePenalty,
-        systemRole: user.systemRole,
         avatar: user.avatar,
         userId: user._id.toString(),
         root: user.roles.includes(UserRole.Admin),
@@ -885,13 +881,13 @@ router.post('/user-reset-password', authLimiter, async (req, res) => {
 
 router.post('/user-info', auth, async (req, res) => {
   try {
-    const { name, avatar, description, temperature, top_p, presencePenalty, systemRole } = req.body as UserInfo
+    const { name, avatar, description } = req.body as UserInfo
     const userId = req.headers.userId.toString()
 
     const user = await getUserById(userId)
     if (user == null || user.status !== Status.Normal)
       throw new Error('用户不存在 | User does not exist.')
-    await updateUserInfo(userId, { name, avatar, description, temperature, top_p, presencePenalty, systemRole } as UserInfo)
+    await updateUserInfo(userId, { name, avatar, description } as UserInfo)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {

@@ -7,10 +7,6 @@ const LOCAL_NAME = 'userStorage'
 export interface UserInfo {
   avatar: string
   name: string
-  systemRole: string
-  temperature: number
-  top_p: number
-  presencePenalty: number
   description: string
   root: boolean
   config: UserConfig
@@ -36,10 +32,6 @@ export function defaultSetting(): UserState {
   return {
     userInfo: {
       avatar: '',
-      systemRole: '',
-      temperature: 0.8,
-      top_p: 0.9,
-      presencePenalty: 0.6,
       name: '',
       description: '',
       root: false,

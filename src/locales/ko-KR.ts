@@ -99,7 +99,6 @@ export default {
     mailConfig: '메일 구성',
     auditConfig: '감사 구성',
     avatarLink: '아바타 링크',
-    systemRole: '시스템 역할',
     name: '이름',
     description: '설명',
     saveUserInfo: '사용자 정보 저장',

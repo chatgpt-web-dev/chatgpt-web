@@ -101,7 +101,6 @@ export default {
     mailConfig: 'Mail Config',
     auditConfig: 'Audit Config',
     avatarLink: 'Avatar Link',
-    systemRole: 'system role',
     name: 'Name',
     description: 'Description',
     temperature: 'Temperature',
