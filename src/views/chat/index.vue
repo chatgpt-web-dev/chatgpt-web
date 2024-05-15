@@ -3,8 +3,8 @@ import type { Ref } from 'vue'
 import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import type { MessageReactive } from 'naive-ui'
-import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, NUpload, UploadFileInfo, useDialog, useMessage } from 'naive-ui'
+import type { MessageReactive, UploadFileInfo } from 'naive-ui'
+import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, NUpload, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
 import { useScroll } from './hooks/useScroll'
@@ -579,7 +579,7 @@ const searchOptions = computed(() => {
 })
 
 // value反渲染key
-const renderOption = (option: { label: string }) => {
+function renderOption(option: { label: string }) {
   for (const i of promptTemplate.value) {
     if (i.value === option.label)
       return [i.key]
