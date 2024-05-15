@@ -7,7 +7,7 @@ import { t } from '@/locales'
 
 interface Props {
   dateTime?: string
-	model?: string
+  model?: string
   text?: string
   inversion?: boolean
   error?: boolean

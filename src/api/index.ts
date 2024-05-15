@@ -126,10 +126,10 @@ export function fetchRegister<T = any>(username: string, password: string) {
 }
 
 export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, description: string) {
-	return post<T>({
-		url: '/user-info',
-		data: { name, avatar, description },
-	})
+  return post<T>({
+    url: '/user-info',
+    data: { name, avatar, description },
+  })
 }
 
 // 提交用户兑换后额度
@@ -237,10 +237,10 @@ export function fetchGetChatRoomsCount<T = any>(page: number, size: number, user
 }
 
 export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string) {
-	return post<T>({
-		url: '/room-create',
-		data: { title, roomId, chatModel },
-	})
+  return post<T>({
+    url: '/room-create',
+    data: { title, roomId, chatModel },
+  })
 }
 
 export function fetchRenameChatRoom<T = any>(title: string, roomId: number) {
