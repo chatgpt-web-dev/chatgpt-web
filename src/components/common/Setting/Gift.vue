@@ -86,7 +86,7 @@ function parseCSV(content: string) {
   return giftCards
 }
 
-function handleUploadChange(data: { file: UploadFileInfo, fileList: Array<UploadFileInfo>, event?: Event }) {
+function handleUploadChange(data: { file: UploadFileInfo; fileList: Array<UploadFileInfo>; event?: Event }) {
   fileListRef.value = data.fileList
   csvData.value = []
   if (data.event) {

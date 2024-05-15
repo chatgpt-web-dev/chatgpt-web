@@ -19,7 +19,7 @@ const handleSaving = ref(false)
 const keyConfig = ref(new KeyConfig('', 'ChatGPTAPI', [], [], ''))
 
 const keys = ref([])
-const createColumns = (): DataTableColumns => {
+function createColumns(): DataTableColumns {
   return [
     {
       title: 'Key',
@@ -226,7 +226,6 @@ onMounted(async () => {
           </NButton>
         </NSpace>
         <NDataTable
-          ref="table"
           remote
           :loading="loading"
           :row-key="(rowData) => rowData._id"

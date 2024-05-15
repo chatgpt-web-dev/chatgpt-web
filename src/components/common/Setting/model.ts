@@ -122,7 +122,7 @@ export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((
   }
 })
 
-export const userRoleOptions = Object.values(UserRole).filter(d => isNaN(Number(d))).map((role) => {
+export const userRoleOptions = Object.values(UserRole).filter(d => Number.isNaN(Number(d))).map((role) => {
   return {
     label: role as string,
     key: role as string,

@@ -123,26 +123,26 @@ function fastDelMsg() {
 }
 
 function toggleShowFastDelMsg(event: any, itemId: number) {
-     if (window?.getSelection()?.toString())
-        return
-      if (!isEventTargetValid(event))
-        return
+  if (window?.getSelection()?.toString())
+    return
+  if (!isEventTargetValid(event))
+    return
 
-        if (props.currentNavIndex === itemId)
-          emit('updateCurrentNavIndex', -1)
-        else
-          emit('updateCurrentNavIndex', itemId)
-  }
+  if (props.currentNavIndex === itemId)
+    emit('updateCurrentNavIndex', -1)
+  else
+    emit('updateCurrentNavIndex', itemId)
+}
 
 function isEventTargetValid(event: any) {
-    let element = event.target
-    while (element) {
-        if (element.classList && element.classList.contains('excludeFastDel'))
-            return false
+  let element = event.target
+  while (element) {
+    if (element.classList && element.classList.contains('excludeFastDel'))
+      return false
 
-        element = element.parentElement
-    }
-    return true
+    element = element.parentElement
+  }
+  return true
 }
 </script>
 
