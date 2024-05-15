@@ -1,4 +1,3 @@
-import * as console from 'node:console'
 import * as dotenv from 'dotenv'
 import 'isomorphic-fetch'
 import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
@@ -7,7 +6,6 @@ import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
 import jwt_decode from 'jwt-decode'
-import dayjs from 'dayjs'
 import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
 import { Status } from '../storage/model'
 import { convertImageUrl } from '../utils/image'
@@ -241,112 +239,8 @@ async function containsSensitiveWords(audit: AuditConfig, text: string): Promise
   return false
 }
 
-async function fetchAccessTokenExpiredTime() {
-  const config = await getCacheConfig()
-  const jwt = jwt_decode(config.accessToken) as JWT
-  if (jwt.exp)
-    return dayjs.unix(jwt.exp).format('YYYY-MM-DD HH:mm:ss')
-  return '-'
-}
-
-let cachedBalance: number | undefined
-let cacheExpiration = 0
-
-async function fetchBalance() {
-  const now = new Date().getTime()
-  if (cachedBalance && cacheExpiration > now)
-    return Promise.resolve(cachedBalance.toFixed(3))
-
-  // 计算起始日期和结束日期
-  const startDate = new Date(now - 90 * 24 * 60 * 60 * 1000)
-  const endDate = new Date(now + 24 * 60 * 60 * 1000)
-
-  const config = await getCacheConfig()
-  const OPENAI_API_KEY = config.apiKey
-  const OPENAI_API_BASE_URL = config.apiBaseUrl
-
-  if (!isNotEmptyString(OPENAI_API_KEY))
-    return Promise.resolve('-')
-
-  const API_BASE_URL = isNotEmptyString(OPENAI_API_BASE_URL)
-    ? OPENAI_API_BASE_URL
-    : 'https://api.openai.com'
-
-  // 查是否订阅
-  const urlSubscription = `${API_BASE_URL}/v1/dashboard/billing/subscription`
-  // 查普通账单
-  // const urlBalance = `${API_BASE_URL}/dashboard/billing/credit_grants`
-  // 查使用量
-  const urlUsage = `${API_BASE_URL}/v1/dashboard/billing/usage?start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`
-
-  const headers = {
-    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-    'Content-Type': 'application/json',
-  }
-  let socksAgent
-  let httpsAgent
-  if (isNotEmptyString(config.socksProxy)) {
-    socksAgent = new SocksProxyAgent({
-      hostname: config.socksProxy.split(':')[0],
-      port: Number.parseInt(config.socksProxy.split(':')[1]),
-      userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
-      password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
-    })
-  }
-  else if (isNotEmptyString(config.httpsProxy)) {
-    httpsAgent = new HttpsProxyAgent(config.httpsProxy)
-  }
-
-  try {
-    // 获取API限额
-    let response = await fetch(urlSubscription, { agent: socksAgent === undefined ? httpsAgent : socksAgent, headers })
-    if (!response.ok) {
-      console.error('您的账户已被封禁，请登录OpenAI进行查看。')
-      return
-    }
-    interface SubscriptionData {
-      hard_limit_usd?: number
-      // 这里可以添加其他可能的属性
-    }
-    const subscriptionData: SubscriptionData = await response.json()
-    const totalAmount = subscriptionData.hard_limit_usd
-
-    interface UsageData {
-      total_usage?: number
-      // 这里可以添加其他可能的属性
-    }
-
-    // 获取已使用量
-    response = await fetch(urlUsage, { agent: socksAgent === undefined ? httpsAgent : socksAgent, headers })
-    const usageData: UsageData = await response.json()
-    const totalUsage = usageData.total_usage / 100
-
-    // 计算剩余额度
-    cachedBalance = totalAmount - totalUsage
-    cacheExpiration = now + 60 * 60 * 1000
-
-    return Promise.resolve(cachedBalance.toFixed(3))
-  }
-  catch (error) {
-    globalThis.console.error(error)
-    return Promise.resolve('-')
-  }
-}
-
-function formatDate(date) {
-  const year = date.getFullYear()
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const day = date.getDate().toString().padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
 async function chatConfig() {
   const config = await getOriginConfig() as ModelConfig
-  // if (config.apiModel === 'ChatGPTAPI')
-  //   config.balance = await fetchBalance()
-  // else
-  //   config.accessTokenExpiredTime = await fetchAccessTokenExpiredTime()
   return sendResponse<ModelConfig>({
     type: 'Success',
     data: config,

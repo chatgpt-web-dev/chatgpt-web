@@ -10,6 +10,7 @@ module.exports = {
     'vue/no-unused-refs': 'off',
     'import/newline-after-import': 'off',
     'unicorn/prefer-number-properties': 'off',
+    'indent': ['error', 2, { SwitchCase: 1 }],
   },
   ignorePatterns: [
     'vite.config.ts',
