@@ -1,6 +1,6 @@
 import { darkTheme, lightTheme } from 'naive-ui'
 
-const setupScrollbarStyle = () => {
+function setupScrollbarStyle() {
   const style = document.createElement('style')
   const styleContent = `
     ::-webkit-scrollbar {

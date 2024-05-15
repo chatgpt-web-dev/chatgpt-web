@@ -17,7 +17,7 @@ const userRef = ref(new UserInfo([UserRole.User]))
 
 const users = ref([])
 
-const createColumns = (): DataTableColumns => {
+function createColumns(): DataTableColumns {
   return [
     {
       title: 'Email',
@@ -279,7 +279,6 @@ onMounted(async () => {
           </NButton>
         </NSpace>
         <NDataTable
-          ref="table"
           remote
           :loading="loading"
           :row-key="(rowData) => rowData._id"

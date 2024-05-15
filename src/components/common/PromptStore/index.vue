@@ -68,7 +68,7 @@ const modalMode = ref('')
 const tempModifiedItem = ref<any>({})
 
 // 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
-const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected?: DataProps) => {
+function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected?: DataProps) {
   if (mode === 'add') {
     tempPromptKey.value = ''
     tempPromptValue.value = ''
@@ -89,7 +89,7 @@ const changeShowModal = (mode: 'add' | 'modify' | 'local_import', selected?: Dat
 // 在线导入相关
 const downloadURL = ref('')
 const downloadDisabled = computed(() => downloadURL.value.trim().length < 1)
-const setDownloadURL = (url: string) => {
+function setDownloadURL(url: string) {
   downloadURL.value = url
 }
 
@@ -115,7 +115,7 @@ async function addPromptTemplate() {
   changeShowModal('add')
 }
 
-const modifyPromptTemplate = async () => {
+async function modifyPromptTemplate() {
   let index = 0
 
   // 通过临时索引把待修改项摘出来
@@ -140,7 +140,7 @@ const modifyPromptTemplate = async () => {
   }
   const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
   userPrompt._id = tempModifiedItem.value._id
-	const data = (await fetchUpsertUserPrompt(userPrompt)).data
+  const data = (await fetchUpsertUserPrompt(userPrompt)).data
   promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
   message.success(t('common.editSuccess'))
   changeShowModal('modify')
@@ -159,13 +159,13 @@ async function deletePromptTemplate(row: DataProps) {
   message.success(t('common.deleteSuccess'))
 }
 
-const clearPromptTemplate = async () => {
+async function clearPromptTemplate() {
   await fetchClearUserPrompt()
   promptList.value = []
   message.success(t('common.clearSuccess'))
 }
 
-const importPromptTemplate = async (from = 'online') => {
+async function importPromptTemplate(from = 'online') {
   try {
     const jsonData = JSON.parse(tempPromptValue.value)
     let title = ''
@@ -214,7 +214,7 @@ const importPromptTemplate = async (from = 'online') => {
       promptList.value.unshift(p)
     })
 
-		await handleGetUserPromptList()
+    await handleGetUserPromptList()
 
     message.success(t('common.importSuccess'))
   }
@@ -226,14 +226,14 @@ const importPromptTemplate = async (from = 'online') => {
 }
 
 // 模板导出
-const exportPromptTemplate = () => {
+function exportPromptTemplate() {
   exportLoading.value = true
-	const exportData = promptList.value.map((item: UserPrompt) => {
-		return {
-			key: item.title,
-			value: item.value,
-		}
-	})
+  const exportData = promptList.value.map((item: UserPrompt) => {
+    return {
+      key: item.title,
+      value: item.value,
+    }
+  })
   const jsonDataStr = JSON.stringify(exportData)
   const blob = new Blob([jsonDataStr], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -246,7 +246,7 @@ const exportPromptTemplate = () => {
 }
 
 // 模板在线导入
-const downloadPromptTemplate = async () => {
+async function downloadPromptTemplate() {
   try {
     importLoading.value = true
     const response = await fetch(downloadURL.value)
@@ -275,7 +275,7 @@ const downloadPromptTemplate = async () => {
 }
 
 // 移动端自适应相关
-const renderTemplate = () => {
+function renderTemplate() {
   const [keyLimit, valueLimit] = isMobile.value ? [10, 30] : [15, 50]
   return promptList.value.map((item: UserPrompt) => {
     return {
@@ -296,7 +296,7 @@ const pagination = computed(() => {
 })
 
 // table相关
-const createColumns = (): DataTableColumns<DataProps> => {
+function createColumns(): DataTableColumns<DataProps> {
   return [
     {
       title: t('store.title'),
@@ -374,7 +374,7 @@ async function handleGetUserPromptList() {
   if (loading.value)
     return
   loading.value = true
-	promptList.value = []
+  promptList.value = []
   const data = (await fetchUserPromptList()).data
   data.data.forEach((d: UserPrompt) => {
     promptList.value.push(d)

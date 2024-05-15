@@ -8,7 +8,7 @@ import { SvgIcon } from '@/components/common'
 
 interface HistoryChat {
   uuid?: number
-	model?: string
+  model?: string
   dateTime: string
   text: string
   inversion?: boolean
@@ -154,7 +154,6 @@ onMounted(async () => {
       />
       <NSpace vertical :size="12">
         <NDataTable
-          ref="table"
           remote
           :loading="loading"
           :row-key="(rowData) => rowData._id"
