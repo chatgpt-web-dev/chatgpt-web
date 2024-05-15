@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref } from 'vue'
 import { HoverButton, SvgIcon, UserAvatar } from '@/components/common'
 import { useAuthStore } from '@/store'
+
 const Setting = defineAsyncComponent(() => import('@/components/common/Setting/index.vue'))
 
 const authStore = useAuthStore()

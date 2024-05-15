@@ -21,6 +21,7 @@ import {
 import { t } from '@/locales'
 import { debounce } from '@/utils/functions/debounce'
 import IconPrompt from '@/icons/Prompt.vue'
+
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
 let controller = new AbortController()
@@ -160,11 +161,11 @@ async function onConversation() {
             lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
-                completion_tokens: data.detail.usage.completion_tokens || null,
-                prompt_tokens: data.detail.usage.prompt_tokens || null,
-                total_tokens: data.detail.usage.total_tokens || null,
-                estimated: data.detail.usage.estimated || null,
-              }
+                  completion_tokens: data.detail.usage.completion_tokens || null,
+                  prompt_tokens: data.detail.usage.prompt_tokens || null,
+                  total_tokens: data.detail.usage.total_tokens || null,
+                  estimated: data.detail.usage.estimated || null,
+                }
               : undefined
             updateChat(
               +uuid,
@@ -307,11 +308,11 @@ async function onRegenerate(index: number) {
             lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
-                completion_tokens: data.detail.usage.completion_tokens || null,
-                prompt_tokens: data.detail.usage.prompt_tokens || null,
-                total_tokens: data.detail.usage.total_tokens || null,
-                estimated: data.detail.usage.estimated || null,
-              }
+                  completion_tokens: data.detail.usage.completion_tokens || null,
+                  prompt_tokens: data.detail.usage.prompt_tokens || null,
+                  total_tokens: data.detail.usage.total_tokens || null,
+                  estimated: data.detail.usage.estimated || null,
+                }
               : undefined
             updateChat(
               +uuid,

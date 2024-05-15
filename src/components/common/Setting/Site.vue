@@ -128,7 +128,7 @@ onMounted(() => {
             />
           </div>
         </div>
-        <!--		增加新注册用户的全局数量设置		-->
+        <!-- 增加新注册用户的全局数量设置 -->
         <div class="flex items-center space-x-4">
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.globalAmount') }}</span>
           <div class="flex-1">
