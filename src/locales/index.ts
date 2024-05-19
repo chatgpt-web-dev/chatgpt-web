@@ -9,7 +9,7 @@ import type { Language } from '@/store/modules/app/helper'
 
 const appStore = useAppStoreWithOut()
 
-const defaultLocale = appStore.language || 'zh-CN'
+const defaultLocale = appStore.language || 'en-US'
 
 const i18n = createI18n({
   locale: defaultLocale,
