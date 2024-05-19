@@ -16,7 +16,7 @@ export interface AppState {
 }
 
 export function defaultSetting(): AppState {
-  return { siderCollapsed: false, theme: 'auto', language: 'zh-CN', fastDelMsg: '0' }
+  return { siderCollapsed: false, theme: 'auto', language: 'en-US', fastDelMsg: '0' }
 }
 
 export function getLocalSetting(): AppState {
