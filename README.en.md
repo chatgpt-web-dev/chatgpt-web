@@ -7,9 +7,9 @@
 
 > [!IMPORTANT]
 > **This project is forked from [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
-> 
+>
 > As the original project author does not agree to introduce a dependency on the database, this Hard Fork was created for independent development [discussion for details](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
-> 
+>
 > Thank you again, the great [Chanzhaoyu](https://github.com/Chanzhaoyu), for your contributions to the open-source project 🙏
 
 Some unique features have been added:
@@ -140,7 +140,7 @@ For all parameter variables, check [here](#docker-parameter-example) or see:
 
 ### Node
 
-`node` requires version `^16 || ^18` (`node >= 14` requires installation of [fetch polyfill](https://github.com/developit/unfetch#usage-as-a-polyfill)), and multiple local `node` versions can be managed using [nvm](https://github.com/nvm-sh/nvm).
+`node` requires version `^16 || ^18 || ^20 || ^22`, and multiple local `node` versions can be managed using [nvm](https://github.com/nvm-sh/nvm).
 
 ```shell
 node -v
@@ -356,7 +356,7 @@ A: There is a length limit for the content returned by the API each time. You ca
 
 ## Auth Proxy Mode
 
-> [!WARNING]  
+> [!WARNING]
 > This feature is only provided for Operations Engineer with relevant experience to deploy during the integration of the enterprise's internal account management system. Improper configuration may lead to security risks.
 
 Set env `AUTH_PROXY_ENABLED=true` can enable auth proxy mode.
