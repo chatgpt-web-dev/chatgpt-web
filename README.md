@@ -7,9 +7,9 @@
 
 > [!IMPORTANT]
 > **此项目 Fork 自 [Chanzhaoyu/chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)**
-> 
+>
 > 由于原项目作者不愿意引入对数据库的依赖 故制作该永久分叉独立开发 [详见讨论](https://github.com/Chanzhaoyu/chatgpt-web/pull/589#issuecomment-1469207694)
-> 
+>
 > 再次感谢 [Chanzhaoyu](https://github.com/Chanzhaoyu) 大佬对开源的贡献 🙏
 
 新增了部分特色功能:
@@ -137,7 +137,7 @@
 
 ### Node
 
-`node` 需要 `^16 || ^18 || ^19` 版本（`node >= 14` 需要安装 [fetch polyfill](https://github.com/developit/unfetch#usage-as-a-polyfill)），使用 [nvm](https://github.com/nvm-sh/nvm) 可管理本地多个 `node` 版本
+`node` 需要 `^16 || ^18 || ^20 || ^22` 版本，使用 [nvm](https://github.com/nvm-sh/nvm) 可管理本地多个 `node` 版本
 
 ```shell
 node -v
@@ -353,7 +353,7 @@ pnpm build
 
 ## Auth Proxy Mode
 
-> [!WARNING]  
+> [!WARNING]
 > 该功能仅适用于有相关经验的运维人员在集成企业内部账号管理系统时部署 配置不当可能会导致安全风险
 
 设置环境变量 `AUTH_PROXY_ENABLED=true` 即可开启 auth proxy 模式
