@@ -1355,4 +1355,5 @@ app.use('/api', uploadRouter)
 app.use('', router)
 app.use('/api', router)
 
-app.listen(3002, () => globalThis.console.log('Server is running on port 3002'))
+const port = parseInt(process.env.PORT, 10) || 3000;
+app.listen(port, '0.0.0.0', () => globalThis.console.log(`Server is running on port ${port}`));
