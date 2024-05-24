@@ -623,6 +623,12 @@ router.post('/session', async (req, res) => {
       let label = model
       if (model === 'text-davinci-002-render-sha-mobile')
         label = 'gpt-3.5-mobile'
+			if (model === 'coze/7372633086053482504-1716578081-2')
+        label = 'gpt-4o'
+			if (model === 'coze/7372646846499487751-1716578547-2')
+        label = 'gpt-4'
+			if (model === 'coze/7372648254925930514-1716579154-2')
+        label = 'gpt-4-turbo'
       return {
         label,
         key: model,
