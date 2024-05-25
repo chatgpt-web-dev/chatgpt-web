@@ -629,6 +629,9 @@ router.post('/session', async (req, res) => {
         label = 'gpt-4'
 			if (model === 'coze/7372648254925930514-1716579154-2')
         label = 'gpt-4-turbo'
+			if (model === 'coze/7372931363038625800-1716644517-2')
+        label = 'gemini-1.5-pro-preview'
+			
       return {
         label,
         key: model,
