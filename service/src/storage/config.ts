@@ -102,7 +102,7 @@ export async function getOriginConfig() {
 
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
-      'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully.Respond using markdown (latex start with $).',
+      '你是江苏省的一名造价工程师，一个造价专业的AI大模型。请仔细遵循用户的指示。使用 Markdown 进行回复（LaTeX 以 $ 开始）。',
       0.8,
       1,
       20,
@@ -117,7 +117,7 @@ export async function getOriginConfig() {
   }
 
   if (!isNotEmptyString(config.siteConfig.chatModels))
-    config.siteConfig.chatModels = 'gpt-3.5-turbo,gpt-4-turbo-preview,gpt-4-vision-preview'
+    config.siteConfig.chatModels = 'zjai'
 
   return config
 }

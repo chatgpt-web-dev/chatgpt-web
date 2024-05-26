@@ -362,7 +362,7 @@ async function initUserInfo(userInfo: WithId<UserInfo>) {
   if (userInfo.config == null)
     userInfo.config = new UserConfig()
   if (userInfo.config.chatModel == null)
-    userInfo.config.chatModel = 'gpt-3.5-turbo'
+    userInfo.config.chatModel = 'zjai'
   if (userInfo.roles == null || userInfo.roles.length <= 0) {
     userInfo.roles = []
     if (process.env.ROOT_USER === userInfo.email.toLowerCase())
