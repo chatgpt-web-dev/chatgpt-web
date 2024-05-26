@@ -64,7 +64,7 @@ export const useAuthStore = defineStore('auth-store', {
       const userStore = useUserStore()
       if (decoded.config === undefined || decoded.config === null) {
         decoded.config = new UserConfig()
-        decoded.config.chatModel = 'gpt-3.5-turbo'
+        decoded.config.chatModel = 'zjai'
       }
 
       await userStore.updateUserInfo(false, {
