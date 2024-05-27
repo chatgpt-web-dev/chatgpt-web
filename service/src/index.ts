@@ -1365,4 +1365,7 @@ app.use('', router)
 app.use('/api', router)
 
 const port = parseInt(process.env.PORT, 10) || 3000;
-app.listen(port, '0.0.0.0', () => globalThis.console.log(`Server is running on port ${port}`));
+app.listen(process.env.PORT || 3002, () => {
+  console.log('Server is running on port ' + (process.env.PORT || 3002));
+});
+
