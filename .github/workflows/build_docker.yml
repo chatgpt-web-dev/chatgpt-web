@@ -2,7 +2,7 @@ name: build_docker
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   release:
     types: [created] # This will only run on new releases
 
