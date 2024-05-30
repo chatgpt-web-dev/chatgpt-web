@@ -94,6 +94,7 @@ export default {
     advanced: '高級',
     statistics: '統計',
     config: '基本設定',
+    chatRecord: '聊天紀錄',
     siteConfig: '网站配置',
     mailConfig: '邮箱配置',
     auditConfig: '敏感词审核',

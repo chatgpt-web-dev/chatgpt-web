@@ -17,6 +17,7 @@ import Announcement from './Anonuncement.vue'
 import { SvgIcon } from '@/components/common'
 import { useAuthStore, useUserStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 
 const props = defineProps<Props>()
 
@@ -100,6 +101,20 @@ const show = computed({
           </template>
           <About />
         </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="ChatRecord" tab="ChatRecord">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ic:outline-chat" />
+            <span class="ml-2">{{ $t('setting.chatRecord') }}</span>
+          </template>
+          <ChatRecord />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
+          </template>
+          <Key />
+        </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SiteConfig" tab="SiteConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:settings-line" />
@@ -134,13 +149,6 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.userConfig') }}</span>
           </template>
           <User />
-        </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
-          </template>
-          <Key />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="GiftCardConfig" tab="GiftCardConfig">
           <template #tab>

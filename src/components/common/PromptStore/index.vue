@@ -1,17 +1,20 @@
 <script setup lang='ts'>
 import type { DataTableColumns } from 'naive-ui'
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { NButton, NCard, NDataTable, NDivider, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
 import PromptRecommend from '../../../assets/recommend.json'
 import { SvgIcon } from '..'
-import { usePromptStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
+import { fetchClearUserPrompt, fetchDeleteUserPrompt, fetchImportUserPrompt, fetchUpsertUserPrompt, fetchUserPromptList } from '@/api'
+import { UserPrompt } from '@/components/common/Setting/model'
+import { useAuthStoreWithout, usePromptStore } from '@/store'
 
 interface DataProps {
+  _id?: string
   renderKey: string
   renderValue: string
-  key: string
+  title: string
   value: string
 }
 
@@ -33,7 +36,7 @@ const show = computed({
   get: () => props.visible,
   set: (visible: boolean) => emit('update:visible', visible),
 })
-
+const loading = ref(false)
 const showModal = ref(false)
 
 const importLoading = ref(false)
@@ -41,13 +44,17 @@ const exportLoading = ref(false)
 
 const searchValue = ref<string>('')
 
-// 移动端自适应相关
-const { isMobile } = useBasicLayout()
+const authStore = useAuthStoreWithout()
 
 const promptStore = usePromptStore()
 
+// 移动端自适应相关
+const { isMobile } = useBasicLayout()
+
 // Prompt在线导入推荐List,根据部署者喜好进行修改(assets/recommend.json)
 const promptRecommendList = PromptRecommend
+// const promptList = ref<UserPrompt[]>([])
+
 const promptList = ref<any>(promptStore.promptList)
 
 // 用于添加修改的临时prompt参数
@@ -61,14 +68,14 @@ const modalMode = ref('')
 const tempModifiedItem = ref<any>({})
 
 // 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
-function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected = { key: '', value: '' }) {
+function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected?: DataProps) {
   if (mode === 'add') {
     tempPromptKey.value = ''
     tempPromptValue.value = ''
   }
-  else if (mode === 'modify') {
+  else if (mode === 'modify' && selected !== undefined) {
     tempModifiedItem.value = { ...selected }
-    tempPromptKey.value = selected.key
+    tempPromptKey.value = selected.title
     tempPromptValue.value = selected.value
   }
   else if (mode === 'local_import') {
@@ -90,9 +97,9 @@ function setDownloadURL(url: string) {
 const inputStatus = computed (() => tempPromptKey.value.trim().length < 1 || tempPromptValue.value.trim().length < 1)
 
 // Prompt模板相关操作
-function addPromptTemplate() {
+async function addPromptTemplate() {
   for (const i of promptList.value) {
-    if (i.key === tempPromptKey.value) {
+    if (i.title === tempPromptKey.value) {
       message.error(t('store.addRepeatTitleTips'))
       return
     }
@@ -101,17 +108,19 @@ function addPromptTemplate() {
       return
     }
   }
-  promptList.value.unshift({ key: tempPromptKey.value, value: tempPromptValue.value } as never)
+  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+  const data = (await fetchUpsertUserPrompt(userPrompt)).data
+  promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id } as never)
   message.success(t('common.addSuccess'))
   changeShowModal('add')
 }
 
-function modifyPromptTemplate() {
+async function modifyPromptTemplate() {
   let index = 0
 
   // 通过临时索引把待修改项摘出来
   for (const i of promptList.value) {
-    if (i.key === tempModifiedItem.value.key && i.value === tempModifiedItem.value.value)
+    if (i.title === tempModifiedItem.value.title && i.value === tempModifiedItem.value.value)
       break
     index = index + 1
   }
@@ -120,45 +129,58 @@ function modifyPromptTemplate() {
 
   // 搜索有冲突的部分
   for (const i of tempList) {
-    if (i.key === tempPromptKey.value) {
+    if (i.title === tempPromptKey.value) {
       message.error(t('store.editRepeatTitleTips'))
       return
     }
     if (i.value === tempPromptValue.value) {
-      message.error(t('store.editRepeatContentTips', { msg: i.key }))
+      message.error(t('store.editRepeatContentTips', { msg: i.title }))
       return
     }
   }
-
-  promptList.value = [{ key: tempPromptKey.value, value: tempPromptValue.value }, ...tempList] as never
+  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+  userPrompt._id = tempModifiedItem.value._id
+  const data = (await fetchUpsertUserPrompt(userPrompt)).data
+  promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
   message.success(t('common.editSuccess'))
   changeShowModal('modify')
 }
 
-function deletePromptTemplate(row: { key: string; value: string }) {
+async function deletePromptTemplate(row: DataProps) {
+  if (row._id === undefined)
+    return
+
+  loading.value = true
+  await fetchDeleteUserPrompt(row._id)
+  loading.value = false
   promptList.value = [
-    ...promptList.value.filter((item: { key: string; value: string }) => item.key !== row.key),
+    ...promptList.value.filter((item: UserPrompt) => item._id !== row._id),
   ] as never
   message.success(t('common.deleteSuccess'))
 }
 
-function clearPromptTemplate() {
+async function clearPromptTemplate() {
+  await fetchClearUserPrompt()
   promptList.value = []
   message.success(t('common.clearSuccess'))
 }
 
-function importPromptTemplate(from = 'online') {
+async function importPromptTemplate(from = 'online') {
   try {
     const jsonData = JSON.parse(tempPromptValue.value)
-    let key = ''
+    let title = ''
     let value = ''
     // 可以扩展加入更多模板字典的key
     if ('key' in jsonData[0]) {
-      key = 'key'
+      title = 'key'
+      value = 'value'
+    }
+    else if ('title' in jsonData[0]) {
+      title = 'title'
       value = 'value'
     }
     else if ('act' in jsonData[0]) {
-      key = 'act'
+      title = 'act'
       value = 'prompt'
     }
     else {
@@ -166,26 +188,34 @@ function importPromptTemplate(from = 'online') {
       message.warning('prompt key not supported.')
       throw new Error('prompt key not supported.')
     }
-
+    const newPromptList: DataProps[] = []
     for (const i of jsonData) {
-      if (!(key in i) || !(value in i))
+      if (!(title in i) || !(value in i))
         throw new Error(t('store.importError'))
       let safe = true
       for (const j of promptList.value) {
-        if (j.key === i[key]) {
-          message.warning(t('store.importRepeatTitle', { msg: i[key] }))
+        if (j.title === i[title]) {
+          message.warning(t('store.importRepeatTitle', { msg: i[title] }))
           safe = false
           break
         }
         if (j.value === i[value]) {
-          message.warning(t('store.importRepeatContent', { msg: i[key] }))
+          message.warning(t('store.importRepeatContent', { msg: i[title] }))
           safe = false
           break
         }
       }
       if (safe)
-        promptList.value.unshift({ key: i[key], value: i[value] } as never)
+        newPromptList.unshift({ title: i[title], value: i[value] } as never)
     }
+    await fetchImportUserPrompt(newPromptList as never)
+
+    newPromptList.forEach((p: UserPrompt) => {
+      promptList.value.unshift(p)
+    })
+
+    await handleGetUserPromptList()
+
     message.success(t('common.importSuccess'))
   }
   catch {
@@ -198,7 +228,13 @@ function importPromptTemplate(from = 'online') {
 // 模板导出
 function exportPromptTemplate() {
   exportLoading.value = true
-  const jsonDataStr = JSON.stringify(promptList.value)
+  const exportData = promptList.value.map((item: UserPrompt) => {
+    return {
+      key: item.title,
+      value: item.value,
+    }
+  })
+  const jsonDataStr = JSON.stringify(exportData)
   const blob = new Blob([jsonDataStr], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -226,7 +262,7 @@ async function downloadPromptTemplate() {
       })
       tempPromptValue.value = JSON.stringify(newJsonData)
     }
-    importPromptTemplate()
+    await importPromptTemplate()
     downloadURL.value = ''
   }
   catch {
@@ -241,13 +277,13 @@ async function downloadPromptTemplate() {
 // 移动端自适应相关
 function renderTemplate() {
   const [keyLimit, valueLimit] = isMobile.value ? [10, 30] : [15, 50]
-
-  return promptList.value.map((item: { key: string; value: string }) => {
+  return promptList.value.map((item: UserPrompt) => {
     return {
-      renderKey: item.key.length <= keyLimit ? item.key : `${item.key.substring(0, keyLimit)}...`,
+      renderKey: item.title.length <= keyLimit ? item.title : `${item.title.substring(0, keyLimit)}...`,
       renderValue: item.value.length <= valueLimit ? item.value : `${item.value.substring(0, valueLimit)}...`,
-      key: item.key,
+      title: item.title,
       value: item.value,
+      _id: item._id,
     }
   })
 }
@@ -314,6 +350,15 @@ watch(
   { deep: true },
 )
 
+onMounted(async () => {
+  if (!!authStore.session?.auth && !authStore.token)
+    return
+  if (promptStore.getPromptList().promptList.length === 0) {
+    await handleGetUserPromptList()
+    promptStore.updatePromptList(promptList.value)
+  }
+})
+
 const dataSource = computed(() => {
   const data = renderTemplate()
   const value = searchValue.value
@@ -324,6 +369,18 @@ const dataSource = computed(() => {
   }
   return data
 })
+
+async function handleGetUserPromptList() {
+  if (loading.value)
+    return
+  loading.value = true
+  promptList.value = []
+  const data = (await fetchUserPromptList()).data
+  data.data.forEach((d: UserPrompt) => {
+    promptList.value.push(d)
+  })
+  loading.value = false
+}
 </script>
 
 <template>
@@ -371,11 +428,13 @@ const dataSource = computed(() => {
           </div>
           <NDataTable
             v-if="!isMobile"
+            remote
             :max-height="400"
             :columns="columns"
             :data="dataSource"
             :pagination="pagination"
             :bordered="false"
+            :loading="loading"
           />
           <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
             <NListItem v-for="(item, index) of dataSource" :key="index">
@@ -413,7 +472,7 @@ const dataSource = computed(() => {
           <div class="max-h-[360px] overflow-y-auto space-y-4">
             <NCard
               v-for="info in promptRecommendList"
-              :key="info.key" :title="info.key"
+              :key="info.title" :title="info.title"
               :bordered="true"
               embedded
             >
