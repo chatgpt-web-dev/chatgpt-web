@@ -20,8 +20,10 @@ interface Props {
   index: number
   currentNavIndex: number
   dateTime?: string
+  model?: string
   text?: string
   images?: string[]
+  isRecord?: boolean
   inversion?: boolean
   error?: boolean
   loading?: boolean
@@ -77,6 +79,11 @@ const options = computed(() => {
       key: 'toggleRenderType',
       icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
     })
+  }
+
+  if (props.isRecord) {
+    const index = common.findIndex(item => item.key === 'delete')
+    common.splice(index, 1)
   }
 
   return common
@@ -157,7 +164,7 @@ function isEventTargetValid(event: any) {
         class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
-        <AvatarComponent :image="inversion" />
+        <AvatarComponent :image="inversion" :only-default="isRecord" />
       </div>
       <div
         v-show="props.currentNavIndex === props.index && appStore.fastDelMsg"
@@ -171,7 +178,7 @@ function isEventTargetValid(event: any) {
     </div>
     <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
       <p v-if="inversion" class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
-        {{ new Date(dateTime as string).toLocaleString() }}
+        {{ `${model || ''} ${new Date(dateTime as string).toLocaleString()}` }}
       </p>
       <p v-else class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
         <NSpace>
@@ -231,7 +238,7 @@ function isEventTargetValid(event: any) {
         />
         <div class="flex flex-col excludeFastDel">
           <button
-            v-if="!inversion"
+            v-if="!inversion && !isRecord"
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
             @click="handleRegenerate"
           >

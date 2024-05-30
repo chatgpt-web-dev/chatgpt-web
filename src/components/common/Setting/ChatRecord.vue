@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NDataTable, NModal, NScrollbar, NSelect, NSpace, NSpin } from 'naive-ui'
 import { h, onMounted, reactive, ref } from 'vue'
-import Message from './Message/index.vue'
+import Message from '@/views/chat/components/Message/index.vue'
 import { fetchGetChatHistory, fetchGetChatRoomsCount, fetchGetUsers } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { SvgIcon } from '@/components/common'
@@ -180,9 +180,12 @@ onMounted(async () => {
               <Message
                 v-for="(item, index) of dataSources"
                 :key="index"
+                :index="index"
+                :current-nav-index="-1"
                 :date-time="item.dateTime"
                 :text="item.text"
                 :model="item.model"
+                is-record
                 :inversion="item.inversion"
                 :response-count="item.responseCount"
                 :usage="item && item.usage || undefined"
