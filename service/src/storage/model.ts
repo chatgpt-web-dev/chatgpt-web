@@ -118,6 +118,7 @@ export class previousResponse {
 export class ChatInfo {
   _id: ObjectId
   roomId: number
+  model: string
   uuid: number
   dateTime: number
   prompt: string
@@ -126,8 +127,9 @@ export class ChatInfo {
   status: Status = Status.Normal
   options: ChatOptions
   previousResponse?: previousResponse[]
-  constructor(roomId: number, uuid: number, prompt: string, images: string[], options: ChatOptions) {
+  constructor(roomId: number, uuid: number, prompt: string, images: string[], model: string, options: ChatOptions) {
     this.roomId = roomId
+    this.model = model
     this.uuid = uuid
     this.prompt = prompt
     this.images = images
@@ -270,6 +272,18 @@ export class KeyConfig {
     this.userRoles = userRoles
     this.status = Status.Normal
     this.remark = remark
+  }
+}
+
+export class UserPrompt {
+  _id: ObjectId
+  userId: string
+  title: string
+  value: string
+  constructor(userId: string, title: string, value: string) {
+    this.userId = userId
+    this.title = title
+    this.value = value
   }
 }
 

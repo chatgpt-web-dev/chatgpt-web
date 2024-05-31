@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword } from '@/components/common/Setting/model'
+import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import type { SettingsState } from '@/store/modules/user/helper'
 
@@ -229,6 +229,13 @@ export function fetchGetChatRooms<T = any>() {
   })
 }
 
+export function fetchGetChatRoomsCount<T = any>(page: number, size: number, userId: string) {
+  return get<T>({
+    url: '/chatrooms-count',
+    data: { page, size, userId },
+  })
+}
+
 export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string) {
   return post<T>({
     url: '/room-create',
@@ -271,9 +278,9 @@ export function fetchDeleteChatRoom<T = any>(roomId: number) {
   })
 }
 
-export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number) {
+export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number, all?: string) {
   return get<T>({
-    url: `/chat-history?roomId=${roomId}&lastId=${lastId}`,
+    url: `/chat-history?roomId=${roomId}&lastId=${lastId}&all=${all}`,
   })
 }
 
@@ -385,5 +392,38 @@ export function fetchUpsertApiKey<T = any>(keyConfig: KeyConfig) {
   return post<T>({
     url: '/setting-key-upsert',
     data: keyConfig,
+  })
+}
+
+export function fetchUserPromptList<T = any>() {
+  return get<T>({
+    url: '/prompt-list',
+  })
+}
+
+export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
+  return post<T>({
+    url: '/prompt-upsert',
+    data: userPrompt,
+  })
+}
+
+export function fetchDeleteUserPrompt<T = any>(id: string) {
+  return post<T>({
+    url: '/prompt-delete',
+    data: { id },
+  })
+}
+
+export function fetchClearUserPrompt<T = any>() {
+  return post<T>({
+    url: '/prompt-clear',
+  })
+}
+
+export function fetchImportUserPrompt<T = any>(dataProps: never[]) {
+  return post<T>({
+    url: '/prompt-import',
+    data: dataProps,
   })
 }

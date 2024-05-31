@@ -94,6 +94,7 @@ export default {
     advanced: '고급',
     config: '기본 구성',
     statistics: '통계학',
+    chatRecord: '채팅 기록',
     siteConfig: '사이트 구성',
     mailConfig: '메일 구성',
     auditConfig: '감사 구성',
