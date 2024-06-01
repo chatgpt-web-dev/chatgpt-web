@@ -147,12 +147,12 @@ onMounted(async () => {
     <div class="buttons-container">
       <div class="button-wrapper">
         <NButton type="primary" @click="closeModal">
-          关闭公告
+          Close
         </NButton>
       </div>
       <div class="button-wrapper">
         <NButton type="default" @click="doNotShowToday">
-          今日不再提示
+          Don't show this again today
         </NButton>
       </div>
     </div>
