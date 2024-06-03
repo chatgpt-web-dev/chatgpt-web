@@ -516,7 +516,7 @@ async function loadMoreMessage(event: any) {
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
     loadingms = ms.loading(
-      '加载中...', {
+      'Loading...', {
         duration: 0,
       },
     )
