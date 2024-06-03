@@ -522,7 +522,7 @@ async function loadMoreMessage(event: any) {
     )
   }, () => {
     allmsg && allmsg.destroy()
-    allmsg = ms.warning('没有更多了', {
+    allmsg = ms.warning('No more messages above', {
       duration: 1000,
     })
   })
