@@ -50,7 +50,7 @@ const message = useMessage()
 
 const textRef = ref<HTMLElement>()
 
-const asRawText = ref(props.inversion)
+const asRawText = false
 
 const messageRef = ref<HTMLElement>()
 
