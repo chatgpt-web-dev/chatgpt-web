@@ -107,7 +107,7 @@ onUnmounted(() => {
 <template>
   <div class="text-black" :class="wrapClass">
     <div ref="textRef" class="leading-relaxed break-words">
-      <div v-if="!inversion" class="flex items-end">
+      <div class="flex items-end">
         <div v-if="!asRawText" class="w-full markdown-body" :class="{ 'markdown-body-generate': loading }" v-html="text" />
         <div v-else class="w-full whitespace-pre-wrap" v-text="text" />
       </div>
