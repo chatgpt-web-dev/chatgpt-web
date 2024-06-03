@@ -50,8 +50,8 @@ const message = useMessage()
 
 const textRef = ref<HTMLElement>()
 
-const asRawText = false
-
+const asRawText = ref(false)
+	
 const messageRef = ref<HTMLElement>()
 
 const indexRef = ref<number>(0)
