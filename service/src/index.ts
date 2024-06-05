@@ -557,6 +557,7 @@ router.get('/user-getamtinfo', auth, async (req, res) => {
     res.send({ status: 'Fail', message: 'Read Amount Error', data: 0 })
   }
 })
+
 // 兑换对话额度
 router.post('/redeem-card', auth, async (req, res) => {
   try {
