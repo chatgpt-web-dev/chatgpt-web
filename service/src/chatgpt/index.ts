@@ -63,7 +63,7 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
     if (model.toLowerCase().includes('gpt-4o') || model.toLowerCase().includes('gpt-4-turbo') || model.toLowerCase().includes('-preview')) {
       // If it's a 'gpt-4o'/'gpt-4-turbo'/'xxxx-preview' model, set the maxModelTokens to 128000
       options.maxModelTokens = 128000
-      options.maxResponseTokens = 32768
+      options.maxResponseTokens = 4096
     }
     // Check if the model type includes '16k'
     else if (model.toLowerCase().includes('16k')) {
