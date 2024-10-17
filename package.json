@@ -69,5 +69,8 @@
     "*.{ts,tsx,vue}": [
       "pnpm lint:fix"
     ]
+  },
+  "dependencies": {
+    "nanoid": "^5.0.7"
   }
 }
