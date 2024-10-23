@@ -67,6 +67,7 @@ let prevScrollTop: number
 const promptStore = usePromptStore()
 
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
+// @ts-expect-error TS2339: Property 'promptList' does not exist on type 'StoreToRefs<any>'.
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
