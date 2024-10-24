@@ -59,37 +59,28 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
     // The token limit includes the token count from both the message array sent and the model response.
 
     // Check if the model type is GPT-4-turbo or newer
+    if (model.toLowerCase().includes('gpt-4o-2024-08-06') || model.toLowerCase().includes('chatgpt-4o-latest')) {
+      // 'gpt-4o-2024-08-06'/'chatgpt-4o-latest'
+      options.maxModelTokens = 128000
+      options.maxResponseTokens = 16384
+    }
     if (model.toLowerCase().includes('gpt-4o') || model.toLowerCase().includes('gpt-4-turbo') || model.toLowerCase().includes('-preview')) {
-      // If it's a 'gpt-4o'/'gpt-4-turbo'/'xxxx-preview' model, set the maxModelTokens to 128000
+      // 'gpt-4o'/'gpt-4-turbo'/'xxxx-preview'
       options.maxModelTokens = 128000
       options.maxResponseTokens = 4096
     }
     else if (model.toLowerCase().includes('gpt-4')) {
-      // If it's a 'gpt-4' model, set the maxModelTokens and maxResponseTokens to 8192 and 2048 respectively
+      // 'gpt-4'
       options.maxModelTokens = 8192
-      options.maxResponseTokens = 2048
-    }
-    // Check if the model type includes 'gpt-3.5-turbo'
-    else if (model.toLowerCase().includes('gpt-3.5-turbo-instruct') || model.toLowerCase().includes('gpt-3.5-turbo-0613')) {
-      // If it's a old 'gpt-3.5-turbo' model, set the maxModelTokens to 4096 and maxResponseTokens to 1024
-      options.maxModelTokens = 4096
-      options.maxResponseTokens = 1024
-    }
-    // Check if the model type includes 'gpt-3.5-turbo'
-    else if (model.toLowerCase().includes('gpt-3.5-turbo')) {
-      // If it's a 'gpt-3.5-turbo' model, set the maxModelTokens to 16385 and maxResponseTokens to 4096
-      options.maxModelTokens = 16385
-      options.maxResponseTokens = 4096
-    }
-    // Check if the model type includes '32k'
-    else if (model.toLowerCase().includes('32k')) {
-      // If it's a '32k' model, set the maxModelTokens to 32768 and maxResponseTokens to 8192
-      options.maxModelTokens = 32768
       options.maxResponseTokens = 8192
     }
-    // Check if the model type includes '16k'
-    else if (model.toLowerCase().includes('16k')) {
-      // If it's a '16k' model, set the maxModelTokens to 16385 and maxResponseTokens to 4096
+    else if (model.toLowerCase().includes('gpt-3.5-turbo-instruct')) {
+      // 'gpt-3.5-turbo-instruct'
+      options.maxModelTokens = 4096
+      options.maxResponseTokens = 4096
+    }
+    else if (model.toLowerCase().includes('gpt-3.5-turbo')) {
+      // 'gpt-3.5-turbo'
       options.maxModelTokens = 16385
       options.maxResponseTokens = 4096
     }
