@@ -3,7 +3,7 @@ import { SvgIcon } from '@/components/common'
 
 export function useIconRender() {
   interface IconConfig {
-    icon?: string
+    icon: string
     color?: string
     fontSize?: number
   }

@@ -3,7 +3,7 @@ import { computed, useAttrs } from 'vue'
 import { Icon } from '@iconify/vue'
 
 interface Props {
-  icon?: string
+  icon: string
 }
 
 defineProps<Props>()
