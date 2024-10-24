@@ -735,6 +735,7 @@ onUnmounted(() => {
                 style="flex-flow:row nowrap;min-width:2.5em;padding:.5em;border-radius:.5em;"
                 :headers="uploadHeaders"
                 :show-file-list="false"
+                :multiple="true"
                 response-type="json"
                 accept="image/png, image/jpeg, image/webp, image/gif"
                 @finish="handleFinish"
