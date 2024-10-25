@@ -681,7 +681,7 @@ onUnmounted(() => {
               <div>
                 <Message
                   v-for="(item, index) of dataSources"
-                  :key="index"
+                  :key="String(item.uuid) + String(item.inversion)"
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
