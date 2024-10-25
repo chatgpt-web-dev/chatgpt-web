@@ -1,7 +1,6 @@
 declare namespace Chat {
   interface Chat {
     uuid?: number
-		id?: string
     dateTime: string
     text: string
     images?: string[]

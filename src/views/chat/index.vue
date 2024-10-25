@@ -21,7 +21,6 @@ import {
 import { t } from '@/locales'
 import { debounce } from '@/utils/functions/debounce'
 import IconPrompt from '@/icons/Prompt.vue'
-import { nanoid } from 'nanoid';
 
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
@@ -104,7 +103,6 @@ async function onConversation() {
     +uuid,
     {
       uuid: chatUuid,
-			id: nanoid(),
       dateTime: new Date().toLocaleString(),
       text: message,
       images: uploadFileKeys,
@@ -128,7 +126,6 @@ async function onConversation() {
   addChat(
     +uuid,
     {
-			id: nanoid(),
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
       text: '',
@@ -683,7 +680,7 @@ onUnmounted(() => {
               <div>
                 <Message
                   v-for="(item, index) of dataSources"
-                  :key="item.id || index"
+                  :key="index"
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
