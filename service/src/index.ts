@@ -1,3 +1,4 @@
+import * as path from 'node:path'
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
@@ -58,7 +59,15 @@ dotenv.config()
 const app = express()
 const router = express.Router()
 
-app.use(express.static('public'))
+app.use(express.static('public', {
+  setHeaders: (res, filePath) => {
+    if (path.extname(filePath) === '.html')
+      res.setHeader('Cache-Control', 'public, max-age=0')
+    else
+      res.setHeader('Cache-Control', 'public, max-age=31536000')
+  },
+}))
+
 app.use(express.json())
 
 app.use('/uploads', express.static('uploads'))
