@@ -59,10 +59,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }} # 镜像标签
           platforms: linux/amd64,linux/arm64 # 支持的平台架构
           tags: | # 镜像标签列表
-            ${{ secrets.DOCKERHUB_USERNAME }}/zjai-web:${{ github.ref_name }} # 使用 GitHub 参考名称作为标签
+            # ${{ secrets.DOCKERHUB_USERNAME }}/zjai-web:${{ github.ref_name }} # 使用 GitHub 参考名称作为标签
             ${{ secrets.DOCKERHUB_USERNAME }}/zjai-web:latest # 最新标签
-            ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:${{ github.ref_name }} # 使用命名空间和参考名称作为标签
-            ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:latest # 使用命名空间的最新标签
+            # ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:${{ github.ref_name }} # 使用命名空间和参考名称作为标签
+            # ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:latest # 使用命名空间的最新标签
           build-args: | # 构建参数
             GIT_COMMIT_HASH=${{ github.sha }} # Git 提交哈希
             RELEASE_VERSION=${{ github.ref_name }} # 发布版本
