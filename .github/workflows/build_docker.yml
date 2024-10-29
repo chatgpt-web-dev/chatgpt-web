@@ -21,7 +21,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web
+          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web
           # Description length should be no longer than 100 characters.
           short-description: A third-party ChatGPT Web UI page, through the official OpenAI completion API.
           readme-filepath: README.en.md
