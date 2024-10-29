@@ -1,65 +1,68 @@
-name: build_docker
+name: build_docker # 工作流名称：构建 Docker
 
 on:
   push:
-    branches: [main]
+    branches: [main] # 当推送到 main 分支时触发
   release:
-    types: [created] # This will only run on new releases
+    types: [created] # 仅在创建新版本时触发
+  workflow_dispatch:  # 启用手动触发
 
 jobs:
-  docker_hub_description:
-    name: Docker Hub description
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  docker_hub_description: # 任务名称：更新 Docker Hub 描述
+    name: Docker Hub description # 任务显示名称
+    runs-on: ubuntu-latest # 运行环境：最新的 Ubuntu
+    steps: # 任务步骤
+      - name: Checkout # 步骤名称：检出代码
+        uses: actions/checkout@v4 # 使用 GitHub 官方的检出操作
         with:
           sparse-checkout: |
-            README.en.md
-      - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web
-          # Description length should be no longer than 100 characters.
-          short-description: A third-party ChatGPT Web UI page, through the official OpenAI completion API.
-          readme-filepath: README.en.md
-          enable-url-completion: true
+            README.en.md # 仅检出 README.en.md 文件
 
-  build_docker:
-    name: Build docker
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Print out all environment variables
-      - run: |
-          env
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Docker Hub Description # 步骤名称：更新 Docker Hub 描述
+        uses: peter-evans/dockerhub-description@v4 # 使用第三方操作更新描述
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v5
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub 用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub 密码
+          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web # Docker Hub 仓库名称
+          short-description: A third-party ChatGPT Web UI page, through the official OpenAI completion API. # 简短描述
+          readme-filepath: README.en.md # 用于描述的 README 文件路径
+          enable-url-completion: true # 启用 URL 完成功能
+
+  build_docker: # 任务名称：构建 Docker 镜像
+    name: Build docker # 任务显示名称
+    runs-on: ubuntu-latest # 运行环境：最新的 Ubuntu
+    steps: # 任务步骤
+      - name: Checkout # 步骤名称：检出代码
+        uses: actions/checkout@v4 # 使用 GitHub 官方的检出操作
+
+      - run: | # 运行命令
+          env # 打印所有环境变量
+
+      - name: Set up QEMU # 步骤名称：设置 QEMU
+        uses: docker/setup-qemu-action@v3 # 使用 Docker 官方的 QEMU 设置操作
+
+      - name: Set up Docker Buildx # 步骤名称：设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3 # 使用 Docker 官方的 Buildx 设置操作
+
+      - name: Login to Docker Hub # 步骤名称：登录 Docker Hub
+        uses: docker/login-action@v3 # 使用 Docker 官方的登录操作
         with:
-          context: .
-          push: true
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:${{ github.ref_name }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:latest
-            ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web:${{ github.ref_name }}
-            ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web:latest
-          build-args: |
-            GIT_COMMIT_HASH=${{ github.sha }}
-            RELEASE_VERSION=${{ github.ref_name }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub 用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub 密码
+
+      - name: Build and push # 步骤名称：构建并推送镜像
+        id: docker_build # 步骤 ID
+        uses: docker/build-push-action@v5 # 使用 Docker 官方的构建和推送操作
+        with:
+          context: . # 构建上下文目录
+          push: true # 构建成功后推送镜像
+          labels: ${{ steps.meta.outputs.labels }} # 镜像标签
+          platforms: linux/amd64,linux/arm64 # 支持的平台架构
+          tags: | # 镜像标签列表
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:${{ github.ref_name }} # 使用 GitHub 参考名称作为标签
+            ${{ secrets.DOCKERHUB_USERNAME }}/chatgpt-web:latest # 最新标签
+            ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web:${{ github.ref_name }} # 使用命名空间和参考名称作为标签
+            ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web:latest # 使用命名空间的最新标签
+          build-args: | # 构建参数
+            GIT_COMMIT_HASH=${{ github.sha }} # Git 提交哈希
+            RELEASE_VERSION=${{ github.ref_name }} # 发布版本
