@@ -7,62 +7,30 @@ on:
     types: [created] # 仅在创建新版本时触发
   workflow_dispatch:  # 启用手动触发
 
-jobs:
-  docker_hub_description: # 任务名称：更新 Docker Hub 描述
-    name: Docker Hub description # 任务显示名称
-    runs-on: ubuntu-latest # 运行环境：最新的 Ubuntu
-    steps: # 任务步骤
-      - name: Checkout # 步骤名称：检出代码
-        uses: actions/checkout@v4 # 使用 GitHub 官方的检出操作
-        with:
-          sparse-checkout: |
-            README.en.md # 仅检出 README.en.md 文件
+jobs:  # 定义作业
+  build:  # 作业名称
 
-      - name: Docker Hub Description # 步骤名称：更新 Docker Hub 描述
-        uses: peter-evans/dockerhub-description@v4 # 使用第三方操作更新描述
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub 用户名
-          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub 密码
-          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web # Docker Hub 仓库名称
-          short-description: A third-party ChatGPT Web UI page, through the official OpenAI completion API. # 简短描述
-          readme-filepath: README.en.md # 用于描述的 README 文件路径
-          enable-url-completion: true # 启用 URL 完成功能
+    runs-on: ubuntu-latest  # 指定在最新的 Ubuntu 环境中运行作业
 
-  build_docker: # 任务名称：构建 Docker 镜像
-    name: Build docker # 任务显示名称
-    runs-on: ubuntu-latest # 运行环境：最新的 Ubuntu
-    steps: # 任务步骤
-      - name: Checkout # 步骤名称：检出代码
-        uses: actions/checkout@v4 # 使用 GitHub 官方的检出操作
+    steps:  # 定义作业的步骤
+      - name: Set up QEMU  # 设置 QEMU
+        uses: docker/setup-qemu-action@v2  # 使用 docker/setup-qemu-action@v2 GitHub Action
 
-      - run: | # 运行命令
-          env # 打印所有环境变量
+      - name: Set up Docker Buildx  # 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v2  # 使用 docker/setup-buildx-action@v2 GitHub Action
 
-      - name: Set up QEMU # 步骤名称：设置 QEMU
-        uses: docker/setup-qemu-action@v3 # 使用 Docker 官方的 QEMU 设置操作
+      - name: Login to DockerHub  # 登录到 DockerHub
+        uses: docker/login-action@v1  # 使用 docker/login-action@v1 GitHub Action
+        with:  # 提供登录所需的凭据
+          username: ${{ secrets.DOCKERHUB_USERNAME }}  # DockerHub 用户名，从 GitHub Secrets 获取
+          password: ${{ secrets.DOCKERHUB_TOKEN }}  # DockerHub 密码，从 GitHub Secrets 获取
 
-      - name: Set up Docker Buildx # 步骤名称：设置 Docker Buildx
-        uses: docker/setup-buildx-action@v3 # 使用 Docker 官方的 Buildx 设置操作
-
-      - name: Login to Docker Hub # 步骤名称：登录 Docker Hub
-        uses: docker/login-action@v3 # 使用 Docker 官方的登录操作
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub 用户名
-          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub 密码
-
-      - name: Build and push # 步骤名称：构建并推送镜像
-        id: docker_build # 步骤 ID
-        uses: docker/build-push-action@v5 # 使用 Docker 官方的构建和推送操作
-        with:
-          context: . # 构建上下文目录
-          push: true # 构建成功后推送镜像
-          labels: ${{ steps.meta.outputs.labels }} # 镜像标签
+      - name: Build and push  # 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v4  # 使用 docker/build-push-action@v4 GitHub Action
+        env:  # 设置环境变量
+          DOCKER_BUILDKIT: "1"  # 启用 Docker BuildKit
+        with:  # 提供构建和推送所需的参数
+          # file: mlc-llm-rk3588/Dockerfile-base  # 指定 Dockerfile 的路径
+          push: true  # 构建完成后推送镜像
           platforms: linux/amd64,linux/arm64 # 支持的平台架构
-          tags: | # 镜像标签列表
-            # ${{ secrets.DOCKERHUB_USERNAME }}/zjai-web:${{ github.ref_name }} # 使用 GitHub 参考名称作为标签
-            ${{ secrets.DOCKERHUB_USERNAME }}/zjai-web:latest # 最新标签
-            # ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:${{ github.ref_name }} # 使用命名空间和参考名称作为标签
-            # ${{ vars.DOCKERHUB_NAMESPACE }}/zjai-web:latest # 使用命名空间的最新标签
-          build-args: | # 构建参数
-            GIT_COMMIT_HASH=${{ github.sha }} # Git 提交哈希
-            RELEASE_VERSION=${{ github.ref_name }} # 发布版本
+          tags: jsntwdj/zjai-web:latest  # 指定镜像的标签
