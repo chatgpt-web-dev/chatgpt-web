@@ -57,8 +57,6 @@ const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatH
 
 const currentNavIndexRef = ref<number>(-1)
 
-const isVisionModel = computed(() => currentChatModel.value && (currentChatModel.value?.includes('vision') || ['gpt-4-turbo', 'gpt-4-turbo-2024-04-09'].includes(currentChatModel.value) || currentChatModel.value?.includes('gpt-4o')))
-
 let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
@@ -94,7 +92,7 @@ async function onConversation() {
   if (nowSelectChatModel.value && currentChatHistory.value)
     currentChatHistory.value.chatModel = nowSelectChatModel.value
 
-  const uploadFileKeys = isVisionModel.value ? uploadFileKeysRef.value : []
+  const uploadFileKeys = uploadFileKeysRef.value
   uploadFileKeysRef.value = []
 
   controller = new AbortController()
@@ -714,7 +712,7 @@ onUnmounted(() => {
     <footer :class="footerClass">
       <div class="w-full max-w-screen-xl m-auto">
         <NSpace vertical>
-          <div v-if="isVisionModel && uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
+          <div v-if="uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
             <NSpace>
               <img v-for="(v, i) of uploadFileKeysRef" :key="i" :src="`/uploads/${v}`" class="max-h-10">
               <HoverButton @click="handleDeleteUploadFile">
@@ -728,7 +726,6 @@ onUnmounted(() => {
           <div class="flex items-center space-x-2">
             <div>
               <NUpload
-                :disabled="!isVisionModel"
                 action="/api/upload-image"
                 list-type="image"
                 class="flex items-center justify-center h-10 transition hover:bg-neutral-100 dark:hover:bg-[#414755]"
