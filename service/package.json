@@ -38,7 +38,6 @@
     "gpt-token": "^0.0.5",
     "https-proxy-agent": "^5.0.1",
     "jsonwebtoken": "^9.0.0",
-    "jwt-decode": "^3.1.2",
     "mongodb": "^6.6.2",
     "multer": "1.4.5-lts.1",
     "node-fetch": "^3.3.0",

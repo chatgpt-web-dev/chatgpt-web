@@ -1,10 +1,9 @@
 import * as dotenv from 'dotenv'
 import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
-import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
+import { ChatGPTAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import jwt_decode from 'jwt-decode'
 import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
 import { Status } from '../storage/model'
 import { convertImageUrl } from '../utils/image'
@@ -13,8 +12,8 @@ import { textAuditServices } from '../utils/textAudit'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
 import { sendResponse } from '../utils'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
-import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
-import { getChatByMessageId, updateRoomAccountId, updateRoomChatModel } from '../storage/mongo'
+import type { ChatContext, ModelConfig } from '../types'
+import { getChatByMessageId, updateRoomChatModel } from '../storage/mongo'
 import type { RequestOptions } from './types'
 
 const { HttpsProxyAgent } = httpsProxyAgent
@@ -81,22 +80,6 @@ export async function initApi(key: KeyConfig, chatModel: string, maxContextCount
 
     return new ChatGPTAPI({ ...options })
   }
-  else {
-    const options: ChatGPTUnofficialProxyAPIOptions = {
-      accessToken: key.key,
-      apiReverseProxyUrl: isNotEmptyString(key.baseUrl)
-        ? key.baseUrl
-        : isNotEmptyString(config.reverseProxy)
-          ? config.reverseProxy
-          : 'https://ai.fakeopen.com/api/conversation',
-      model,
-      debug: !config.apiDisableDebug,
-    }
-
-    await setupProxy(options)
-
-    return new ChatGPTUnofficialProxyAPI({ ...options })
-  }
 }
 const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
 async function chatReplyProcess(options: RequestOptions) {
@@ -107,14 +90,6 @@ async function chatReplyProcess(options: RequestOptions) {
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
-
-  if (key.keyModel === 'ChatGPTUnofficialProxyAPI') {
-    if (!options.room.accountId)
-      updateRoomAccountId(userId, options.room.roomId, getAccountId(key.key))
-
-    if (options.lastContext && ((options.lastContext.conversationId && !options.lastContext.parentMessageId) || (!options.lastContext.conversationId && options.lastContext.parentMessageId)))
-      throw new Error('无法在一个房间同时使用 AccessToken 以及 Api，请联系管理员，或新开聊天室进行对话 | Unable to use AccessToken and Api at the same time in the same room, please contact the administrator or open a new chat room for conversation')
-  }
 
   // Add Chat Record
   updateRoomChatModel(userId, options.room.roomId, model)
@@ -235,7 +210,7 @@ async function chatConfig() {
   })
 }
 
-async function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPIOptions) {
+async function setupProxy(options: ChatGPTAPIOptions) {
   const config = await getCacheConfig()
   if (isNotEmptyString(config.socksProxy)) {
     const agent = new SocksProxyAgent({
@@ -344,22 +319,10 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
 }
 
 async function getRandomApiKey(user: UserInfo, chatModel: string, accountId?: string): Promise<KeyConfig | undefined> {
-  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
     .filter(d => d.chatModels.includes(chatModel))
-  if (accountId)
-    keys = keys.filter(d => d.keyModel === 'ChatGPTUnofficialProxyAPI' && getAccountId(d.key) === accountId)
 
   return randomKeyConfig(keys)
-}
-
-function getAccountId(accessToken: string): string {
-  try {
-    const jwt = jwt_decode(accessToken) as JWT
-    return jwt['https://api.openai.com/auth'].user_id
-  }
-  catch (error) {
-    return ''
-  }
 }
 
 export type { ChatContext, ChatMessage }
