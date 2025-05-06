@@ -171,6 +171,7 @@ async function onConversation() {
               dataSources.value.length - 1,
               {
                 dateTime: new Date().toLocaleString(),
+                reasoning: data?.reasoning,
                 text: lastText + (data.text ?? ''),
                 inversion: false,
                 error: false,
@@ -318,6 +319,7 @@ async function onRegenerate(index: number) {
               index,
               {
                 dateTime: new Date().toLocaleString(),
+                reasoning: data?.reasoning,
                 text: lastText + (data.text ?? ''),
                 inversion: false,
                 responseCount,
@@ -386,6 +388,7 @@ async function onResponseHistory(index: number, historyIndex: number) {
     index,
     {
       dateTime: chat.dateTime,
+      reasoning: chat?.reasoning,
       text: chat.text,
       inversion: false,
       responseCount: chat.responseCount,
@@ -683,6 +686,7 @@ onUnmounted(() => {
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
+                  :reasoning="item?.reasoning"
                   :text="item.text"
                   :images="item.images"
                   :inversion="item.inversion"

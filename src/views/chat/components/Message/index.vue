@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { NButton, NButtonGroup, NDropdown, NPopover, NSpace, useMessage } from 'naive-ui'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
+import Reasoning from './Reasoning.vue'
 import { SvgIcon } from '@/components/common'
 import { useIconRender } from '@/hooks/useIconRender'
 import { t } from '@/locales'
@@ -21,6 +22,7 @@ interface Props {
   currentNavIndex: number
   dateTime?: string
   model?: string
+  reasoning?: string
   text?: string
   images?: string[]
   isRecord?: boolean
@@ -223,6 +225,7 @@ function isEventTargetValid(event: any) {
           </template>
         </NSpace>
       </p>
+      <Reasoning v-if="reasoning" :reasoning="reasoning" :loading="loading" />
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"

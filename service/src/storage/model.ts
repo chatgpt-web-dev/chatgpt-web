@@ -121,6 +121,7 @@ export class ChatInfo {
   dateTime: number
   prompt: string
   images?: string[]
+  reasoning?: string
   response?: string
   status: Status = Status.Normal
   options: ChatOptions

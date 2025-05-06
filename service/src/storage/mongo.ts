@@ -93,10 +93,11 @@ export async function getChatByMessageId(messageId: string) {
   return await chatCol.findOne({ 'options.messageId': messageId })
 }
 
-export async function updateChat(chatId: string, response: string, messageId: string, model: string, usage: UsageResponse, previousResponse?: []) {
+export async function updateChat(chatId: string, reasoning: string, response: string, messageId: string, model: string, usage: UsageResponse, previousResponse?: []) {
   const query = { _id: new ObjectId(chatId) }
   const update = {
     $set: {
+      'reasoning': reasoning,
       'response': response,
       'model': model || '',
       'options.messageId': messageId,
