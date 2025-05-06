@@ -32,7 +32,7 @@ export async function getOriginConfig() {
       process.env.OPENAI_API_DISABLE_DEBUG === 'true',
       process.env.OPENAI_ACCESS_TOKEN,
       process.env.OPENAI_API_BASE_URL,
-      process.env.OPENAI_API_MODEL === 'ChatGPTUnofficialProxyAPI' ? 'ChatGPTUnofficialProxyAPI' : 'ChatGPTAPI',
+      'ChatGPTAPI',
       process.env.API_REVERSE_PROXY,
       (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
         ? (`${process.env.SOCKS_PROXY_HOST}:${process.env.SOCKS_PROXY_PORT}`)
@@ -76,12 +76,6 @@ export async function getOriginConfig() {
     if (config.siteConfig.registerReview === undefined)
       config.siteConfig.registerReview = process.env.REGISTER_REVIEW === 'true'
   }
-  if (config.apiModel !== 'ChatGPTAPI' && config.apiModel !== 'ChatGPTUnofficialProxyAPI') {
-    if (isNotEmptyString(config.accessToken))
-      config.apiModel = 'ChatGPTUnofficialProxyAPI'
-    else
-      config.apiModel = 'ChatGPTAPI'
-  }
 
   if (config.auditConfig === undefined) {
     config.auditConfig = new AuditConfig(
@@ -102,7 +96,7 @@ export async function getOriginConfig() {
 
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
-      'You are ChatGPT, a large language model trained by OpenAI. Follow the user\'s instructions carefully.Respond using markdown (latex start with $).',
+      'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
       0.8,
       1,
       20,
