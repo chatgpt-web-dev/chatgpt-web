@@ -2,6 +2,7 @@ declare namespace Chat {
   interface Chat {
     uuid?: number
     dateTime: string
+    reasoning?: string
     text: string
     images?: string[]
     inversion?: boolean

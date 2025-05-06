@@ -14,6 +14,7 @@ export interface ChatMessage {
 export interface ResponseChunk {
   id: string
   text: string
+  reasoning: string
   role: string
   finish_reason: string
 }

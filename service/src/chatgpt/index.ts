@@ -126,12 +126,16 @@ async function chatReplyProcess(options: RequestOptions) {
     })
 
     // Process the stream
+    let responseReasoning = ''
     let responseText = ''
     let responseId = ''
     const usage = new UsageResponse()
 
     for await (const chunk of stream) {
       // Extract the content from the chunk
+      // @ts-expect-error For deepseek-reasoner model only. The reasoning contents of the assistant message, before the final answer.
+      const reasoningContent = chunk.choices[0]?.delta?.reasoning_content || ''
+      responseReasoning += reasoningContent
       const content = chunk.choices[0]?.delta?.content || ''
       responseText += content
       responseId = chunk.id
@@ -141,6 +145,7 @@ async function chatReplyProcess(options: RequestOptions) {
       // Build response object similar to the original implementation
       const responseChunk = {
         id: chunk.id,
+        reasoning: responseReasoning,
         text: responseText,
         role: 'assistant',
         finish_reason,
@@ -159,6 +164,7 @@ async function chatReplyProcess(options: RequestOptions) {
     // Final response object
     const response = {
       id: responseId || messageId,
+      reasoning: responseReasoning,
       text: responseText,
       role: 'assistant',
       detail: {
