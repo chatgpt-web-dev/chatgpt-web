@@ -79,33 +79,15 @@ Some unique features have been added:
 
 ## Introduction
 
-Supports dual models, provides two unofficial `ChatGPT API` methods:
+Uses the official `OpenAI API` to access `ChatGPT`:
 
-| Method                                        | Free?  | Reliability | Quality |
-| --------------------------------------------- | ------ | ----------- | ------- |
-| `ChatGPTAPI(gpt-3.5-turbo-0301)`                           | No     | Reliable    | Relatively clumsy |
-| `ChatGPTUnofficialProxyAPI(Web accessToken)` | Yes    | Relatively unreliable | Smart |
-
-Comparison:
-1. `ChatGPTAPI` uses `gpt-3.5-turbo-0301` to simulate `ChatGPT` through the official `OpenAI` completion `API` (the most reliable method, but it is not free and does not use models specifically tuned for chat).
-2. `ChatGPTUnofficialProxyAPI` accesses `ChatGPT`'s backend `API` via an unofficial proxy server to bypass `Cloudflare` (uses the real `ChatGPT`, is very lightweight, but depends on third-party servers and has rate limits).
+`ChatGPTAPI` uses `gpt-4.1` through the official `OpenAI` completion `API` (requires an API key).
 
 [Details](https://github.com/Chanzhaoyu/chatgpt-web/issues/138)
 
-Switching Methods:
+Setup:
 1. Go to the `service/.env.example` file and copy the contents to the `service/.env` file.
-2. For `OpenAI API Key`, fill in the `OPENAI_API_KEY` field [(Get apiKey)](https://platform.openai.com/overview).
-3. For `Web API`, fill in the `OPENAI_ACCESS_TOKEN` field [(Get accessToken)](https://chat.openai.com/api/auth/session).
-4. When both are present, `OpenAI API Key` takes precedence.
-
-Reverse Proxy:
-
-Available when using `ChatGPTUnofficialProxyAPI`.[Details](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)
-
-```shell
-# service/.env
-API_REVERSE_PROXY=
-```
+2. Fill in the `OPENAI_API_KEY` field with your OpenAI API Key [(Get apiKey)](https://platform.openai.com/overview).
 
 Environment Variables:
 
@@ -152,18 +134,15 @@ If you have not installed `pnpm` before:
 npm install pnpm -g
 ```
 
-### Fill in the Keys
+### Fill in the API Key
 
-Get `Openai Api Key` or `accessToken` and fill in the local environment variables [jump](#introduction)
+Get your `OpenAI API Key` and fill in the local environment variables [jump](#introduction)
 
 ```
 # service/.env file
 
 # OpenAI API Key - https://platform.openai.com/overview
 OPENAI_API_KEY=
-
-# change this to an `accessToken` extracted from the ChatGPT site's `https://chat.openai.com/api/auth/session` response
-OPENAI_ACCESS_TOKEN=
 ```
 
 ## Install Dependencies
@@ -205,11 +184,9 @@ pnpm dev
 
 #### Docker Parameter Example
 
-- `OPENAI_API_KEY` one of two
-- `OPENAI_ACCESS_TOKEN` one of two, `OPENAI_API_KEY` takes precedence when both are present
+- `OPENAI_API_KEY` required
 - `OPENAI_API_BASE_URL` optional, available when `OPENAI_API_KEY` is set
-- `OPENAI_API_MODEL`  `ChatGPTAPI` OR `ChatGPTUnofficialProxyAPI`
-- `API_REVERSE_PROXY` optional, available when `OPENAI_ACCESS_TOKEN` is set [Reference](#introduction)
+- `OPENAI_API_MODEL` optional, specify the model to use
 - `AUTH_SECRET_KEY` Access Password，optional
 - `TIMEOUT_MS` timeout, in milliseconds, optional
 - `SOCKS_PROXY_HOST` optional, effective with SOCKS_PROXY_PORT

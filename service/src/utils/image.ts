@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import type { Buffer } from 'node:buffer'
 import * as fileType from 'file-type'
 
 fs.mkdir('uploads').then(() => {
@@ -11,8 +12,15 @@ fs.mkdir('uploads').then(() => {
   globalThis.console.error('Error creating directory uploads, ', e)
 })
 
-export async function convertImageUrl(uploadFileKey: string): Promise<string> {
-  const imageData = await fs.readFile(`uploads/${uploadFileKey}`)
+export async function convertImageUrl(uploadFileKey: string): Promise<string | undefined> {
+  let imageData: Buffer
+  try {
+    imageData = await fs.readFile(`uploads/${uploadFileKey}`)
+  }
+  catch (e) {
+    globalThis.console.error(`Error open uploads file ${uploadFileKey}, ${e.message}`)
+    return
+  }
   // 判断文件格式
   const imageType = await fileType.fileTypeFromBuffer(imageData)
   const mimeType = imageType.mime

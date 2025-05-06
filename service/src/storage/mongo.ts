@@ -93,14 +93,13 @@ export async function getChatByMessageId(messageId: string) {
   return await chatCol.findOne({ 'options.messageId': messageId })
 }
 
-export async function updateChat(chatId: string, response: string, messageId: string, conversationId: string, model: string, usage: UsageResponse, previousResponse?: []) {
+export async function updateChat(chatId: string, response: string, messageId: string, model: string, usage: UsageResponse, previousResponse?: []) {
   const query = { _id: new ObjectId(chatId) }
   const update = {
     $set: {
       'response': response,
       'model': model || '',
       'options.messageId': messageId,
-      'options.conversationId': conversationId,
       'options.prompt_tokens': usage?.prompt_tokens,
       'options.completion_tokens': usage?.completion_tokens,
       'options.total_tokens': usage?.total_tokens,
@@ -165,17 +164,6 @@ export async function updateRoomUsingContext(userId: string, roomId: number, usi
   const update = {
     $set: {
       usingContext: using,
-    },
-  }
-  const result = await roomCol.updateOne(query, update)
-  return result.modifiedCount > 0
-}
-
-export async function updateRoomAccountId(userId: string, roomId: number, accountId: string) {
-  const query = { userId, roomId }
-  const update = {
-    $set: {
-      accountId,
     },
   }
   const result = await roomCol.updateOne(query, update)

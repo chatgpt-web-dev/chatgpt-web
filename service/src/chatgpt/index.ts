@@ -1,23 +1,17 @@
 import * as dotenv from 'dotenv'
-import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
-import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
-import { SocksProxyAgent } from 'socks-proxy-agent'
-import httpsProxyAgent from 'https-proxy-agent'
-import fetch from 'node-fetch'
-import jwt_decode from 'jwt-decode'
+import OpenAI from 'openai'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
-import { Status } from '../storage/model'
+import { Status, UsageResponse } from '../storage/model'
 import { convertImageUrl } from '../utils/image'
 import type { TextAuditService } from '../utils/textAudit'
 import { textAuditServices } from '../utils/textAudit'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
 import { sendResponse } from '../utils'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
-import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
-import { getChatByMessageId, updateRoomAccountId, updateRoomChatModel } from '../storage/mongo'
-import type { RequestOptions } from './types'
-
-const { HttpsProxyAgent } = httpsProxyAgent
+import type { ModelConfig } from '../types'
+import { getChatByMessageId, updateRoomChatModel } from '../storage/mongo'
+import type { ChatMessage, RequestOptions } from './types'
 
 dotenv.config()
 
@@ -33,156 +27,149 @@ const ErrorCodeMessage: Record<string, string> = {
 let auditService: TextAuditService
 const _lockedKeys: { key: string; lockedTime: number }[] = []
 
-export async function initApi(key: KeyConfig, chatModel: string, maxContextCount: number) {
-  // More Info: https://github.com/transitive-bullshit/chatgpt-api
-
+export async function initApi(key: KeyConfig) {
   const config = await getCacheConfig()
-  const model = chatModel as string
+  const openaiBaseUrl = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
 
-  if (key.keyModel === 'ChatGPTAPI') {
-    const OPENAI_API_BASE_URL = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
-
-    let contextCount = 0
-    const options: ChatGPTAPIOptions = {
-      apiKey: key.key,
-      completionParams: { model },
-      debug: !config.apiDisableDebug,
-      messageStore: undefined,
-      getMessageById: async (id) => {
-        if (contextCount++ >= maxContextCount)
-          return null
-        return await getMessageById(id)
-      },
-    }
-
-    // Set the token limits based on the model's type. This is because different models have different token limits.
-    // The token limit includes the token count from both the message array sent and the model response.
-
-    if (model.toLowerCase().includes('gpt-4.1')) {
-      // https://platform.openai.com/docs/models/gpt-4.1
-      options.maxModelTokens = 1047576
-      options.maxResponseTokens = 32768
-    }
-    else if (model.toLowerCase().includes('gpt-4o')) {
-      // https://platform.openai.com/docs/models/gpt-4o
-      options.maxModelTokens = 128000
-      options.maxResponseTokens = 16384
-    }
-    // If none of the above, use the default values
-    else {
-      options.maxModelTokens = 1047576
-      options.maxResponseTokens = 32768
-    }
-
-    if (isNotEmptyString(OPENAI_API_BASE_URL))
-      options.apiBaseUrl = `${OPENAI_API_BASE_URL}/v1`
-
-    await setupProxy(options)
-
-    return new ChatGPTAPI({ ...options })
+  let httpAgent: HttpsProxyAgent<any> | undefined
+  if (isNotEmptyString(config.httpsProxy)) {
+    const httpsProxy = config.httpsProxy
+    if (httpsProxy)
+      httpAgent = new HttpsProxyAgent(httpsProxy)
   }
-  else {
-    const options: ChatGPTUnofficialProxyAPIOptions = {
-      accessToken: key.key,
-      apiReverseProxyUrl: isNotEmptyString(key.baseUrl)
-        ? key.baseUrl
-        : isNotEmptyString(config.reverseProxy)
-          ? config.reverseProxy
-          : 'https://ai.fakeopen.com/api/conversation',
-      model,
-      debug: !config.apiDisableDebug,
-    }
 
-    await setupProxy(options)
-
-    return new ChatGPTUnofficialProxyAPI({ ...options })
-  }
+  const client = new OpenAI({
+    baseURL: openaiBaseUrl,
+    apiKey: key.key,
+    httpAgent,
+  })
+  return client
 }
+
 const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
+
 async function chatReplyProcess(options: RequestOptions) {
   const model = options.room.chatModel
-  const key = await getRandomApiKey(options.user, model, options.room.accountId)
+  const key = await getRandomApiKey(options.user, model)
   const userId = options.user._id.toString()
   const maxContextCount = options.user.advanced.maxContextCount ?? 20
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  if (key.keyModel === 'ChatGPTUnofficialProxyAPI') {
-    if (!options.room.accountId)
-      updateRoomAccountId(userId, options.room.roomId, getAccountId(key.key))
-
-    if (options.lastContext && ((options.lastContext.conversationId && !options.lastContext.parentMessageId) || (!options.lastContext.conversationId && options.lastContext.parentMessageId)))
-      throw new Error('无法在一个房间同时使用 AccessToken 以及 Api，请联系管理员，或新开聊天室进行对话 | Unable to use AccessToken and Api at the same time in the same room, please contact the administrator or open a new chat room for conversation')
-  }
-
   // Add Chat Record
   updateRoomChatModel(userId, options.room.roomId, model)
 
-  const { message, uploadFileKeys, lastContext, process, systemMessage, temperature, top_p } = options
-  let content: string | {
-    type: string
-    text?: string
-    image_url?: {
-      url: string
-    }
-  }[] = message
-  if (uploadFileKeys && uploadFileKeys.length > 0) {
-    content = [
-      {
-        type: 'text',
-        text: message,
-      },
-    ]
-    for (const uploadFileKey of uploadFileKeys) {
-      content.push({
-        type: 'image_url',
-        image_url: {
-          url: await convertImageUrl(uploadFileKey),
-        },
-      })
-    }
-  }
+  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p } = options
 
   try {
-    const timeoutMs = (await getCacheConfig()).timeoutMs
-    let options: SendMessageOptions = { timeoutMs }
+    // Initialize OpenAI client
+    const openai = await initApi(key)
 
-    if (key.keyModel === 'ChatGPTAPI') {
-      if (isNotEmptyString(systemMessage))
-        options.systemMessage = systemMessage
-      options.completionParams = { model, temperature, top_p }
-    }
-
-    if (lastContext != null) {
-      if (key.keyModel === 'ChatGPTAPI')
-        options.parentMessageId = lastContext.parentMessageId
-      else
-        options = { ...lastContext }
-    }
-    const api = await initApi(key, model, maxContextCount)
-
+    // Create abort controller for cancellation
     const abort = new AbortController()
-    options.abortSignal = abort.signal
     processThreads.push({ userId, abort, messageId })
-    const response = await api.sendMessage(content, {
-      ...options,
-      onProgress: (partialResponse) => {
-        process?.(partialResponse)
-      },
+
+    // Prepare messages array for the chat completion
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = []
+
+    // Add previous messages from conversation history.
+    await addPreviousMessages(parentMessageId, maxContextCount, messages)
+
+    // Add system message if provided
+    if (isNotEmptyString(systemMessage)) {
+      messages.unshift({
+        role: 'system',
+        content: systemMessage,
+      })
+    }
+
+    // Prepare the user message content (text and images)
+    let content: string | OpenAI.Chat.ChatCompletionContentPart[] = message
+
+    // Handle image uploads if present
+    if (uploadFileKeys && uploadFileKeys.length > 0) {
+      content = [
+        {
+          type: 'text',
+          text: message,
+        },
+      ]
+      for (const uploadFileKey of uploadFileKeys) {
+        content.push({
+          type: 'image_url',
+          image_url: {
+            url: await convertImageUrl(uploadFileKey),
+          },
+        })
+      }
+    }
+
+    // Add the user message
+    messages.push({
+      role: 'user',
+      content,
     })
+
+    // Create the chat completion with streaming
+    const stream = await openai.chat.completions.create({
+      model,
+      messages,
+      temperature: temperature ?? undefined,
+      top_p: top_p ?? undefined,
+      stream: true,
+      stream_options: {
+        include_usage: true,
+      },
+    }, {
+      signal: abort.signal,
+    })
+
+    // Process the stream
+    let responseText = ''
+    let responseId = ''
+    const usage = new UsageResponse()
+
+    for await (const chunk of stream) {
+      // Extract the content from the chunk
+      const content = chunk.choices[0]?.delta?.content || ''
+      responseText += content
+      responseId = chunk.id
+
+      const finish_reason = chunk.choices[0]?.finish_reason
+
+      // Build response object similar to the original implementation
+      const responseChunk = {
+        id: chunk.id,
+        text: responseText,
+        role: 'assistant',
+        finish_reason,
+      }
+
+      // Call the process callback if provided
+      process?.(responseChunk)
+
+      if (chunk?.usage?.total_tokens) {
+        usage.total_tokens = chunk?.usage?.total_tokens
+        usage.prompt_tokens = chunk?.usage?.prompt_tokens
+        usage.completion_tokens = chunk?.usage?.completion_tokens
+      }
+    }
+
+    // Final response object
+    const response = {
+      id: responseId || messageId,
+      text: responseText,
+      role: 'assistant',
+      detail: {
+        usage,
+      },
+    }
+
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {
-    const code = error.statusCode
-    if (code === 429 && (error.message.includes('Too Many Requests') || error.message.includes('Rate limit'))) {
-      // access token  Only one message at a time
-      if (options.tryCount++ < 3) {
-        _lockedKeys.push({ key: key.key, lockedTime: Date.now() })
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        return await chatReplyProcess(options)
-      }
-    }
+    const code = error.status || error.statusCode
     globalThis.console.error(error)
     if (Reflect.has(ErrorCodeMessage, code))
       return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
@@ -235,33 +222,6 @@ async function chatConfig() {
   })
 }
 
-async function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPIOptions) {
-  const config = await getCacheConfig()
-  if (isNotEmptyString(config.socksProxy)) {
-    const agent = new SocksProxyAgent({
-      hostname: config.socksProxy.split(':')[0],
-      port: Number.parseInt(config.socksProxy.split(':')[1]),
-      userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
-      password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
-
-    })
-    options.fetch = (url, options) => {
-      return fetch(url, { agent, ...options })
-    }
-  }
-  else {
-    if (isNotEmptyString(config.httpsProxy)) {
-      const httpsProxy = config.httpsProxy
-      if (httpsProxy) {
-        const agent = new HttpsProxyAgent(httpsProxy)
-        options.fetch = (url, options) => {
-          return fetch(url, { agent, ...options })
-        }
-      }
-    }
-  }
-}
-
 async function getMessageById(id: string): Promise<ChatMessage | undefined> {
   const isPrompt = id.startsWith('prompt_')
   const chatInfo = await getChatByMessageId(isPrompt ? id.substring(7) : id)
@@ -278,13 +238,7 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
     }
     else {
       if (isPrompt) { // prompt
-        let content: string | {
-          type: string
-          text?: string
-          image_url?: {
-            url: string
-          }
-        }[] = chatInfo.prompt
+        let content: string | OpenAI.Chat.ChatCompletionContentPart[] = chatInfo.prompt
         if (chatInfo.images && chatInfo.images.length > 0) {
           content = [
             {
@@ -293,29 +247,30 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
             },
           ]
           for (const image of chatInfo.images) {
-            content.push({
-              type: 'image_url',
-              image_url: {
-                url: await convertImageUrl(image),
-              },
-            })
+            const imageUrlBase64 = await convertImageUrl(image)
+            if (imageUrlBase64) {
+              content.push({
+                type: 'image_url',
+                image_url: {
+                  url: await convertImageUrl(image),
+                },
+              })
+            }
           }
         }
         return {
           id,
-          conversationId: chatInfo.options.conversationId,
           parentMessageId,
           role: 'user',
-          text: content,
+          content,
         }
       }
       else {
         return { // completion
           id,
-          conversationId: chatInfo.options.conversationId,
           parentMessageId,
           role: 'assistant',
-          text: chatInfo.response,
+          content: chatInfo.response,
         }
       }
     }
@@ -343,25 +298,31 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
   return thisKey
 }
 
-async function getRandomApiKey(user: UserInfo, chatModel: string, accountId?: string): Promise<KeyConfig | undefined> {
-  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyConfig | undefined> {
+  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
     .filter(d => d.chatModels.includes(chatModel))
-  if (accountId)
-    keys = keys.filter(d => d.keyModel === 'ChatGPTUnofficialProxyAPI' && getAccountId(d.key) === accountId)
 
   return randomKeyConfig(keys)
 }
 
-function getAccountId(accessToken: string): string {
-  try {
-    const jwt = jwt_decode(accessToken) as JWT
-    return jwt['https://api.openai.com/auth'].user_id
-  }
-  catch (error) {
-    return ''
+// Helper function to add previous messages to the conversation context
+async function addPreviousMessages(parentMessageId: string, maxContextCount: number, messages: OpenAI.Chat.ChatCompletionMessageParam[]): Promise<void> {
+  // Recursively get previous messages
+  let currentMessageId = parentMessageId
+
+  while (currentMessageId) {
+    const currentChatMessage: ChatMessage | undefined = await getMessageById(currentMessageId)
+
+    messages.unshift({
+      content: currentChatMessage.content,
+      role: currentChatMessage.role,
+    } as OpenAI.Chat.ChatCompletionMessage)
+
+    currentMessageId = currentChatMessage?.parentMessageId
+
+    if (messages.length >= maxContextCount)
+      break
   }
 }
-
-export type { ChatContext, ChatMessage }
 
 export { chatReplyProcess, chatConfig, containsSensitiveWords }
