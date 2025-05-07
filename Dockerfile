@@ -22,7 +22,7 @@ COPY . /app
 RUN pnpm run build
 
 # build backend
-FROM node:22-alpine as backend
+FROM node:22-alpine AS backend
 
 RUN npm install pnpm@8 -g
 
@@ -40,6 +40,8 @@ RUN pnpm build
 
 # service
 FROM node:22-alpine
+
+RUN apk add --no-cache tini
 
 RUN npm install pnpm@8 -g
 
@@ -59,4 +61,6 @@ COPY --from=backend /app/build /app/build
 
 EXPOSE 3002
 
-CMD ["sh", "-c", "node --import tsx/esm ./build/index.js"]
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["node", "--import", "tsx/esm", "./build/index.js"]
