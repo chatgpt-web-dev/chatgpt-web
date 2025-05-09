@@ -5,7 +5,7 @@ import { t } from '@/locales'
 
 interface Props {
   reasoning?: string
-  finishReason?: string
+  reasonEnd?: boolean
   loading?: boolean
 }
 
@@ -23,7 +23,7 @@ const reasoningBtnTitle = computed(() => {
 })
 
 const shouldShowThinkingIndicator = computed(() => {
-  return props.loading && props.finishReason !== 'stop'
+  return props.loading && !props.reasonEnd
 })
 
 const hasReasoningText = computed(() => {

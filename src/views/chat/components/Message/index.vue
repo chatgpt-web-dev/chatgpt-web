@@ -226,7 +226,7 @@ function isEventTargetValid(event: any) {
           </template>
         </NSpace>
       </p>
-      <Reasoning v-if="reasoning" :reasoning="reasoning" :finish-reason="finishReason" :loading="loading" />
+      <Reasoning v-if="reasoning" :reasoning="reasoning" :reason-end="text ? text.length > 0 : false" :loading="loading" />
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"

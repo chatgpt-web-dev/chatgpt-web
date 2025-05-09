@@ -3,7 +3,7 @@ declare namespace Chat {
     uuid?: number
     dateTime: string
     reasoning?: string
-    finish_reason?: null | 'stop'
+    finish_reason?: string
     text: string
     images?: string[]
     inversion?: boolean
