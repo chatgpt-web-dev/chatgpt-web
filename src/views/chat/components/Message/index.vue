@@ -23,6 +23,7 @@ interface Props {
   dateTime?: string
   model?: string
   reasoning?: string
+  finishReason?: string
   text?: string
   images?: string[]
   isRecord?: boolean
@@ -225,7 +226,7 @@ function isEventTargetValid(event: any) {
           </template>
         </NSpace>
       </p>
-      <Reasoning v-if="reasoning" :reasoning="reasoning" :loading="loading" />
+      <Reasoning v-if="reasoning" :reasoning="reasoning" :reason-end="text ? text.length > 0 : false" :loading="loading" />
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"

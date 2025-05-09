@@ -78,6 +78,10 @@ export default {
     deleteKeyConfirm: 'Are you sure to delete this key?',
     disable2FA: 'Disable 2FA',
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
+    thinking: '생각 중',
+    reasoningProcess: '추론 과정',
+    noReasoningProcess: '추론 과정 없음',
+    expandCollapseReasoningProcess: '추론 과정 펼치기/접기',
   },
   setting: {
     overRide: '덮어쓰기 활성화',

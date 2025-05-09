@@ -78,6 +78,10 @@ export default {
     deleteKeyConfirm: 'Are you sure to delete this key?',
     disable2FA: 'Disable 2FA',
     disable2FAConfirm: 'Are you sure to disable 2FA for this user?',
+    thinking: 'Thinking',
+    reasoningProcess: 'Reasoning Process',
+    noReasoningProcess: 'No Reasoning Process',
+    expandCollapseReasoningProcess: 'Expand/Collapse Reasoning Process',
   },
   setting: {
     overRide: 'Enable Override',
