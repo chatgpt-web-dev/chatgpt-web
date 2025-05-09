@@ -94,7 +94,7 @@ function toggleCollapse() {
           <span class="text-gray-700 dark:text-gray-200 truncate">{{ $t('chat.thinking') }}</span>
           <span v-if="hasReasoningText" class="mx-1.5 text-gray-400 dark:text-gray-500">|</span>
         </template>
-        <span v-if="hasReasoningText" class="text-gray-800 dark:text-gray-100 truncate">{{ $t('chat.thinking') }}</span>
+        <span v-if="hasReasoningText" class="text-gray-800 dark:text-gray-100 truncate">{{ $t('chat.reasoningProcess') }}</span>
         <span v-else-if="!shouldShowThinkingIndicator && !hasReasoningText" class="text-gray-500 dark:text-gray-400">({{ $t('chat.noReasoningProcess') }})</span>
       </div>
       <button
