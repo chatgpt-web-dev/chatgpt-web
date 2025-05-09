@@ -320,6 +320,7 @@ async function onRegenerate(index: number) {
               {
                 dateTime: new Date().toLocaleString(),
                 reasoning: data?.reasoning,
+                finish_reason: data?.finish_reason,
                 text: lastText + (data.text ?? ''),
                 inversion: false,
                 responseCount,
@@ -687,6 +688,7 @@ onUnmounted(() => {
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
                   :reasoning="item?.reasoning"
+                  :finish_reason="item?.finish_reason"
                   :text="item.text"
                   :images="item.images"
                   :inversion="item.inversion"

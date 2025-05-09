@@ -78,6 +78,10 @@ export default {
     deleteKeyConfirm: '你确定要删除这个 key 吗?',
     disable2FA: '禁用 2FA',
     disable2FAConfirm: '您确定要为此用户禁用两步验证吗？?',
+    thinking: '思考中',
+    reasoningProcess: '推理过程',
+    noReasoningProcess: '无推理过程',
+    expandCollapseReasoningProcess: '展开/折叠推理过程',
   },
   setting: {
     overRide: '开启覆写',
