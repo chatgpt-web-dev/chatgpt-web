@@ -16,7 +16,7 @@ const instance = getCurrentInstance()
 const uid = instance?.uid || Date.now() + Math.random().toString(36).substring(2)
 
 const textRef = ref<HTMLElement>()
-const isCollapsed = ref(true)
+const isCollapsed = ref(false)
 
 const reasoningBtnTitle = computed(() => {
   return t('chat.expandCollapseReasoningProcess')
