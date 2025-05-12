@@ -1,5 +1,7 @@
 import type { JwtPayload } from 'jsonwebtoken'
 
+import 'openai'
+
 export interface RequestProps {
   roomId: number
   uuid: number
@@ -50,5 +52,20 @@ export class TwoFAConfig {
     this.userName = ''
     this.secretKey = ''
     this.otpauthUrl = ''
+  }
+} // 必须导入原始模块以进行扩展
+
+declare module 'openai/resources/chat/completions' {
+  // OpenAI SDK v4 中, delta 对象的类型是 ChatCompletionChunk.Choice.Delta
+  // 我们需要扩展这个嵌套的接口
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace ChatCompletionChunk {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace Choice {
+      interface Delta {
+        reasoning_content?: string | null
+        reasoning?: string | null
+      }
+    }
   }
 }
