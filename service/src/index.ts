@@ -311,21 +311,17 @@ router.post('/session', async (req, res) => {
     const hasAuth = config.siteConfig.loginEnabled || config.siteConfig.authProxyEnabled
     const authProxyEnabled = config.siteConfig.authProxyEnabled
     const allowRegister = config.siteConfig.registerEnabled
-    if (config.apiModel !== 'ChatGPTAPI' && config.apiModel !== 'ChatGPTUnofficialProxyAPI')
-      config.apiModel = 'ChatGPTAPI'
+    config.apiModel = 'ChatGPTAPI'
     const userId = await getUserId(req)
     const chatModels: {
-      label
+      label: string
       key: string
       value: string
     }[] = []
 
     const chatModelOptions = config.siteConfig.chatModels.split(',').map((model: string) => {
-      let label = model
-      if (model === 'text-davinci-002-render-sha-mobile')
-        label = 'gpt-3.5-mobile'
       return {
-        label,
+        label: model,
         key: model,
         value: model,
       }
@@ -417,7 +413,7 @@ router.post('/session', async (req, res) => {
         allowRegister,
         model: config.apiModel,
         title: config.siteConfig.siteTitle,
-        chatModels: chatModelOptions, // if userId is null which means in nologin mode, open all model options, otherwise user can only choose gpt-3.5-turbo
+        chatModels: chatModelOptions,
         allChatModels: chatModelOptions,
         showWatermark: config.siteConfig?.showWatermark,
         userInfo,
