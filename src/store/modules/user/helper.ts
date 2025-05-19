@@ -35,7 +35,7 @@ export function defaultSetting(): UserState {
       name: '',
       description: '',
       root: false,
-      config: { chatModel: 'gpt-3.5-turbo' },
+      config: { chatModel: '' },
       roles: [],
       advanced: {
         systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
@@ -53,7 +53,7 @@ export function getLocalState(): UserState {
   if (localSetting != null && localSetting.userInfo != null) {
     if (localSetting.userInfo.config == null) {
       localSetting.userInfo.config = new UserConfig()
-      localSetting.userInfo.config.chatModel = 'gpt-3.5-turbo'
+      localSetting.userInfo.config.chatModel = ''
     }
     if (!localSetting.userInfo.advanced) {
       localSetting.userInfo.advanced = {

@@ -204,7 +204,6 @@ function handleImportButtonClick(): void {
             style="width: 200px"
             :value="userInfo.config.chatModel"
             :options="authStore.session?.chatModels"
-            :disabled="!!authStore.session?.auth && !authStore.token"
             @update-value="(val) => updateUserChatModel(val)"
           />
         </div>

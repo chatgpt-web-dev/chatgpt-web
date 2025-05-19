@@ -62,10 +62,8 @@ export const useAuthStore = defineStore('auth-store', {
       this.token = token
       const decoded = jwt_decode(token) as UserInfo
       const userStore = useUserStore()
-      if (decoded.config === undefined || decoded.config === null) {
+      if (decoded.config === undefined || decoded.config === null)
         decoded.config = new UserConfig()
-        decoded.config.chatModel = 'gpt-3.5-turbo'
-      }
 
       await userStore.updateUserInfo(false, {
         avatar: decoded.avatar,
