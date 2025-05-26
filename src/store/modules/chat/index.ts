@@ -107,6 +107,8 @@ export const useChatStore = defineStore('chat-store', {
     },
 
     async setChatModel(chatModel: string, roomId: number) {
+      const index = this.history.findIndex(item => item.uuid === this.active)
+      this.history[index].chatModel = chatModel
       await fetchUpdateChatRoomChatModel(chatModel, roomId)
       const userStore = useUserStore()
       userStore.userInfo.config.chatModel = chatModel

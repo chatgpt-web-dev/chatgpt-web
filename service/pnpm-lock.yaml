@@ -30,11 +30,11 @@ dependencies:
     specifier: ^9.0.0
     version: 9.0.0
   mongodb:
-    specifier: ^6.6.2
-    version: 6.6.2
+    specifier: ^6.16.0
+    version: 6.16.0
   multer:
-    specifier: 1.4.5-lts.1
-    version: 1.4.5-lts.1
+    specifier: ^2.0.0
+    version: 2.0.0
   node-fetch:
     specifier: ^3.3.0
     version: 3.3.0
@@ -519,9 +519,8 @@ packages:
       wrap-ansi-cjs: /wrap-ansi@7.0.0
     dev: true
 
-  /@mongodb-js/saslprep@1.1.6:
-    resolution: {integrity: sha512-jqTTXQ46H8cAxmXBu8wm1HTSIMBMrIcoVrsjdQkKdMBj3il/fSCgWyya4P2I1xjPBl69mw+nRphrPlcIqBd20Q==}
-    requiresBuild: true
+  /@mongodb-js/saslprep@1.2.2:
+    resolution: {integrity: sha512-EB0O3SCSNRUFk66iRCpI+cXzIjdswfCs7F6nOC3RAGJ7xr5YhaicvsRwJ9eyzYvYRlCSDUO/c7g4yNulxKC1WA==}
     dependencies:
       sparse-bitfield: 3.0.3
     dev: false
@@ -1107,8 +1106,8 @@ packages:
       fill-range: 7.0.1
     dev: true
 
-  /bson@6.7.0:
-    resolution: {integrity: sha512-w2IquM5mYzYZv6rs3uN2DZTOBe2a0zXLj53TGDqwF4l6Sz/XsISrisXOJihArF9+BZ6Cq/GjVht7Sjfmri7ytQ==}
+  /bson@6.10.3:
+    resolution: {integrity: sha512-MTxGsqgYTwfshYWTRdmZRC+M7FnG1b4y7RO7p2k3X24Wq0yv1m77Wsj0BzlPzd/IowgESfsruQCUToa7vbOpPQ==}
     engines: {node: '>=16.20.1'}
     dev: false
 
@@ -2778,12 +2777,12 @@ packages:
       whatwg-url: 13.0.0
     dev: false
 
-  /mongodb@6.6.2:
-    resolution: {integrity: sha512-ZF9Ugo2JCG/GfR7DEb4ypfyJJyiKbg5qBYKRintebj8+DNS33CyGMkWbrS9lara+u+h+yEOGSRiLhFO/g1s1aw==}
+  /mongodb@6.16.0:
+    resolution: {integrity: sha512-D1PNcdT0y4Grhou5Zi/qgipZOYeWrhLEpk33n3nm6LGtz61jvO88WlrWCK/bigMjpnOdAUKKQwsGIl0NtWMyYw==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
-      '@mongodb-js/zstd': ^1.1.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
       mongodb-client-encryption: '>=6.0.0 <7'
@@ -2805,8 +2804,8 @@ packages:
       socks:
         optional: true
     dependencies:
-      '@mongodb-js/saslprep': 1.1.6
-      bson: 6.7.0
+      '@mongodb-js/saslprep': 1.2.2
+      bson: 6.10.3
       mongodb-connection-string-url: 3.0.1
     dev: false
 
@@ -2817,9 +2816,9 @@ packages:
   /ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  /multer@1.4.5-lts.1:
-    resolution: {integrity: sha512-ywPWvcDMeH+z9gQq5qYHCCy+ethsk4goepZ45GLD63fOu0YcNecQxi64nDs3qluZB+murG3/D4dJ7+dGctcCQQ==}
-    engines: {node: '>= 6.0.0'}
+  /multer@2.0.0:
+    resolution: {integrity: sha512-bS8rPZurbAuHGAnApbM9d4h1wSoYqrOqkE+6a64KLMK9yWU7gJXBDDVklKQ3TPi9DRb85cRs6yXaC0+cjxRtRg==}
+    engines: {node: '>= 10.16.0'}
     dependencies:
       append-field: 1.0.0
       busboy: 1.6.0
