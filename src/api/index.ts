@@ -271,6 +271,13 @@ export function fetchUpdateChatRoomUsingContext<T = any>(using: boolean, roomId:
   })
 }
 
+export function fetchUpdateChatRoomSearchEnabled<T = any>(searchEnabled: boolean, roomId: number) {
+  return post<T>({
+    url: '/room-search-enabled',
+    data: { searchEnabled, roomId },
+  })
+}
+
 export function fetchDeleteChatRoom<T = any>(roomId: number) {
   return post<T>({
     url: '/room-delete',

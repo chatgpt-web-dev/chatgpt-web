@@ -7,12 +7,14 @@ import IconPrompt from '@/icons/Prompt.vue'
 interface Props {
   usingContext: boolean
   showPrompt: boolean
+  searchEnabled?: boolean
 }
 
 interface Emit {
   (ev: 'export'): void
   (ev: 'toggleUsingContext'): void
   (ev: 'toggleShowPrompt'): void
+  (ev: 'toggleSearchEnabled'): void
 }
 
 defineProps<Props>()
@@ -41,6 +43,10 @@ function handleExport() {
 
 function toggleUsingContext() {
   emit('toggleUsingContext')
+}
+
+function toggleSearchEnabled() {
+  emit('toggleSearchEnabled')
 }
 
 function handleShowPrompt() {
@@ -79,6 +85,12 @@ function handleShowPrompt() {
             <SvgIcon icon="ri:chat-history-line" />
           </span>
           <span style="margin-left:.25em">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
+        </HoverButton>
+        <HoverButton :class="{ 'text-[#4b9e5f]': searchEnabled, 'text-[#a8071a]': !searchEnabled }" @click="toggleSearchEnabled">
+          <span class="text-xl">
+            <SvgIcon icon="mdi:web" />
+          </span>
+          <span style="margin-left:.25em">{{ searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
         </HoverButton>
         <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">

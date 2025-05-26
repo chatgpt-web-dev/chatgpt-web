@@ -29,6 +29,7 @@ declare namespace Chat {
     prompt?: string
     usingContext: boolean
     chatModel?: string
+    searchEnabled?: boolean
   }
 
   interface ChatState {

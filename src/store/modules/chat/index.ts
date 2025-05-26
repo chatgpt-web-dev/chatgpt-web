@@ -11,6 +11,7 @@ import {
   fetchGetChatRooms,
   fetchRenameChatRoom,
   fetchUpdateChatRoomChatModel,
+  fetchUpdateChatRoomSearchEnabled,
   fetchUpdateChatRoomUsingContext,
   fetchUpdateUserChatModel,
 } from '@/api'
@@ -113,6 +114,15 @@ export const useChatStore = defineStore('chat-store', {
       const userStore = useUserStore()
       userStore.userInfo.config.chatModel = chatModel
       await fetchUpdateUserChatModel(chatModel)
+    },
+
+    async setChatSearchEnabled(searchEnabled: boolean, roomId: number) {
+      const index = this.history.findIndex(item => item.uuid === this.active)
+      if (index !== -1) {
+        this.history[index].searchEnabled = searchEnabled
+        await fetchUpdateChatRoomSearchEnabled(searchEnabled, roomId)
+        this.recordState()
+      }
     },
 
     async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {

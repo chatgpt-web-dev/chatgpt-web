@@ -9,6 +9,7 @@ import {
   renameChatRoom,
   updateRoomChatModel,
   updateRoomPrompt,
+  updateRoomSearchEnabled,
   updateRoomUsingContext,
 } from '../storage/mongo'
 
@@ -27,6 +28,7 @@ router.get('/chatrooms', auth, async (req, res) => {
         prompt: r.prompt,
         usingContext: r.usingContext === undefined ? true : r.usingContext,
         chatModel: r.chatModel,
+        searchEnabled: !!r.searchEnabled,
       })
     })
     res.send({ status: 'Success', message: null, data: result })
@@ -132,6 +134,22 @@ router.post('/room-chatmodel', auth, async (req, res) => {
   catch (error) {
     console.error(error)
     res.send({ status: 'Fail', message: 'Rename error', data: null })
+  }
+})
+
+router.post('/room-search-enabled', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const { searchEnabled, roomId } = req.body as { searchEnabled: boolean; roomId: number }
+    const success = await updateRoomSearchEnabled(userId, roomId, searchEnabled)
+    if (success)
+      res.send({ status: 'Success', message: 'Saved successfully', data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Update error', data: null })
   }
 })
 
