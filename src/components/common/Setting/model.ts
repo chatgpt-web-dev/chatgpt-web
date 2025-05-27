@@ -13,6 +13,7 @@ export class ConfigState {
   siteConfig?: SiteConfig
   mailConfig?: MailConfig
   auditConfig?: AuditConfig
+  searchConfig?: SearchConfig
   announceConfig?: AnnounceConfig
 }
 
@@ -179,4 +180,16 @@ export interface GiftCard {
   cardno: string
   amount: number
   redeemed: number
+}
+
+export type SearchServiceProvider = 'tavily'
+
+export interface SearchServiceOptions {
+  apiKey: string
+}
+
+export class SearchConfig {
+  enabled?: boolean
+  provider?: SearchServiceProvider
+  options?: SearchServiceOptions
 }

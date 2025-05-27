@@ -81,17 +81,16 @@ export class ChatRoom {
   prompt: string
   usingContext: boolean
   status: Status = Status.Normal
-  // only access token used
-  accountId?: string
   chatModel: string
-  constructor(userId: string, title: string, roomId: number, chatModel: string) {
+  searchEnabled: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
     this.usingContext = true
-    this.accountId = null
     this.chatModel = chatModel
+    this.searchEnabled = searchEnabled
   }
 }
 
@@ -121,6 +120,8 @@ export class ChatInfo {
   dateTime: number
   prompt: string
   images?: string[]
+  searchQuery?: string
+  searchResult?: string
   reasoning?: string
   response?: string
   status: Status = Status.Normal
@@ -172,6 +173,20 @@ export class ChatUsage {
   }
 }
 
+export class SearchConfig {
+  public enabled: boolean
+  public provider?: SearchServiceProvider
+  public options?: SearchServiceOptions
+}
+
+export enum SearchServiceProvider {
+  Tavily = 'tavily',
+}
+
+export class SearchServiceOptions {
+  public apiKey: string
+}
+
 export class Config {
   constructor(
     public _id: ObjectId,
@@ -188,6 +203,7 @@ export class Config {
     public siteConfig?: SiteConfig,
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
+    public searchConfig?: SearchConfig,
     public advancedConfig?: AdvancedConfig,
     public announceConfig?: AnnounceConfig,
   ) { }

@@ -552,6 +552,19 @@ async function handleScroll(event: any) {
   prevScrollTop = scrollTop
 }
 
+async function handleToggleSearchEnabled() {
+  if (!currentChatHistory.value)
+    return
+
+  const searchEnabled = currentChatHistory.value.searchEnabled ?? false
+  currentChatHistory.value.searchEnabled = !searchEnabled
+  await chatStore.setChatSearchEnabled(!searchEnabled, +uuid)
+  if (currentChatHistory.value.searchEnabled)
+    ms.success(t('chat.turnOnSearch'))
+  else
+    ms.warning(t('chat.turnOffSearch'))
+}
+
 async function handleToggleUsingContext() {
   if (!currentChatHistory.value)
     return
@@ -662,7 +675,10 @@ onUnmounted(() => {
       v-if="isMobile"
       :using-context="usingContext"
       :show-prompt="showPrompt"
-      @export="handleExport" @toggle-using-context="handleToggleUsingContext"
+      :search-enabled="currentChatHistory?.searchEnabled"
+      @export="handleExport"
+      @toggle-using-context="handleToggleUsingContext"
+      @toggle-search-enabled="handleToggleSearchEnabled"
       @toggle-show-prompt="showPrompt = true"
     />
     <main class="flex-1 overflow-hidden">
@@ -767,7 +783,6 @@ onUnmounted(() => {
               <span class="text-xl">
                 <SvgIcon icon="ri:chat-history-line" />
               </span>
-              <!-- <span style="margin-left:.25em">{{ usingContext ? '包含上下文' : '不含上下文' }}</span> -->
             </HoverButton>
             <NSelect
               style="width: 250px"
@@ -776,6 +791,11 @@ onUnmounted(() => {
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
               @update-value="(val) => handleSyncChatModel(val)"
             />
+            <HoverButton v-if="!isMobile" :tooltip="currentChatHistory?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')" :class="{ 'text-[#4b9e5f]': currentChatHistory?.searchEnabled, 'text-[#a8071a]': !currentChatHistory?.searchEnabled }" @click="handleToggleSearchEnabled">
+              <span class="text-xl">
+                <SvgIcon icon="mdi:web" />
+              </span>
+            </HoverButton>
             <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
           </div>
           <div class="flex items-center justify-between space-x-2">

@@ -115,6 +115,28 @@ export async function updateChat(chatId: string, reasoning: string, response: st
   await chatCol.updateOne(query, update)
 }
 
+export async function updateChatSearchQuery(chatId: string, searchQuery: string) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchQuery,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateChatSearchResult(chatId: string, searchResult: string) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchResult,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
 export async function insertChatUsage(userId: ObjectId,
   roomId: number,
   chatId: ObjectId,
@@ -127,7 +149,7 @@ export async function insertChatUsage(userId: ObjectId,
 }
 
 export async function createChatRoom(userId: string, title: string, roomId: number, chatModel: string) {
-  const room = new ChatRoom(userId, title, roomId, chatModel)
+  const room = new ChatRoom(userId, title, roomId, chatModel, false)
   await roomCol.insertOne(room)
   return room
 }
@@ -176,6 +198,17 @@ export async function updateRoomChatModel(userId: string, roomId: number, chatMo
   const update = {
     $set: {
       chatModel,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomSearchEnabled(userId: string, roomId: number, searchEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      searchEnabled,
     },
   }
   const result = await roomCol.updateOne(query, update)

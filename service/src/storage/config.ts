@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 import * as dotenv from 'dotenv'
 import type { TextAuditServiceProvider } from 'src/utils/textAudit'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
-import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
+import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SearchConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
 
 dotenv.config()
@@ -108,6 +108,11 @@ export async function getOriginConfig() {
       false,
       '',
     )
+  }
+
+  if (!config.searchConfig) {
+    config.searchConfig = new SearchConfig()
+    config.searchConfig.enabled = false
   }
 
   if (!isNotEmptyString(config.siteConfig.chatModels))
