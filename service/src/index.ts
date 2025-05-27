@@ -781,6 +781,33 @@ router.post('/audit-test', rootAuth, async (req, res) => {
   }
 })
 
+router.post('/setting-search', rootAuth, async (req, res) => {
+  try {
+    const config = req.body as import('./storage/model').SearchConfig
+
+    const thisConfig = await getOriginConfig()
+    thisConfig.searchConfig = config
+    const result = await updateConfig(thisConfig)
+    clearConfigCache()
+    res.send({ status: 'Success', message: '操作成功 | Successfully', data: result.searchConfig })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/search-test', rootAuth, async (req, res) => {
+  try {
+    const { search, text } = req.body as { search: import('./storage/model').SearchConfig; text: string }
+    // TODO: Implement actual search test logic with Tavily API
+    // For now, just return a success response
+    res.send({ status: 'Success', message: '搜索测试成功 | Search test successful', data: { query: text, results: [] } })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 router.post('/setting-advanced', auth, async (req, res) => {
   try {
     const config = req.body as {

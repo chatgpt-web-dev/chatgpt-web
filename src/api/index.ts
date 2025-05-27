@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import { get, post } from '@/utils/request'
-import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
+import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import type { SettingsState } from '@/store/modules/user/helper'
 
@@ -337,6 +337,20 @@ export function fetchTestAudit<T = any>(text: string, audit: AuditConfig) {
   return post<T>({
     url: '/audit-test',
     data: { audit, text },
+  })
+}
+
+export function fetchUpdateSearch<T = any>(search: SearchConfig) {
+  return post<T>({
+    url: '/setting-search',
+    data: search,
+  })
+}
+
+export function fetchTestSearch<T = any>(text: string, search: SearchConfig) {
+  return post<T>({
+    url: '/search-test',
+    data: { search, text },
   })
 }
 

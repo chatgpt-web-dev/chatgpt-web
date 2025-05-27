@@ -171,6 +171,20 @@ export class ChatUsage {
   }
 }
 
+export class SearchConfig {
+  public enabled: boolean
+  public provider?: SearchServiceProvider
+  public options?: SearchServiceOptions
+}
+
+export enum SearchServiceProvider {
+  Tavily = 'tavily',
+}
+
+export class SearchServiceOptions {
+  public apiKey: string
+}
+
 export class Config {
   constructor(
     public _id: ObjectId,
@@ -187,6 +201,7 @@ export class Config {
     public siteConfig?: SiteConfig,
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
+    public searchConfig?: SearchConfig,
     public advancedConfig?: AdvancedConfig,
     public announceConfig?: AnnounceConfig,
   ) { }

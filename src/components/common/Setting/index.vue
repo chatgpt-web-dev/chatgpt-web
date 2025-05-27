@@ -8,6 +8,7 @@ import About from './About.vue'
 import Site from './Site.vue'
 import Mail from './Mail.vue'
 import Audit from './Audit.vue'
+import Search from './Search.vue'
 import Gift from './Gift.vue'
 import User from './User.vue'
 import Key from './Keys.vue'
@@ -142,6 +143,13 @@ const show = computed({
             <span class="ml-2">{{ $t('setting.auditConfig') }}</span>
           </template>
           <Audit />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="SearchConfig" tab="SearchConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="mdi:web" />
+            <span class="ml-2">{{ $t('setting.searchConfig') }}</span>
+          </template>
+          <Search />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
           <template #tab>
