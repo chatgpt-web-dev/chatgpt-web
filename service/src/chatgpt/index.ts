@@ -85,25 +85,7 @@ async function chatReplyProcess(options: RequestOptions) {
     }
 
     // Prepare the user message content (text and images)
-    let content: string | OpenAI.Chat.ChatCompletionContentPart[] = message
-
-    // Handle image uploads if present
-    if (uploadFileKeys && uploadFileKeys.length > 0) {
-      content = [
-        {
-          type: 'text',
-          text: message,
-        },
-      ]
-      for (const uploadFileKey of uploadFileKeys) {
-        content.push({
-          type: 'image_url',
-          image_url: {
-            url: await convertImageUrl(uploadFileKey),
-          },
-        })
-      }
-    }
+    const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(message, uploadFileKeys)
 
     // Add the user message
     messages.push({
@@ -244,26 +226,7 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
     }
     else {
       if (isPrompt) { // prompt
-        let content: string | OpenAI.Chat.ChatCompletionContentPart[] = chatInfo.prompt
-        if (chatInfo.images && chatInfo.images.length > 0) {
-          content = [
-            {
-              type: 'text',
-              text: chatInfo.prompt,
-            },
-          ]
-          for (const image of chatInfo.images) {
-            const imageUrlBase64 = await convertImageUrl(image)
-            if (imageUrlBase64) {
-              content.push({
-                type: 'image_url',
-                image_url: {
-                  url: await convertImageUrl(image),
-                },
-              })
-            }
-          }
-        }
+        const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(chatInfo.prompt, chatInfo.images)
         return {
           id,
           parentMessageId,
@@ -309,6 +272,35 @@ async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyCo
     .filter(d => d.chatModels.includes(chatModel))
 
   return randomKeyConfig(keys)
+}
+
+// Helper function to create content with text and optional images
+async function createContent(text: string, images?: string[]): Promise<string | OpenAI.Chat.ChatCompletionContentPart[]> {
+  // If no images or empty array, return just the text
+  if (!images || images.length === 0)
+    return text
+
+  // Create content with text and images
+  const content: OpenAI.Chat.ChatCompletionContentPart[] = [
+    {
+      type: 'text',
+      text,
+    },
+  ]
+
+  for (const image of images) {
+    const imageUrl = await convertImageUrl(image)
+    if (imageUrl) {
+      content.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl,
+        },
+      })
+    }
+  }
+
+  return content
 }
 
 // Helper function to add previous messages to the conversation context
