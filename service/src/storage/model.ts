@@ -120,6 +120,8 @@ export class ChatInfo {
   dateTime: number
   prompt: string
   images?: string[]
+  searchQuery?: string
+  searchResult?: string
   reasoning?: string
   response?: string
   status: Status = Status.Normal

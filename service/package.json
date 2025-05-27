@@ -28,8 +28,9 @@
     "common:cleanup": "rimraf node_modules && rimraf pnpm-lock.yaml"
   },
   "dependencies": {
+    "@tavily/core": "^0.5.3",
     "axios": "^1.8.4",
-    "dayjs": "^1.11.7",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.0.3",
     "express": "^5.1.0",
     "express-rate-limit": "^6.7.0",

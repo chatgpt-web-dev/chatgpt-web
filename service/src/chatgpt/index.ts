@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv'
 import OpenAI from 'openai'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { tavily } from '@tavily/core'
+import dayjs from 'dayjs'
 import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
 import { Status, UsageResponse } from '../storage/model'
 import { convertImageUrl } from '../utils/image'
@@ -10,7 +12,7 @@ import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/con
 import { sendResponse } from '../utils'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import type { ModelConfig } from '../types'
-import { getChatByMessageId, updateRoomChatModel } from '../storage/mongo'
+import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
 import type { ChatMessage, RequestOptions } from './types'
 
 dotenv.config()
@@ -49,16 +51,15 @@ export async function initApi(key: KeyConfig) {
 const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
 
 async function chatReplyProcess(options: RequestOptions) {
+  const globalConfig = await getCacheConfig()
   const model = options.room.chatModel
+  const searchEnabled = options.room.searchEnabled
   const key = await getRandomApiKey(options.user, model)
   const userId = options.user._id.toString()
   const maxContextCount = options.user.advanced.maxContextCount ?? 20
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
-
-  // Add Chat Record
-  updateRoomChatModel(userId, options.room.roomId, model)
 
   const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p } = options
 
@@ -92,6 +93,52 @@ async function chatReplyProcess(options: RequestOptions) {
       role: 'user',
       content,
     })
+
+    const searchConfig = globalConfig.searchConfig
+    if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
+      messages[0].content = `Before you formally answer the question, you have the option to search the web to get more context from the web.
+Please judge whether you need to search the Internet.
+If you need to search, please return the query word to be submitted to the search engine.
+If you do not need to search, the result will be empty.
+Please do not actually answer the question.
+Just wrap the result in <search_query></search_query>> and return it in plain text, such as <search_query>example search query</search_query> or <search_query></search_query>`
+      const completion = await openai.chat.completions.create({
+        model,
+        messages,
+      })
+      let searchQuery: string = completion.choices[0].message.content
+      const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
+      if (match)
+        searchQuery = match[1].trim()
+      else
+        searchQuery = ''
+
+      if (searchQuery) {
+        await updateChatSearchQuery(messageId, searchQuery)
+
+        const tvly = tavily({ apiKey: searchConfig.options?.apiKey })
+        const response = await tvly.search(
+          searchQuery,
+          {
+            includeRawContent: true,
+            timeout: 300,
+          },
+        )
+
+        const searchResult = JSON.stringify(response)
+        await updateChatSearchResult(messageId, searchResult)
+
+        messages.push({
+          role: 'user',
+          content: `Additional information from web searche engine.
+search query: <search_query>${searchQuery}</search_query>
+search result: <search_result>${searchResult}</search_result>
+current time: <date>${dayjs().format('YYYY-MM-DD HH:mm:ss')}</date>`,
+        })
+      }
+    }
+
+    messages[0].content = systemMessage
 
     // Create the chat completion with streaming
     const stream = await openai.chat.completions.create({

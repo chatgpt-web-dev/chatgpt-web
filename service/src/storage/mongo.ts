@@ -115,6 +115,28 @@ export async function updateChat(chatId: string, reasoning: string, response: st
   await chatCol.updateOne(query, update)
 }
 
+export async function updateChatSearchQuery(chatId: string, searchQuery: string) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchQuery,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateChatSearchResult(chatId: string, searchResult: string) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchResult,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
 export async function insertChatUsage(userId: ObjectId,
   roomId: number,
   chatId: ObjectId,
