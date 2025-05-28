@@ -136,7 +136,7 @@ async function uploadGiftCards() {
       </NUpload>
 
       <NSpace vertical :size="12">
-        <span class="flex-shrink-0 w-[100px]">Data Preview(Top 30) & Due to body-parser limits csv files >2k rows not supported </span>
+        <span class="shrink-0 w-[100px]">Data Preview(Top 30) & Due to body-parser limits csv files >2k rows not supported </span>
         <NDataTable
           remote
           :loading="loading"
@@ -149,7 +149,7 @@ async function uploadGiftCards() {
     </div>
     <NDivider />
     <div class="flex items-center space-x-4">
-      <span class="flex-shrink-0 w-[100px]">{{ $t('setting.overRide') }}</span>
+      <span class="shrink-0 w-[100px]">{{ $t('setting.overRide') }}</span>
       <div class="flex-1">
         <NSwitch v-model:value="overRideSwitch" />
       </div>

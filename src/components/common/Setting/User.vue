@@ -298,7 +298,7 @@ onMounted(async () => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.email') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.email') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="userRef.email"
@@ -308,7 +308,7 @@ onMounted(async () => {
         </div>
 
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.password') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.password') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="userRef.password"
@@ -318,7 +318,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.userRoles') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.userRoles') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 100%"
@@ -330,7 +330,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.remark') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.remark') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="userRef.remark" type="textarea"
@@ -339,7 +339,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
           <div class="flex-1">
             <NInputNumber
               v-model:value="userRef.useAmount"
@@ -348,7 +348,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.limit_switch') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.limit_switch') }}</span>
           <div class="flex-1">
             <NSwitch
               v-model:value="userRef.limit_switch"
@@ -358,7 +358,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]" />
+          <span class="shrink-0 w-[100px]" />
           <NButton type="primary" :loading="handleSaving" @click="handleUpdateUser()">
             {{ $t('common.save') }}
           </NButton>

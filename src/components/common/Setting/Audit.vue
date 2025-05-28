@@ -64,7 +64,7 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditCustomizeEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditCustomizeEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.customizeEnabled"
@@ -73,7 +73,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.customizeEnabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditCustomizeWords') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditCustomizeWords') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.sensitiveWords"
@@ -85,7 +85,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.enabled"
@@ -94,7 +94,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditProvider') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditProvider') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 140px"
@@ -105,7 +105,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditApiKey') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditApiKey') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.apiKey"
@@ -115,7 +115,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditApiSecret') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditApiSecret') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.apiSecret"
@@ -125,7 +125,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditBaiduLabel') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditBaiduLabel') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.label"
@@ -138,7 +138,7 @@ onMounted(() => {
           </p>
         </div>
         <div v-if="config && (config.enabled || config.customizeEnabled)" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.auditTest') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.auditTest') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="testText"
@@ -147,7 +147,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]" />
+          <span class="shrink-0 w-[100px]" />
           <div class="flex flex-wrap items-center gap-4">
             <NButton :loading="saving" type="primary" @click="updateAuditInfo()">
               {{ $t('common.save') }}

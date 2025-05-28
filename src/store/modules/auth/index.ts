@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import jwt_decode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import type { UserInfo } from '../user/helper'
 import { useChatStore } from '../chat'
 import { useUserStore } from '../user'
@@ -60,7 +60,7 @@ export const useAuthStore = defineStore('auth-store', {
 
     async setToken(token: string) {
       this.token = token
-      const decoded = jwt_decode(token) as UserInfo
+      const decoded = jwtDecode(token) as UserInfo
       const userStore = useUserStore()
       if (decoded.config === undefined || decoded.config === null)
         decoded.config = new UserConfig()

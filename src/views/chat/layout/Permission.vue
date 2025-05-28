@@ -206,7 +206,7 @@ async function handleResetPassword() {
 
 <template>
   <NModal v-model:show="show" style="width: 90%; max-width: 440px">
-    <div class="p-10 bg-white rounded dark:bg-slate-800">
+    <div class="p-10 bg-white rounded-sm dark:bg-slate-800">
       <div class="space-y-4">
         <header class="space-y-2">
           <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-neutral-200">
