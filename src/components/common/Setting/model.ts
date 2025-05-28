@@ -192,9 +192,13 @@ export class SearchConfig {
   enabled: boolean
   provider: SearchServiceProvider
   options: SearchServiceOptions
-  constructor(enabled: boolean, provider: SearchServiceProvider, options: SearchServiceOptions) {
+  systemMessageWithSearchResult: string
+  systemMessageGetSearchQuery: string
+  constructor(enabled: boolean, provider: SearchServiceProvider, options: SearchServiceOptions, systemMessageWithSearchResult: string, systemMessageGetSearchQuery: string) {
     this.enabled = enabled
     this.provider = provider
     this.options = options
+    this.systemMessageWithSearchResult = systemMessageWithSearchResult
+    this.systemMessageGetSearchQuery = systemMessageGetSearchQuery
   }
 }

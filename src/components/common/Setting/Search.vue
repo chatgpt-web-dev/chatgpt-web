@@ -24,7 +24,7 @@ async function fetchConfig() {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
     if (!data.searchConfig)
-      data.searchConfig = new SearchConfig(false, '', { apiKey: '' })
+      data.searchConfig = new SearchConfig(false, '', { apiKey: '' }, '', '')
     if (!data.searchConfig.options)
       data.searchConfig.options = { apiKey: '' }
     config.value = data.searchConfig
@@ -105,6 +105,18 @@ onMounted(() => {
               v-model:value="testText"
               placeholder=""
             />
+          </div>
+        </div>
+        <div v-if="config && config.enabled" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ $t('setting.systemMessageWithSearchResult') }}</span>
+          <div class="flex-1">
+            <NInput v-model:value="config.systemMessageWithSearchResult" type="textarea" :autosize="{ minRows: 2 }" :placeholder="t('setting.systemMessageWithSearchResultPlaceholder')" />
+          </div>
+        </div>
+        <div v-if="config && config.enabled" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ $t('setting.systemMessageGetSearchQuery') }}</span>
+          <div class="flex-1">
+            <NInput v-model:value="config.systemMessageGetSearchQuery" type="textarea" :autosize="{ minRows: 2 }" :placeholder="t('setting.systemMessageGetSearchQueryPlaceholder')" />
           </div>
         </div>
         <div class="flex items-center space-x-4">

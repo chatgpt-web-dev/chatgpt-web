@@ -177,6 +177,8 @@ export class SearchConfig {
   public enabled: boolean
   public provider?: SearchServiceProvider
   public options?: SearchServiceOptions
+  public systemMessageWithSearchResult?: string
+  public systemMessageGetSearchQuery?: string
 }
 
 export enum SearchServiceProvider {

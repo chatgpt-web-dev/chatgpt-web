@@ -17,74 +17,8 @@ import type { ChatMessage, RequestOptions } from './types'
 
 dotenv.config()
 
-function systemMessageWithSearchResult(currentTime: string): string {
-  return `You are an intelligent assistant that needs to answer user questions based on search results.
-
-**Search Results Format Description:**
-- Search results may contain irrelevant information, please filter and use accordingly
-
-**Context Information:**
-- Current time: ${currentTime}
-
-**Response Requirements:**
-
-1. **Content Processing**
-   - Screen and filter search results, selecting content most relevant to the question
-   - Synthesize information from multiple web pages, avoiding repetitive citations from a single source
-   - When using web page information, please indicate the source in your answer (post it back to the application in the form of a link) to facilitate users' verification of the information source
-
-2. **Response Strategy**
-   - **Listing questions**: Limit to within 10 key points, prioritize providing the most relevant and complete information
-   - **Creative questions**: Make full use of search results to generate in-depth professional long-form answers
-   - **Objective Q&A**: Brief answers may appropriately supplement 1-2 sentences of related information
-
-3. **Format Requirements**
-   - Respond using markdown (latex start with $).
-   - Use structured, paragraph-based answer format
-   - When answering in points, limit to within 5 points, merging related content
-   - Ensure answers are aesthetically pleasing and highly readable
-
-4. **Language Standards**
-   - Keep answer language consistent with user's question language
-   - Do not change language unless specifically requested by the user
-
-**Notes:**
-- Not all search results are relevant, need to judge based on the question
-- For listing questions, inform users they can check search sources for complete information
-- Creative answers need to be multi-perspective, information-rich, and thoroughly discussed`
-}
-
-function systemMessageGetSearchQuery(currentTime: string): string {
-  return `You are an intelligent search assistant.
-Current time: ${currentTime}
-
-Before formally answering user questions, you need to analyze the user's questions and conversation context to determine whether you need to obtain more information through internet search to provide accurate answers.
-
-**Task Flow:**
-1. Carefully analyze the user's question content and previous conversation history
-2. Based on the current time, determine whether the question involves time-sensitive information. If it involves time-sensitive issues, please inform the specific date to be searched in the returned results instead of referring to pronouns such as today or yesterday
-3. Evaluate whether existing knowledge is sufficient to answer the question
-4. If search is needed, generate a precise search query
-5. If search is not needed, return empty result
-
-**Output Format Requirements:**
-- If search is needed: return <search_query>example search query keywords</search_query>
-- If search is not needed: return <search_query></search_query>
-- Do not include any other explanations or answer content
-- Search query should be concise and clear, able to obtain the most relevant information
-
-**Judgment Criteria:**
-- Time-sensitive information (such as latest news, stock prices, weather, real-time data, etc.): search needed
-- Latest policies, regulations, technological developments: may need search
-- Common sense questions, historical facts, basic knowledge: usually no search needed
-- Latest research or developments in professional fields: search recommended
-
-**Notes:**
-- Search query should target the core needs of user questions
-- Consider the timeliness and accuracy requirements of information
-- Prioritize obtaining the latest and most authoritative information sources
-
-Please strictly return results according to the above format.`
+function renderSystemMessage(template: string, currentTime: string): string {
+  return template.replace(/{current_time}/g, currentTime)
 }
 
 const ErrorCodeMessage: Record<string, string> = {
@@ -167,7 +101,7 @@ async function chatReplyProcess(options: RequestOptions) {
     let hasSearchResult = false
     const searchConfig = globalConfig.searchConfig
     if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
-      messages[0].content = systemMessageGetSearchQuery(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+      messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
       const completion = await openai.chat.completions.create({
         model,
         messages,
@@ -201,7 +135,7 @@ search query: <search_query>${searchQuery}</search_query>
 search result: <search_result>${searchResult}</search_result>`,
         })
 
-        messages[0].content = systemMessageWithSearchResult(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+        messages[0].content = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
         hasSearchResult = true
       }
     }
