@@ -62,7 +62,7 @@ Before formally answering user questions, you need to analyze the user's questio
 
 **Task Flow:**
 1. Carefully analyze the user's question content and previous conversation history
-2. Combined with the current time, determine whether the question involves time-sensitive information
+2. Based on the current time, determine whether the problem involves time-sensitive information. If it involves time-sensitive issues, please inform the time needed for the search in the returned results3. Evaluate whether existing knowledge is sufficient to answer the question
 3. Evaluate whether existing knowledge is sufficient to answer the question
 4. If search is needed, generate a precise search query
 5. If search is not needed, return empty result
