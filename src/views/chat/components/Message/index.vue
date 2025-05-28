@@ -164,17 +164,17 @@ function isEventTargetValid(event: any) {
   >
     <div class="flex flex-col">
       <div
-        class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
+        class="flex items-center justify-center shrink-0 h-8 overflow-hidden rounded-full basis-8"
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
         <AvatarComponent :image="inversion" :only-default="isRecord" />
       </div>
       <div
         v-show="props.currentNavIndex === props.index && appStore.fastDelMsg"
-        class="flex-grow flex items-center justify-center overflow-hidden rounded-full"
+        class="grow flex items-center justify-center overflow-hidden rounded-full"
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
-        <button class="focus:outline-none" style="opacity: 0.5;" @click="fastDelMsg">
+        <button class="focus:outline-hidden" style="opacity: 0.5;" @click="fastDelMsg">
           <SvgIcon class="text-lg" icon="ri:delete-bin-line" />
         </button>
       </div>

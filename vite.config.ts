@@ -1,5 +1,6 @@
 import path from 'path'
 import { defineConfig, loadEnv } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig((env) => {
@@ -11,7 +12,10 @@ export default defineConfig((env) => {
         '@': path.resolve(process.cwd(), 'src'),
       },
     },
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      tailwindcss(),
+    ],
     server: {
       host: '0.0.0.0',
       port: 1002,

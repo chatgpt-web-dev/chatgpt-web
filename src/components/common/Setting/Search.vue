@@ -69,7 +69,7 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.searchEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.searchEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.enabled"
@@ -78,7 +78,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.searchProvider') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.searchProvider') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 140px"
@@ -89,7 +89,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.searchApiKey') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.searchApiKey') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="config.options.apiKey"
@@ -99,7 +99,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.searchTest') }}</span>
+          <span class="shrink-0 w-[100px]">{{ $t('setting.searchTest') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="testText"
@@ -108,7 +108,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]" />
+          <span class="shrink-0 w-[100px]" />
           <div class="flex flex-wrap items-center gap-4">
             <NButton :loading="saving" type="primary" @click="updateSearchInfo()">
               {{ $t('common.save') }}

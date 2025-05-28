@@ -40,7 +40,7 @@ const headerComputedClass = computed(() => {
     hasReasoningText.value ? 'cursor-pointer hover:bg-gray-300 dark:hover:bg-slate-600' : 'cursor-default',
     (isCollapsed.value || !hasReasoningText.value) ? 'rounded-md' : 'rounded-t-md',
     isMobile.value ? 'max-w-full' : 'max-w-md',
-    'shadow-sm',
+    'shadow-xs',
   ]
 })
 
@@ -56,7 +56,7 @@ const actualContentComputedClass = computed(() => {
   return [
     'p-3',
     'bg-gray-50 dark:bg-slate-800',
-    'rounded-b-md shadow-sm',
+    'rounded-b-md shadow-xs',
     'text-xs leading-relaxed break-words',
     'prose prose-sm dark:prose-invert max-w-none',
   ]
@@ -100,7 +100,7 @@ function toggleCollapse() {
       <button
         v-if="hasReasoningText"
         type="button"
-        class="ml-auto flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none p-1 shrink-0 rounded-full hover:bg-gray-300 dark:hover:bg-slate-600"
+        class="ml-auto flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-hidden p-1 shrink-0 rounded-full hover:bg-gray-300 dark:hover:bg-slate-600"
         :aria-expanded="!isCollapsed"
         :aria-controls="`reasoning-details-${uid}`"
         :title="reasoningBtnTitle"
