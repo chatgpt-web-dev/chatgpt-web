@@ -31,7 +31,7 @@ function systemMessageWithSearchResult(currentTime: string): string {
 1. **Content Processing**
    - Screen and filter search results, selecting content most relevant to the question
    - Synthesize information from multiple web pages, avoiding repetitive citations from a single source
-   - Do not mention specific sources or rankings of search results
+   - When using web page information, please indicate the source in your answer (post it back to the application in the form of a link) to facilitate users' verification of the information source
 
 2. **Response Strategy**
    - **Listing questions**: Limit to within 10 key points, prioritize providing the most relevant and complete information
@@ -62,7 +62,7 @@ Before formally answering user questions, you need to analyze the user's questio
 
 **Task Flow:**
 1. Carefully analyze the user's question content and previous conversation history
-2. Combined with the current time, determine whether the question involves time-sensitive information
+2. Based on the current time, determine whether the question involves time-sensitive information. If it involves time-sensitive issues, please inform the specific date to be searched in the returned results instead of referring to pronouns such as today or yesterday
 3. Evaluate whether existing knowledge is sufficient to answer the question
 4. If search is needed, generate a precise search query
 5. If search is not needed, return empty result

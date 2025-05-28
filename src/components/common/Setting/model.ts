@@ -182,14 +182,19 @@ export interface GiftCard {
   redeemed: number
 }
 
-export type SearchServiceProvider = 'tavily'
+export type SearchServiceProvider = 'tavily' | ''
 
 export interface SearchServiceOptions {
   apiKey: string
 }
 
 export class SearchConfig {
-  enabled?: boolean
-  provider?: SearchServiceProvider
-  options?: SearchServiceOptions
+  enabled: boolean
+  provider: SearchServiceProvider
+  options: SearchServiceOptions
+  constructor(enabled: boolean, provider: SearchServiceProvider, options: SearchServiceOptions) {
+    this.enabled = enabled
+    this.provider = provider
+    this.options = options
+  }
 }

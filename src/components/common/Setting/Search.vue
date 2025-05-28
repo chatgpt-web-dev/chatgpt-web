@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue'
 import { NButton, NInput, NSelect, NSpin, NSwitch, useMessage } from 'naive-ui'
-import type { ConfigState, SearchConfig, SearchServiceProvider } from './model'
+import { SearchConfig } from './model'
+import type { ConfigState, SearchServiceProvider } from './model'
 import { fetchChatConfig, fetchTestSearch, fetchUpdateSearch } from '@/api'
 import { t } from '@/locales'
 
@@ -22,6 +23,10 @@ async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
+    if (!data.searchConfig)
+      data.searchConfig = new SearchConfig(false, '', { apiKey: '' })
+    if (!data.searchConfig.options)
+      data.searchConfig.options = { apiKey: '' }
     config.value = data.searchConfig
   }
   finally {
@@ -87,11 +92,9 @@ onMounted(() => {
           <span class="flex-shrink-0 w-[100px]">{{ $t('setting.searchApiKey') }}</span>
           <div class="flex-1">
             <NInput
-              :value="config && config.options && config.options.apiKey"
+              v-model:value="config.options.apiKey"
               placeholder=""
-              type="password"
               show-password-on="click"
-              @input="(val) => { if (config && config.options) config.options.apiKey = val }"
             />
           </div>
         </div>
