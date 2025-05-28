@@ -32,6 +32,8 @@ Some unique features have been added:
 
 [✓] Implement SSO login through the auth proxy feature (need to integrate a third-party authentication reverse proxy, it can support login protocols such as LDAP/OIDC/SAML)
 
+[✓] Web Search functionality (Real-time web search based on Tavily API)
+
 > [!CAUTION]
 > This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
 
@@ -72,6 +74,13 @@ Some unique features have been added:
 		- [Manual packaging](#manual-packaging)
 			- [Backend service](#backend-service-1)
 			- [Frontend webpage](#frontend-webpage-1)
+	- [Auth Proxy Mode](#auth-proxy-mode)
+	- [Web Search Functionality](#web-search-functionality)
+		- [Features](#features)
+		- [Configuration](#configuration)
+		- [Usage](#usage)
+		- [Technical Implementation](#technical-implementation)
+		- [Notes](#notes)
 	- [Frequently Asked Questions](#frequently-asked-questions)
 	- [Contributing](#contributing)
 	- [Sponsorship](#sponsorship)
@@ -346,6 +355,92 @@ Default header name is `X-Email`, can custom config use set env `AUTH_PROXY_HEAD
 Recommended for current IdP to use LDAP protocol, using [authelia](https://www.authelia.com)
 
 Recommended for current IdP to use OIDC protocol, using [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
+
+## Web Search Functionality
+
+> [!TIP]
+> Web Search functionality is based on [Tavily API](https://tavily.com/) implementation, allowing ChatGPT to access the latest web information to answer questions.
+
+### Features
+
+- **Real-time Web Search**: Get the latest web information based on Tavily API
+- **Intelligent Query Extraction**: Automatically extract the most relevant search keywords from user questions
+- **Search Result Integration**: Seamlessly integrate search results into AI conversations
+- **Per-session Control**: Each conversation can independently enable or disable search functionality
+- **Search History**: Save search queries and results to database
+- **Configurable System Messages**: Support custom search-related system prompt messages
+
+### Configuration
+
+#### 1. Get Tavily API Key
+
+1. Visit [Tavily Official Website](https://tavily.com/) to register an account
+2. Obtain API Key
+
+#### 2. Administrator Configuration
+
+1. Login to the system as an administrator
+2. Go to system settings page
+3. Find "Web Search Configuration" option
+4. Fill in the following configurations:
+   - **Enable Status**: Turn on/off global search functionality
+   - **API Key**: Enter Tavily API Key
+   - **Search Query System Message**: Prompt template for extracting search keywords
+   - **Search Result System Message**: Prompt template for processing search results
+
+#### 3. System Message Templates
+
+**Search Query Extraction Template** (for extracting search keywords from user questions):
+```
+You are a search query extraction assistant. Extract the most relevant search query from user's question and wrap it with <search_query></search_query> tags.
+Current time: {current_time}
+```
+
+**Search Result Processing Template** (for processing conversations with search results):
+```
+You are a helpful assistant with access to real-time web search results. Use the provided search information to give accurate and up-to-date responses.
+Current time: {current_time}
+```
+
+### Usage
+
+#### User Operations
+
+1. **Enable Search Functionality**:
+   - In the conversation interface, find the search toggle button
+   - Click to enable web search functionality for the current session
+
+2. **Ask Questions for Real-time Information**:
+   - After enabling search, directly ask ChatGPT questions that require real-time information
+   - The system will automatically search for relevant information and integrate it into the response
+
+3. **View Search History**:
+   - Search queries and results are saved in the database
+   - You can view specific search records through the database
+
+#### Workflow
+
+1. **User Question**: User asks a question in a search-enabled session
+2. **Query Extraction**: System uses AI to extract search keywords from the question
+3. **Web Search**: Call Tavily API for real-time search
+4. **Result Integration**: Provide search results as context to AI
+5. **Generate Response**: AI generates more accurate responses based on search results
+
+### Technical Implementation
+
+- **Search Engine**: Tavily API
+- **Query Extraction**: Use OpenAI API to intelligently extract keywords
+- **Result Format**: JSON format to store complete search results
+- **Data Storage**: MongoDB stores search queries and results
+- **Timeout Setting**: Search request timeout is 300 seconds
+
+### Notes
+
+- Web Search functionality requires additional Tavily API costs
+- Search functionality will increase response time
+- It is recommended to enable selectively based on actual needs
+- Administrators can control the global search functionality status
+- Each session can independently control whether to use search functionality
 
 
 ## Contributing

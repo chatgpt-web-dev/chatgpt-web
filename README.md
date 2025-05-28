@@ -32,6 +32,8 @@
 
 [✓] 通过 auth proxy 功能实现sso登录 (配合第三方身份验证反向代理 可实现支持 LDAP/OIDC/SAML 等协议登录)
 
+[✓] Web Search 网络搜索功能 (基于 Tavily API 实现实时网络搜索)
+
 
 > [!CAUTION]
 > 声明：此项目只发布于 Github，基于 MIT 协议，免费且作为开源学习使用。并且不会有任何形式的卖号、付费服务、讨论群、讨论组等行为。谨防受骗。
@@ -74,6 +76,13 @@
 		- [手动打包](#手动打包)
 			- [后端服务](#后端服务-1)
 			- [前端网页](#前端网页-1)
+	- [Auth Proxy Mode](#auth-proxy-mode)
+	- [Web Search 网络搜索功能](#web-search-网络搜索功能)
+		- [功能特性](#功能特性)
+		- [配置方式](#配置方式)
+		- [使用方式](#使用方式)
+		- [技术实现](#技术实现)
+		- [注意事项](#注意事项)
 	- [常见问题](#常见问题)
 	- [参与贡献](#参与贡献)
 	- [赞助](#赞助)
@@ -357,6 +366,92 @@ pnpm build
 推荐当前 Idp 使用 LDAP 协议的 可以选择使用 [authelia](https://www.authelia.com)
 
 当前 Idp 使用 OIDC 协议的 可以选择使用 [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
+
+## Web Search 网络搜索功能
+
+> [!TIP]
+> Web Search 功能基于 [Tavily API](https://tavily.com/) 实现，可以让 ChatGPT 获取最新的网络信息来回答问题。
+
+### 功能特性
+
+- **实时网络搜索**: 基于 Tavily API 获取最新的网络信息
+- **智能查询提取**: 自动从用户问题中提取最相关的搜索关键词
+- **搜索结果整合**: 将搜索结果无缝整合到 AI 对话中
+- **按会话控制**: 每个对话可以独立开启或关闭搜索功能
+- **搜索历史记录**: 保存搜索查询和结果到数据库
+- **可配置系统消息**: 支持自定义搜索相关的系统提示消息
+
+### 配置方式
+
+#### 1. 获取 Tavily API Key
+
+1. 访问 [Tavily 官网](https://tavily.com/) 注册账号
+2. 获取 API Key
+
+#### 2. 管理员配置
+
+1. 以管理员身份登录系统
+2. 进入系统设置页面
+3. 找到 "Web Search 配置" 选项
+4. 填写以下配置：
+   - **启用状态**: 开启/关闭全局搜索功能
+   - **API Key**: 填入 Tavily API Key
+   - **搜索查询系统消息**: 用于提取搜索关键词的提示模板
+   - **搜索结果系统消息**: 用于处理搜索结果的提示模板
+
+#### 3. 系统消息模板
+
+**搜索查询提取模板** (用于从用户问题中提取搜索关键词):
+```
+You are a search query extraction assistant. Extract the most relevant search query from user's question and wrap it with <search_query></search_query> tags.
+Current time: {current_time}
+```
+
+**搜索结果处理模板** (用于处理包含搜索结果的对话):
+```
+You are a helpful assistant with access to real-time web search results. Use the provided search information to give accurate and up-to-date responses.
+Current time: {current_time}
+```
+
+### 使用方式
+
+#### 用户端操作
+
+1. **开启搜索功能**:
+   - 在对话界面中，找到搜索开关按钮
+   - 点击开启当前会话的网络搜索功能
+
+2. **提问获取实时信息**:
+   - 开启搜索后，直接向 ChatGPT 提问需要实时信息的问题
+   - 系统会自动搜索相关信息并整合到回答中
+
+3. **查看搜索历史**:
+   - 搜索查询和结果会保存在数据库中
+   - 可以通过数据库查看具体的搜索记录
+
+#### 工作流程
+
+1. **用户提问**: 用户在开启搜索的会话中提问
+2. **查询提取**: 系统使用 AI 从问题中提取搜索关键词
+3. **网络搜索**: 调用 Tavily API 进行实时搜索
+4. **结果整合**: 将搜索结果作为上下文提供给 AI
+5. **生成回答**: AI 基于搜索结果生成更准确的回答
+
+### 技术实现
+
+- **搜索引擎**: Tavily API
+- **查询提取**: 使用 OpenAI API 智能提取关键词
+- **结果格式**: JSON 格式存储完整搜索结果
+- **数据存储**: MongoDB 存储搜索查询和结果
+- **超时设置**: 搜索请求超时时间为 300 秒
+
+### 注意事项
+
+- Web Search 功能需要额外的 Tavily API 费用
+- 搜索功能会增加响应时间
+- 建议根据实际需求选择性开启
+- 管理员可以控制全局搜索功能的开启状态
+- 每个会话可以独立控制是否使用搜索功能
 
 
 ## 常见问题
