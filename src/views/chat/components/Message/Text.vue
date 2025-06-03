@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, onUpdated, ref } from 'vue'
 import MarkdownIt from 'markdown-it'
 import mdKatex from '@vscode/markdown-it-katex'
 import mila from 'markdown-it-link-attributes'

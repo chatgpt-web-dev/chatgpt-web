@@ -1,7 +1,4 @@
 <script setup lang='ts'>
-import type { Ref } from 'vue'
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
-import { NCol, NDatePicker, NIcon, NNumberAnimation, NRow, NSelect, NSpin, NStatistic } from 'naive-ui'
 import type { ChartData, ChartOptions } from 'chart.js'
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js'
 import { Bar } from 'vue-chartjs'

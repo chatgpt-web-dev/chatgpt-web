@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia'
 import type { AppState, FastDelMsg, Language, Theme } from './helper'
 import { getLocalSetting, setLocalSetting } from './helper'
 import { store } from '@/store/helper'

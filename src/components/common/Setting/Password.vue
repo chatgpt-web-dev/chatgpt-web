@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSpin, useMessage } from 'naive-ui'
 import { UserPassword } from './model'
 import { fetchUpdateUserPassword } from '@/api'
 import { t } from '@/locales'

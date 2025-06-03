@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { NButton, NInput, NModal, NSpace, useMessage } from 'naive-ui'
 import { t } from '@/locales'
 import { fetchUpdateChatRoomPrompt } from '@/api'
 import { useChatStore } from '@/store'

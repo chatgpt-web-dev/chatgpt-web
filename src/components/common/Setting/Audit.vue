@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSelect, NSpin, NSwitch, useMessage } from 'naive-ui'
 import type { AuditConfig, ConfigState, TextAuditServiceProvider } from './model'
 import { fetchChatConfig, fetchTestAudit, fetchUpdateAudit } from '@/api'
 import { t } from '@/locales'

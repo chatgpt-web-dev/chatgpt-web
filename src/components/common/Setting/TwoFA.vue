@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NSpin, NStep, NSteps, useMessage } from 'naive-ui'
 import QrcodeVue from 'qrcode.vue'
 import type { TwoFAConfig } from './model'
 import { fetchDisableUser2FA, fetchGetUser2FA, fetchVerifyUser2FA } from '@/api'

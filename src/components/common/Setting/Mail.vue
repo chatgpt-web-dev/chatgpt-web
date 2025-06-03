@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSpin, NSwitch, useMessage } from 'naive-ui'
 import type { ConfigState, MailConfig } from './model'
 import { fetchChatConfig, fetchTestMail, fetchUpdateMail } from '@/api'
 import { t } from '@/locales'

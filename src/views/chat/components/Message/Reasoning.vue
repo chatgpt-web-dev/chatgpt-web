@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed, getCurrentInstance, ref } from 'vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
 

@@ -1,7 +1,4 @@
 <script setup lang='ts'>
-import { computed, onMounted, ref } from 'vue'
-import { NAvatar, NButton, NTag } from 'naive-ui'
-import { useRoute } from 'vue-router'
 import { UserRole } from '../Setting/model'
 import { useAuthStore, useUserStore } from '@/store'
 import defaultAvatar from '@/assets/avatar.jpg'

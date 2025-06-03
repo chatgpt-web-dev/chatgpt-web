@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed, nextTick } from 'vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useAppStore, useChatStore } from '@/store'
 import IconPrompt from '@/icons/Prompt.vue'

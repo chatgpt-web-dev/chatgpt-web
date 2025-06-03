@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { NButton, NButtonGroup, NDropdown, NPopover, NSpace, useMessage } from 'naive-ui'
 import AvatarComponent from './Avatar.vue'
 import TextComponent from './Text.vue'
 import Reasoning from './Reasoning.vue'

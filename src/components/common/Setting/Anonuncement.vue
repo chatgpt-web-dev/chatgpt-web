@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSpin, NSwitch, useMessage } from 'naive-ui'
 import type { AnnounceConfig, ConfigState } from './model'
 import { fetchChatConfig, fetchUpdateAnnounce } from '@/api'
 import { t } from '@/locales'

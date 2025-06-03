@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { computed, nextTick, onMounted, ref } from 'vue'
-import { NInput, NPopconfirm, NScrollbar, NSpin } from 'naive-ui'
 import { SvgIcon } from '@/components/common'
 import { useAppStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'

@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia'
 import type { PromptStore } from './helper'
 import { getLocalPromptList, setLocalPromptList } from './helper'
 

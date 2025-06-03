@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia'
 import { useUserStore } from '../user'
 import { getLocalState, setLocalState } from './helper'
 import { router } from '@/router'

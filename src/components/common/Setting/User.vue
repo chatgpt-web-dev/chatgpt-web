@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { DataTableColumns } from 'naive-ui'
-import { h, onMounted, reactive, ref } from 'vue'
-import { NButton, NDataTable, NInput, NInputNumber, NModal, NSelect, NSpace, NSwitch, NTag, useDialog, useMessage } from 'naive-ui'
+import { NButton, NTag } from 'naive-ui'
 import { Status, UserInfo, UserRole, userRoleOptions } from './model'
 import { fetchDisableUser2FAByAdmin, fetchGetUsers, fetchUpdateUser, fetchUpdateUserStatus } from '@/api'
 import { t } from '@/locales'

@@ -1,7 +1,6 @@
 <script setup lang='ts'>
 import type { DataTableColumns } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
-import { NButton, NCard, NDataTable, NDivider, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
+import { NButton } from 'naive-ui'
 import PromptRecommend from '../../../assets/recommend.json'
 import { SvgIcon } from '..'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
