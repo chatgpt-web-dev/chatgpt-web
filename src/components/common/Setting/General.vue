@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSwitch, useMessage } from 'naive-ui'
 import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import { SvgIcon } from '@/components/common'

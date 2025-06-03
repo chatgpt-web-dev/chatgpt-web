@@ -1,7 +1,5 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import { computed, onMounted, ref, watch } from 'vue'
-import { NButton, NLayoutSider, NModal } from 'naive-ui'
 import List from './List.vue'
 import Footer from './Footer.vue'
 import { useAppStore, useAuthStore, useChatStore } from '@/store'

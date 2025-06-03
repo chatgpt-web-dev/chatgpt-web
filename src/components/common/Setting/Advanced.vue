@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { NButton, NInput, NSlider, useMessage } from 'naive-ui'
 import { useUserStore } from '@/store'
 import { t } from '@/locales'
 

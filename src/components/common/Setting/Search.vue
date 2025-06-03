@@ -1,6 +1,4 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NSelect, NSpin, NSwitch, useMessage } from 'naive-ui'
 import { SearchConfig } from './model'
 import type { ConfigState, SearchServiceProvider } from './model'
 import { fetchChatConfig, fetchTestSearch, fetchUpdateSearch } from '@/api'

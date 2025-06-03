@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { NWatermark } from 'naive-ui'
-import { computed } from 'vue'
 import { useUserStore } from '@/store'
 
 const userStore = useUserStore()

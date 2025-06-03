@@ -1,7 +1,4 @@
 <script setup lang='ts'>
-import { computed, onMounted, ref } from 'vue'
-import { NButton, NInput, NModal, NTabPane, NTabs, useMessage } from 'naive-ui'
-import { useRoute, useRouter } from 'vue-router'
 import { fetchLogin, fetchRegister, fetchResetPassword, fetchSendResetMail, fetchVerify, fetchVerifyAdmin } from '@/api'
 import { useAuthStore } from '@/store'
 

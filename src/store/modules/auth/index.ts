@@ -1,4 +1,3 @@
-import { defineStore } from 'pinia'
 import { jwtDecode } from 'jwt-decode'
 import type { UserInfo } from '../user/helper'
 import { useChatStore } from '../chat'

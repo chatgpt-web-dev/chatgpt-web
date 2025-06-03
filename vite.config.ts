@@ -1,7 +1,10 @@
-import path from 'path'
+import path from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
 
 export default defineConfig((env) => {
   const viteEnv = loadEnv(env.mode, process.cwd()) as unknown as ImportMetaEnv
@@ -15,6 +18,27 @@ export default defineConfig((env) => {
     plugins: [
       vue(),
       tailwindcss(),
+      AutoImport({
+        imports: [
+          'vue',
+          'vue-router',
+          'pinia',
+          {
+            'naive-ui': [
+              'useDialog',
+              'useMessage',
+              'useNotification',
+              'useLoadingBar',
+            ],
+          },
+        ],
+      }),
+      Components({
+        dirs: [],
+        resolvers: [
+          NaiveUiResolver(),
+        ],
+      }),
     ],
     server: {
       host: '0.0.0.0',

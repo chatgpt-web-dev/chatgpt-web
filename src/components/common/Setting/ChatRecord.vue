@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { NButton, NDataTable, NModal, NScrollbar, NSelect, NSpace, NSpin } from 'naive-ui'
-import { h, onMounted, reactive, ref } from 'vue'
+import { NButton } from 'naive-ui'
 import Message from '@/views/chat/components/Message/index.vue'
 import { fetchGetChatHistory, fetchGetChatRoomsCount, fetchGetUsers } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'

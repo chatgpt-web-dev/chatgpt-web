@@ -1,7 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
 import type { UploadFileInfo } from 'naive-ui'
-import { NButton, NDataTable, NDivider, NIcon, NP, NSpace, NSwitch, NText, NUpload, NUploadDragger, useMessage } from 'naive-ui'
 import type { GiftCard } from './model'
 import { SvgIcon } from '@/components/common'
 import { fetchUpdateGiftCards } from '@/api'
