@@ -83,7 +83,8 @@ export class ChatRoom {
   status: Status = Status.Normal
   chatModel: string
   searchEnabled: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean) {
+  thinkEnabled: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean, thinkEnabled: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
@@ -91,6 +92,7 @@ export class ChatRoom {
     this.usingContext = true
     this.chatModel = chatModel
     this.searchEnabled = searchEnabled
+    this.thinkEnabled = thinkEnabled
   }
 }
 

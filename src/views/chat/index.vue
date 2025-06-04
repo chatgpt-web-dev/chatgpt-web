@@ -561,6 +561,19 @@ async function handleToggleSearchEnabled() {
     ms.warning(t('chat.turnOffSearch'))
 }
 
+async function handleToggleThinkEnabled() {
+  if (!currentChatHistory.value)
+    return
+
+  const thinkEnabled = currentChatHistory.value.thinkEnabled ?? false
+  currentChatHistory.value.thinkEnabled = !thinkEnabled
+  await chatStore.setChatThinkEnabled(!thinkEnabled, +uuid)
+  if (currentChatHistory.value.thinkEnabled)
+    ms.success(t('chat.turnOnThink'))
+  else
+    ms.warning(t('chat.turnOffThink'))
+}
+
 async function handleToggleUsingContext() {
   if (!currentChatHistory.value)
     return
@@ -672,9 +685,11 @@ onUnmounted(() => {
       :using-context="usingContext"
       :show-prompt="showPrompt"
       :search-enabled="currentChatHistory?.searchEnabled"
+      :think-enabled="currentChatHistory?.thinkEnabled"
       @export="handleExport"
       @toggle-using-context="handleToggleUsingContext"
       @toggle-search-enabled="handleToggleSearchEnabled"
+      @toggle-think-enabled="handleToggleThinkEnabled"
       @toggle-show-prompt="showPrompt = true"
     />
     <main class="flex-1 overflow-hidden">
@@ -788,8 +803,15 @@ onUnmounted(() => {
               @update-value="(val) => handleSyncChatModel(val)"
             />
             <HoverButton v-if="!isMobile" :tooltip="currentChatHistory?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')" :class="{ 'text-[#4b9e5f]': currentChatHistory?.searchEnabled, 'text-[#a8071a]': !currentChatHistory?.searchEnabled }" @click="handleToggleSearchEnabled">
-              <span class="text-xl">
+              <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:web" />
+                <span class="ml-1 text-sm">{{ currentChatHistory?.searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton v-if="!isMobile" :tooltip="currentChatHistory?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')" :class="{ 'text-[#4b9e5f]': currentChatHistory?.thinkEnabled, 'text-[#a8071a]': !currentChatHistory?.thinkEnabled }" @click="handleToggleThinkEnabled">
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="mdi:lightbulb-outline" />
+                <span class="ml-1 text-sm">{{ currentChatHistory?.thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
             <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />

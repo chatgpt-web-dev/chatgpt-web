@@ -7,6 +7,7 @@ interface Props {
   usingContext: boolean
   showPrompt: boolean
   searchEnabled?: boolean
+  thinkEnabled?: boolean
 }
 
 interface Emit {
@@ -14,6 +15,7 @@ interface Emit {
   (ev: 'toggleUsingContext'): void
   (ev: 'toggleShowPrompt'): void
   (ev: 'toggleSearchEnabled'): void
+  (ev: 'toggleThinkEnabled'): void
 }
 
 defineProps<Props>()
@@ -46,6 +48,10 @@ function toggleUsingContext() {
 
 function toggleSearchEnabled() {
   emit('toggleSearchEnabled')
+}
+
+function toggleThinkEnabled() {
+  emit('toggleThinkEnabled')
 }
 
 function handleShowPrompt() {
@@ -90,6 +96,12 @@ function handleShowPrompt() {
             <SvgIcon icon="mdi:web" />
           </span>
           <span style="margin-left:.25em">{{ searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
+        </HoverButton>
+        <HoverButton :class="{ 'text-[#4b9e5f]': thinkEnabled, 'text-[#a8071a]': !thinkEnabled }" @click="toggleThinkEnabled">
+          <span class="text-xl">
+            <SvgIcon icon="mdi:lightbulb-outline" />
+          </span>
+          <span style="margin-left:.25em">{{ thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
         </HoverButton>
         <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">

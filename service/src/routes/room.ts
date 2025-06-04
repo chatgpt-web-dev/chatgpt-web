@@ -10,6 +10,7 @@ import {
   updateRoomChatModel,
   updateRoomPrompt,
   updateRoomSearchEnabled,
+  updateRoomThinkEnabled,
   updateRoomUsingContext,
 } from '../storage/mongo'
 
@@ -29,6 +30,7 @@ router.get('/chatrooms', auth, async (req, res) => {
         usingContext: r.usingContext === undefined ? true : r.usingContext,
         chatModel: r.chatModel,
         searchEnabled: !!r.searchEnabled,
+        thinkEnabled: !!r.thinkEnabled,
       })
     })
     res.send({ status: 'Success', message: null, data: result })
@@ -142,6 +144,22 @@ router.post('/room-search-enabled', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { searchEnabled, roomId } = req.body as { searchEnabled: boolean, roomId: number }
     const success = await updateRoomSearchEnabled(userId, roomId, searchEnabled)
+    if (success)
+      res.send({ status: 'Success', message: 'Saved successfully', data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Update error', data: null })
+  }
+})
+
+router.post('/room-think-enabled', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const { thinkEnabled, roomId } = req.body as { thinkEnabled: boolean, roomId: number }
+    const success = await updateRoomThinkEnabled(userId, roomId, thinkEnabled)
     if (success)
       res.send({ status: 'Success', message: 'Saved successfully', data: null })
     else

@@ -30,6 +30,7 @@ declare namespace Chat {
     usingContext: boolean
     chatModel?: string
     searchEnabled?: boolean
+    thinkEnabled?: boolean
   }
 
   interface ChatState {
