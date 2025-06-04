@@ -1,21 +1,21 @@
 <script setup lang='ts'>
 import type { MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
-import { Message } from './components'
-import { useScroll } from './hooks/useScroll'
-import { useChat } from './hooks/useChat'
-import HeaderComponent from './components/Header/index.vue'
-import { HoverButton, SvgIcon } from '@/components/common'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
 import {
   fetchChatAPIProcess,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
 } from '@/api'
-import { t } from '@/locales'
-import { debounce } from '@/utils/functions/debounce'
+import { HoverButton, SvgIcon } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
+import { t } from '@/locales'
+import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
+import { debounce } from '@/utils/functions/debounce'
+import { Message } from './components'
+import HeaderComponent from './components/Header/index.vue'
+import { useChat } from './hooks/useChat'
+import { useScroll } from './hooks/useScroll'
 
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
@@ -186,7 +186,7 @@ async function onConversation() {
 
             scrollToBottomIfAtBottom()
           }
-          catch (error) {
+          catch {
             //
           }
         },
@@ -334,7 +334,7 @@ async function onRegenerate(index: number) {
               return fetchChatAPIOnce()
             }
           }
-          catch (error) {
+          catch {
             //
           }
         },
@@ -429,7 +429,7 @@ function handleExport() {
         ms.success(t('chat.exportSuccess'))
         Promise.resolve()
       }
-      catch (error: any) {
+      catch {
         ms.error(t('chat.exportFailed'))
       }
       finally {
@@ -514,7 +514,8 @@ async function loadMoreMessage(event: any) {
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
     loadingms = ms.loading(
-      '加载中...', {
+      '加载中...',
+      {
         duration: 0,
       },
     )
@@ -625,7 +626,7 @@ function formatTooltip(value: number) {
 }
 
 // https://github.com/tusen-ai/naive-ui/issues/4887
-function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) {
+function handleFinish(options: { file: UploadFileInfo, event?: ProgressEvent }) {
   if (options.file.status === 'finished') {
     const response = (options.event?.target as XMLHttpRequest).response
     uploadFileKeysRef.value.push(`${response.data.fileKey}`)
@@ -821,6 +822,6 @@ onUnmounted(() => {
         </NSpace>
       </div>
     </footer>
-    <Prompt v-if="showPrompt" v-model:roomId="uuid" v-model:visible="showPrompt" />
+    <Prompt v-if="showPrompt" v-model:room-id="uuid" v-model:visible="showPrompt" />
   </div>
 </template>

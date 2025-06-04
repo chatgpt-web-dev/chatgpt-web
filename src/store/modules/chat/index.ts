@@ -1,6 +1,3 @@
-import { useUserStore } from '../user'
-import { getLocalState, setLocalState } from './helper'
-import { router } from '@/router'
 import {
   fetchClearChat,
   fetchCreateChatRoom,
@@ -14,6 +11,9 @@ import {
   fetchUpdateChatRoomUsingContext,
   fetchUpdateUserChatModel,
 } from '@/api'
+import { router } from '@/router'
+import { useUserStore } from '../user'
+import { getLocalState, setLocalState } from './helper'
 
 export const useChatStore = defineStore('chat-store', {
   state: (): Chat.ChatState => getLocalState(),
@@ -60,9 +60,7 @@ export const useChatStore = defineStore('chat-store', {
       callback && callback()
     },
 
-    async syncChat(h: Chat.History, lastId?: number, callback?: () => void,
-      callbackForStartRequest?: () => void,
-      callbackForEmptyMessage?: () => void) {
+    async syncChat(h: Chat.History, lastId?: number, callback?: () => void, callbackForStartRequest?: () => void, callbackForEmptyMessage?: () => void) {
       if (!h.uuid) {
         callback && callback()
         return

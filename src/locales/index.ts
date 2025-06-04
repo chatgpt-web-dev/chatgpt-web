@@ -1,11 +1,11 @@
 import type { App } from 'vue'
+import type { Language } from '@/store/modules/app/helper'
 import { createI18n } from 'vue-i18n'
+import { useAppStoreWithOut } from '@/store/modules/app'
 import enUS from './en-US'
+import koKR from './ko-KR'
 import zhCN from './zh-CN'
 import zhTW from './zh-TW'
-import koKR from './ko-KR'
-import { useAppStoreWithOut } from '@/store/modules/app'
-import type { Language } from '@/store/modules/app/helper'
 
 const appStore = useAppStoreWithOut()
 

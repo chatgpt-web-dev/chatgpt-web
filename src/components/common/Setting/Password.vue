@@ -1,7 +1,7 @@
 <script setup lang='ts'>
-import { UserPassword } from './model'
 import { fetchUpdateUserPassword } from '@/api'
 import { t } from '@/locales'
+import { UserPassword } from './model'
 
 const ms = useMessage()
 

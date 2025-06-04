@@ -1,7 +1,7 @@
 <script lang="ts" setup>
+import defaultAvatar from '@/assets/avatar.jpg'
 import { useUserStore } from '@/store'
 import { isString } from '@/utils/is'
-import defaultAvatar from '@/assets/avatar.jpg'
 
 interface Props {
   image?: boolean

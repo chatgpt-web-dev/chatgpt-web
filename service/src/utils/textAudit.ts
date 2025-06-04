@@ -7,7 +7,7 @@ export interface TextAuditServiceOptions {
 }
 
 export interface TextAuditService {
-  containsSensitiveWords(text: string): Promise<boolean>
+  containsSensitiveWords: (text: string) => Promise<boolean>
 }
 
 /**
@@ -28,7 +28,7 @@ export class BaiduTextAuditService implements TextAuditService {
       'Accept': 'application/json'
     }
     const response = await fetch(url, { headers, method: 'POST', body: `text=${encodeURIComponent(text)}` })
-    const data = await response.json() as { conclusionType: number; data: any; error_msg: string }
+    const data = await response.json() as { conclusionType: number, data: any, error_msg: string }
 
     if (data.error_msg)
       throw new Error(data.error_msg)
@@ -65,7 +65,7 @@ export class BaiduTextAuditService implements TextAuditService {
         'Accept': 'application/json'
       }
       const response = await fetch(url, { headers })
-      const data = (await response.json()) as { access_token: string; expires_in: number }
+      const data = (await response.json()) as { access_token: string, expires_in: number }
 
       this.accessToken = data.access_token
       this.expiredTime = Math.floor(new Date().getTime() / 1000) + (+data.expires_in)

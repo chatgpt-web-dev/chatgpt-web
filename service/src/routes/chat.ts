@@ -1,24 +1,29 @@
-import * as console from 'node:console'
-import { ObjectId } from 'mongodb'
-import Router from 'express'
 import type { ResponseChunk } from '../chatgpt/types'
-import { limiter } from '../middleware/limiter'
+import type { ChatInfo, ChatOptions, UsageResponse, UserInfo } from '../storage/model'
+import type { RequestProps } from '../types'
+import * as console from 'node:console'
+import Router from 'express'
+import { ObjectId } from 'mongodb'
 import { abortChatProcess, chatReplyProcess, containsSensitiveWords } from '../chatgpt'
 import { auth } from '../middleware/auth'
+import { limiter } from '../middleware/limiter'
 import { getCacheConfig } from '../storage/config'
-import type { ChatInfo, ChatOptions, UsageResponse, UserInfo } from '../storage/model'
 import { Status, UserRole } from '../storage/model'
 import {
   clearChat,
   deleteAllChatRooms,
   deleteChat,
   existsChatRoom,
-  getChat, getChatRoom,
+  getChat,
+  getChatRoom,
   getChats,
-  getUserById, insertChat, insertChatUsage, updateAmountMinusOne, updateChat,
+  getUserById,
+  insertChat,
+  insertChatUsage,
+  updateAmountMinusOne,
+  updateChat,
 } from '../storage/mongo'
 import { isNotEmptyString } from '../utils/is'
-import type { RequestProps } from '../types'
 
 export const router = Router()
 
@@ -173,7 +178,7 @@ router.get('/chat-response-history', auth, async (req, res) => {
 router.post('/chat-delete', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { roomId, uuid, inversion } = req.body as { roomId: number; uuid: number; inversion: boolean }
+    const { roomId, uuid, inversion } = req.body as { roomId: number, uuid: number, inversion: boolean }
     if (!roomId || !await existsChatRoom(userId, roomId)) {
       res.send({ status: 'Fail', message: 'Unknown room', data: null })
       return
@@ -296,30 +301,14 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       if (regenerate && message.options.messageId) {
         const previousResponse = message.previousResponse || []
         previousResponse.push({ response: message.response, options: message.options })
-        await updateChat(message._id as unknown as string,
-          result.data.reasoning,
-          result.data.text,
-          result.data.id,
-          model,
-          result.data.detail?.usage as UsageResponse,
-          previousResponse as [])
+        await updateChat(message._id as unknown as string, result.data.reasoning, result.data.text, result.data.id, model, result.data.detail?.usage as UsageResponse, previousResponse as [])
       }
       else {
-        await updateChat(message._id as unknown as string,
-          result.data.reasoning,
-          result.data.text,
-          result.data.id,
-          model,
-          result.data.detail?.usage as UsageResponse)
+        await updateChat(message._id as unknown as string, result.data.reasoning, result.data.text, result.data.id, model, result.data.detail?.usage as UsageResponse)
       }
 
       if (result.data.detail?.usage) {
-        await insertChatUsage(new ObjectId(req.headers.userId),
-          roomId,
-          message._id,
-          result.data.id,
-          model,
-          result.data.detail?.usage as UsageResponse)
+        await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
       }
       // update personal useAmount moved here
       // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
@@ -337,16 +326,12 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 router.post('/chat-abort', [auth, limiter], async (req, res) => {
   try {
     const userId = req.headers.userId.toString()
-    const { text, messageId, conversationId } = req.body as { text: string; messageId: string; conversationId: string }
-    const msgId = await abortChatProcess(userId)
-    await updateChat(msgId,
-      text,
-      messageId,
-      conversationId,
-      null, null)
+    const { text, messageId, conversationId } = req.body as { text: string, messageId: string, conversationId: string }
+    const msgId = abortChatProcess(userId)
+    await updateChat(msgId, text, messageId, conversationId, null, null)
     res.send({ status: 'Success', message: 'OK', data: null })
   }
-  catch (error) {
+  catch {
     res.send({ status: 'Fail', message: '重置邮件已发送 | Reset email has been sent', data: null })
   }
 })

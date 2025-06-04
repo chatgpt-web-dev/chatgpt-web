@@ -268,9 +268,9 @@ export class AdvancedConfig {
 
 export enum TextAudioType {
   None = 0,
-  Request = 1 << 0, // 二进制 01
-  Response = 1 << 1, // 二进制 10
-  All = Request | Response, // 二进制 11
+  Request = 1, // 二进制 01
+  Response = 2, // 二进制 10
+  All = 3, // 二进制 11
 }
 
 export class KeyConfig {

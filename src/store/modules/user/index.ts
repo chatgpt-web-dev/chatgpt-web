@@ -1,6 +1,6 @@
 import type { UserInfo, UserState } from './helper'
-import { defaultSetting, getLocalState, setLocalState } from './helper'
 import { fetchResetAdvanced, fetchUpdateAdvanced, fetchUpdateUserAmt, fetchUpdateUserInfo, fetchUserAmt } from '@/api'
+import { defaultSetting, getLocalState, setLocalState } from './helper'
 
 export const useUserStore = defineStore('user-store', {
   state: (): UserState => getLocalState(),

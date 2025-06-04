@@ -1,4 +1,5 @@
-import axios, { type AxiosResponse } from 'axios'
+import type { AxiosResponse } from 'axios'
+import axios from 'axios'
 import { useAuthStore } from '@/store'
 
 const service = axios.create({

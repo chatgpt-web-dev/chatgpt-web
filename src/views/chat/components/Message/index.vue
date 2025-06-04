@@ -1,13 +1,13 @@
 <script setup lang='ts'>
-import AvatarComponent from './Avatar.vue'
-import TextComponent from './Text.vue'
-import Reasoning from './Reasoning.vue'
 import { SvgIcon } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useIconRender } from '@/hooks/useIconRender'
 import { t } from '@/locales'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { copyToClip } from '@/utils/copy'
 import { useAppStore } from '@/store'
+import { copyToClip } from '@/utils/copy'
+import AvatarComponent from './Avatar.vue'
+import Reasoning from './Reasoning.vue'
+import TextComponent from './Text.vue'
 
 const props = defineProps<Props>()
 

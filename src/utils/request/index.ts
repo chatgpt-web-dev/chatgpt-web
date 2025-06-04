@@ -1,6 +1,6 @@
 import type { AxiosProgressEvent, AxiosResponse, GenericAbortSignal } from 'axios'
-import request from './axios'
 import { useAuthStore } from '@/store'
+import request from './axios'
 
 export interface HttpOption {
   url: string

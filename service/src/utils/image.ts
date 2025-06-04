@@ -1,5 +1,5 @@
-import fs from 'node:fs/promises'
 import type { Buffer } from 'node:buffer'
+import fs from 'node:fs/promises'
 import * as fileType from 'file-type'
 
 fs.mkdir('uploads').then(() => {

@@ -1,11 +1,11 @@
-import { jwtDecode } from 'jwt-decode'
 import type { UserInfo } from '../user/helper'
+import { jwtDecode } from 'jwt-decode'
+import { fetchLogout, fetchSession } from '@/api'
+import { UserConfig } from '@/components/common/Setting/model'
+import { store } from '@/store/helper'
 import { useChatStore } from '../chat'
 import { useUserStore } from '../user'
 import { getToken, removeToken, setToken } from './helper'
-import { store } from '@/store/helper'
-import { fetchLogout, fetchSession } from '@/api'
-import { UserConfig } from '@/components/common/Setting/model'
 
 interface SessionResponse {
   auth: boolean
@@ -25,7 +25,7 @@ interface SessionResponse {
   }[]
   usageCountLimit: boolean
   showWatermark: boolean
-  userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; config: UserConfig }
+  userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, config: UserConfig }
 }
 
 export interface AuthState {

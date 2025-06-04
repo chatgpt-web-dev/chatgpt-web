@@ -1,8 +1,8 @@
 <script setup lang='ts'>
-import { SearchConfig } from './model'
 import type { ConfigState, SearchServiceProvider } from './model'
 import { fetchChatConfig, fetchTestSearch, fetchUpdateSearch } from '@/api'
 import { t } from '@/locales'
+import { SearchConfig } from './model'
 
 const ms = useMessage()
 
@@ -11,7 +11,7 @@ const saving = ref(false)
 const testing = ref(false)
 const testText = ref<string>('What is the latest news about artificial intelligence?')
 
-const serviceOptions: { label: string; key: SearchServiceProvider; value: SearchServiceProvider }[] = [
+const serviceOptions: { label: string, key: SearchServiceProvider, value: SearchServiceProvider }[] = [
   { label: 'Tavily', key: 'tavily', value: 'tavily' },
 ]
 
@@ -48,7 +48,7 @@ async function updateSearchInfo() {
 async function testSearch() {
   testing.value = true
   try {
-    const { message } = await fetchTestSearch(testText.value as string, config.value as SearchConfig) as { status: string; message: string }
+    const { message } = await fetchTestSearch(testText.value as string, config.value as SearchConfig) as { status: string, message: string }
     ms.success(message)
   }
   catch (error: any) {

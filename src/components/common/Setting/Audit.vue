@@ -10,7 +10,7 @@ const saving = ref(false)
 const testing = ref(false)
 const testText = ref<string>()
 
-const serviceOptions: { label: string; key: TextAuditServiceProvider; value: TextAuditServiceProvider }[] = [
+const serviceOptions: { label: string, key: TextAuditServiceProvider, value: TextAuditServiceProvider }[] = [
   { label: '百度云', key: 'baidu', value: 'baidu' },
 ]
 
@@ -43,7 +43,7 @@ async function updateAuditInfo() {
 async function testAudit() {
   testing.value = true
   try {
-    const { message } = await fetchTestAudit(testText.value as string, config.value as AuditConfig) as { status: string; message: string }
+    const { message } = await fetchTestAudit(testText.value as string, config.value as AuditConfig) as { status: string, message: string }
     ms.success(message)
   }
   catch (error: any) {

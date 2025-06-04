@@ -1,10 +1,10 @@
 <script setup lang='ts'>
-import { UserRole } from '../Setting/model'
-import { useAuthStore, useUserStore } from '@/store'
 import defaultAvatar from '@/assets/avatar.jpg'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useAuthStore, useUserStore } from '@/store'
 import { isString } from '@/utils/is'
 import Permission from '@/views/chat/layout/Permission.vue'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { UserRole } from '../Setting/model'
 
 const route = useRoute()
 const userStore = useUserStore()

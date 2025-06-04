@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { NButton } from 'naive-ui'
-import Message from '@/views/chat/components/Message/index.vue'
 import { fetchGetChatHistory, fetchGetChatRoomsCount, fetchGetUsers } from '@/api'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { SvgIcon } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import Message from '@/views/chat/components/Message/index.vue'
 
 interface HistoryChat {
   uuid?: number
@@ -34,29 +34,25 @@ const columns = [{
   title: 'Last Time',
   key: 'lastTime',
   width: 35,
-},
-{
+}, {
   title: 'username',
   key: 'name',
   width: 30,
   ellipsis: {
     tooltip: true,
   },
-},
-{
+}, {
   title: 'Title',
   key: 'title',
   width: 100,
   ellipsis: {
     tooltip: true,
   },
-},
-{
+}, {
   title: 'Chat Count',
   key: 'chatCount',
   width: 20,
-},
-{
+}, {
   title: 'Action',
   key: 'uuid',
   width: 20,

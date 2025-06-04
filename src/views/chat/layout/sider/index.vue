@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import List from './List.vue'
-import Footer from './Footer.vue'
-import { useAppStore, useAuthStore, useChatStore } from '@/store'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { GithubSite, PromptStore, Watermark } from '@/components/common'
-import { fetchAnnouncement } from '@/api'
 import type { AnnounceConfig } from '@/components/common/Setting/model'
+import { fetchAnnouncement } from '@/api'
+import { GithubSite, PromptStore, Watermark } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useAppStore, useAuthStore, useChatStore } from '@/store'
+import Footer from './Footer.vue'
+import List from './List.vue'
 
 const config = ref<AnnounceConfig>()
 

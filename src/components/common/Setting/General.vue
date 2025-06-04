@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
-import { SvgIcon } from '@/components/common'
-import { useAppStore, useAuthStore, useUserStore } from '@/store'
 import type { UserInfo } from '@/store/modules/user/helper'
-import { getCurrentDate } from '@/utils/functions'
+import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
+import { SvgIcon } from '@/components/common'
+import { UserConfig } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
-import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
+import { useAppStore, useAuthStore, useUserStore } from '@/store'
+import { getCurrentDate } from '@/utils/functions'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
@@ -45,7 +45,7 @@ const language = computed({
   },
 })
 
-const themeOptions: { label: string; key: Theme; icon: string }[] = [
+const themeOptions: { label: string, key: Theme, icon: string }[] = [
   {
     label: 'Auto',
     key: 'auto',
@@ -63,7 +63,7 @@ const themeOptions: { label: string; key: Theme; icon: string }[] = [
   },
 ]
 
-const languageOptions: { label: string; key: Language; value: Language }[] = [
+const languageOptions: { label: string, key: Language, value: Language }[] = [
   { label: '简体中文', key: 'zh-CN', value: 'zh-CN' },
   { label: '繁體中文', key: 'zh-TW', value: 'zh-TW' },
   { label: 'English', key: 'en-US', value: 'en-US' },
@@ -75,7 +75,7 @@ async function updateUserInfo(options: Partial<UserInfo>) {
   ms.success(`更新个人信息 ${t('common.success')}`)
 }
 // 更新并兑换，这里图页面设计方便暂时先放一起了，下方页面新增了两个输入框
-async function redeemandupdateUserInfo(options: { avatar: string; name: string; description: string; useAmount: number; redeemCardNo: string }) {
+async function redeemandupdateUserInfo(options: { avatar: string, name: string, description: string, useAmount: number, redeemCardNo: string }) {
   const { avatar, name, description, useAmount, redeemCardNo } = options
   let add_amt = 0
   let message = ''
@@ -135,7 +135,7 @@ function importData(event: Event): void {
       ms.success(t('common.success'))
       location.reload()
     }
-    catch (error) {
+    catch {
       ms.error(t('common.invalidFileFormat'))
     }
   }

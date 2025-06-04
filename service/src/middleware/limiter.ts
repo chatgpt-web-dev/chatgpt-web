@@ -1,7 +1,7 @@
-import { rateLimit } from 'express-rate-limit'
+import * as process from 'node:process'
 import * as dotenv from 'dotenv'
+import { rateLimit } from 'express-rate-limit'
 import requestIp from 'request-ip'
-
 import { isNotEmptyString } from '../utils/is'
 
 dotenv.config()
@@ -38,4 +38,4 @@ const authLimiter = rateLimit({
   },
 })
 
-export { limiter, authLimiter }
+export { authLimiter, limiter }

@@ -47,17 +47,18 @@
     "tsx": "^4.7.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.43.1",
+    "@antfu/eslint-config": "^4.13.2",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/multer": "^1.4.11",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.29",
     "@types/nodemailer": "^6.4.14",
     "@types/request-ip": "^0.0.41",
     "@types/speakeasy": "^2.0.10",
     "copyfiles": "^2.4.1",
-    "eslint": "^8.56.0",
-    "rimraf": "^5.0.5",
-    "typescript": "~5.3.3"
+    "eslint": "^9.28.0",
+    "jiti": "^2.4.2",
+    "rimraf": "^6.0.1",
+    "typescript": "~5.8.3"
   }
 }

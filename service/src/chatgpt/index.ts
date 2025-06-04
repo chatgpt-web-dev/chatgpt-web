@@ -1,24 +1,24 @@
-import * as dotenv from 'dotenv'
-import OpenAI from 'openai'
-import { HttpsProxyAgent } from 'https-proxy-agent'
+import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
+import type { ModelConfig } from '../types'
+import type { TextAuditService } from '../utils/textAudit'
+import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
 import dayjs from 'dayjs'
-import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
-import { Status, UsageResponse } from '../storage/model'
-import { convertImageUrl } from '../utils/image'
-import type { TextAuditService } from '../utils/textAudit'
-import { textAuditServices } from '../utils/textAudit'
+import * as dotenv from 'dotenv'
+import { HttpsProxyAgent } from 'https-proxy-agent'
+import OpenAI from 'openai'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
-import { sendResponse } from '../utils'
-import { hasAnyRole, isNotEmptyString } from '../utils/is'
-import type { ModelConfig } from '../types'
+import { Status, UsageResponse } from '../storage/model'
 import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
-import type { ChatMessage, RequestOptions } from './types'
+import { sendResponse } from '../utils'
+import { convertImageUrl } from '../utils/image'
+import { hasAnyRole, isNotEmptyString } from '../utils/is'
+import { textAuditServices } from '../utils/textAudit'
 
 dotenv.config()
 
 function renderSystemMessage(template: string, currentTime: string): string {
-  return template.replace(/{current_time}/g, currentTime)
+  return template.replace(/\{current_time\}/g, currentTime)
 }
 
 const ErrorCodeMessage: Record<string, string> = {
@@ -31,7 +31,7 @@ const ErrorCodeMessage: Record<string, string> = {
 }
 
 let auditService: TextAuditService
-const _lockedKeys: { key: string; lockedTime: number }[] = []
+const _lockedKeys: { key: string, lockedTime: number }[] = []
 
 export async function initApi(key: KeyConfig) {
   const config = await getCacheConfig()
@@ -52,7 +52,7 @@ export async function initApi(key: KeyConfig) {
   return client
 }
 
-const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
+const processThreads: { userId: string, abort: AbortController, messageId: string }[] = []
 
 async function chatReplyProcess(options: RequestOptions) {
   const globalConfig = await getCacheConfig()
@@ -318,8 +318,7 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
 }
 
 async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyConfig | undefined> {
-  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
-    .filter(d => d.chatModels.includes(chatModel))
+  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(chatModel))
 
   return randomKeyConfig(keys)
 }
@@ -373,4 +372,4 @@ async function addPreviousMessages(parentMessageId: string, maxContextCount: num
   }
 }
 
-export { chatReplyProcess, chatConfig, containsSensitiveWords }
+export { chatConfig, chatReplyProcess, containsSensitiveWords }

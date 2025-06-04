@@ -1,9 +1,10 @@
-import jwt from 'jsonwebtoken'
 import type { Request } from 'express'
-import { authProxyHeaderName, getCacheConfig } from '../storage/config'
-import { createUser, getUser, getUserById } from '../storage/mongo'
-import { Status, UserRole } from '../storage/model'
 import type { AuthJwtPayload } from '../types'
+import * as process from 'node:process'
+import jwt from 'jsonwebtoken'
+import { authProxyHeaderName, getCacheConfig } from '../storage/config'
+import { Status, UserRole } from '../storage/model'
+import { createUser, getUser, getUserById } from '../storage/mongo'
 
 async function auth(req, res, next) {
   const config = await getCacheConfig()
