@@ -1,15 +1,21 @@
+import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AuthJwtPayload } from './types'
 import * as path from 'node:path'
+import * as process from 'node:process'
+import * as dotenv from 'dotenv'
 import express from 'express'
 import jwt from 'jsonwebtoken'
-import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
 import speakeasy from 'speakeasy'
-import { TwoFAConfig } from './types'
-import type { AuthJwtPayload } from './types'
 import { chatConfig, containsSensitiveWords, initAuditService } from './chatgpt'
 import { auth, getUserId } from './middleware/auth'
+import { authLimiter } from './middleware/limiter'
+import { isAdmin, rootAuth } from './middleware/rootAuth'
+import { router as chatRouter } from './routes/chat'
+import { router as promptRouter } from './routes/prompt'
+import { router as roomRouter } from './routes/room'
+import { router as uploadRouter } from './routes/upload'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
 import { AdvancedConfig, Status, UserRole } from './storage/model'
 import {
   createUser,
@@ -17,8 +23,8 @@ import {
   getAmtByCardNo,
   getUser,
   getUserById,
-  getUserStatisticsByDay,
   getUsers,
+  getUserStatisticsByDay,
   updateApiKeyStatus,
   updateConfig,
   updateGiftCard,
@@ -35,16 +41,10 @@ import {
   upsertKey,
   verifyUser,
 } from './storage/mongo'
-import { authLimiter } from './middleware/limiter'
+import { TwoFAConfig } from './types'
 import { hasAnyRole, isEmail, isNotEmptyString } from './utils/is'
 import { sendNoticeMail, sendResetPasswordMail, sendTestMail, sendVerifyMail, sendVerifyMailAdmin } from './utils/mail'
 import { checkUserResetPassword, checkUserVerify, checkUserVerifyAdmin, getUserResetPasswordUrl, getUserVerifyUrl, getUserVerifyUrlAdmin, md5 } from './utils/security'
-import { isAdmin, rootAuth } from './middleware/rootAuth'
-
-import { router as chatRouter } from './routes/chat'
-import { router as promptRouter } from './routes/prompt'
-import { router as roomRouter } from './routes/room'
-import { router as uploadRouter } from './routes/upload'
 
 dotenv.config()
 
@@ -73,7 +73,7 @@ app.all('/', (_, res, next) => {
 
 router.post('/user-register', authLimiter, async (req, res) => {
   try {
-    const { username, password } = req.body as { username: string; password: string }
+    const { username, password } = req.body as { username: string, password: string }
     const config = await getCacheConfig()
     if (!config.siteConfig.registerEnabled) {
       res.send({ status: 'Fail', message: '注册账号功能未启用 | Register account is disabled!', data: null })
@@ -162,7 +162,7 @@ router.post('/session', async (req, res) => {
       }
     })
 
-    let userInfo: { name: string; description: string; avatar: string; userId: string; root: boolean; roles: UserRole[]; config: UserConfig; advanced: AdvancedConfig }
+    let userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, roles: UserRole[], config: UserConfig, advanced: AdvancedConfig }
     if (userId != null) {
       const user = await getUserById(userId)
       if (user === null) {
@@ -196,7 +196,7 @@ router.post('/session', async (req, res) => {
 
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
 
-      const count: { key: string; count: number }[] = []
+      const count: { key: string, count: number }[] = []
       chatModelOptions.forEach((chatModel) => {
         keys.forEach((key) => {
           if (key.chatModels.includes(chatModel.value)) {
@@ -262,7 +262,7 @@ router.post('/session', async (req, res) => {
 
 router.post('/user-login', authLimiter, async (req, res) => {
   try {
-    const { username, password, token } = req.body as { username: string; password: string; token?: string }
+    const { username, password, token } = req.body as { username: string, password: string, token?: string }
     if (!username || !password || !isEmail(username))
       throw new Error('用户名或密码为空 | Username or password is empty')
 
@@ -330,7 +330,7 @@ router.post('/user-send-reset-mail', authLimiter, async (req, res) => {
 
 router.post('/user-reset-password', authLimiter, async (req, res) => {
   try {
-    const { username, password, sign } = req.body as { username: string; password: string; sign: string }
+    const { username, password, sign } = req.body as { username: string, password: string, sign: string }
     if (!username || !password || !isEmail(username))
       throw new Error('用户名或密码为空 | Username or password is empty')
     if (!sign || !checkUserResetPassword(sign, username))
@@ -428,7 +428,7 @@ router.post('/redeem-card', auth, async (req, res) => {
 // update giftcard database
 router.post('/giftcard-update', rootAuth, async (req, res) => {
   try {
-    const { data, overRideSwitch } = req.body as { data: GiftCard[];overRideSwitch: boolean }
+    const { data, overRideSwitch } = req.body as { data: GiftCard[], overRideSwitch: boolean }
     await updateGiftCards(data, overRideSwitch)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
@@ -467,7 +467,7 @@ router.get('/users', rootAuth, async (req, res) => {
 
 router.post('/user-status', rootAuth, async (req, res) => {
   try {
-    const { userId, status } = req.body as { userId: string; status: Status }
+    const { userId, status } = req.body as { userId: string, status: Status }
     const user = await getUserById(userId)
     await updateUserStatus(userId, status)
     if ((user.status === Status.PreVerify || user.status === Status.AdminVerify) && status === Status.Normal)
@@ -482,7 +482,7 @@ router.post('/user-status', rootAuth, async (req, res) => {
 // 函数中加入useAmount limit_switch
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
-    const { userId, email, password, roles, remark, useAmount, limit_switch } = req.body as { userId?: string; email: string; password: string; roles: UserRole[]; remark?: string; useAmount?: number; limit_switch?: boolean }
+    const { userId, email, password, roles, remark, useAmount, limit_switch } = req.body as { userId?: string, email: string, password: string, roles: UserRole[], remark?: string, useAmount?: number, limit_switch?: boolean }
     if (userId) {
       await updateUser(userId, roles, password, remark, Number(useAmount), limit_switch)
     }
@@ -500,7 +500,7 @@ router.post('/user-edit', rootAuth, async (req, res) => {
 
 router.post('/user-password', auth, async (req, res) => {
   try {
-    let { oldPassword, newPassword, confirmPassword } = req.body as { oldPassword: string; newPassword: string; confirmPassword: string }
+    let { oldPassword, newPassword, confirmPassword } = req.body as { oldPassword: string, newPassword: string, confirmPassword: string }
     if (!oldPassword || !newPassword || !confirmPassword)
       throw new Error('密码不能为空 | Password cannot be empty')
     if (newPassword !== confirmPassword)
@@ -550,7 +550,7 @@ router.get('/user-2fa', auth, async (req, res) => {
 
 router.post('/user-2fa', auth, async (req, res) => {
   try {
-    const { secretKey, token } = req.body as { secretKey: string; token: string }
+    const { secretKey, token } = req.body as { secretKey: string, token: string }
     const userId = req.headers.userId.toString()
 
     const verified = speakeasy.totp.verify({
@@ -767,7 +767,7 @@ router.post('/setting-audit', rootAuth, async (req, res) => {
 
 router.post('/audit-test', rootAuth, async (req, res) => {
   try {
-    const { audit, text } = req.body as { audit: AuditConfig; text: string }
+    const { audit, text } = req.body as { audit: AuditConfig, text: string }
     const config = await getCacheConfig()
     if (audit.enabled)
       initAuditService(audit)
@@ -798,7 +798,7 @@ router.post('/setting-search', rootAuth, async (req, res) => {
 
 router.post('/search-test', rootAuth, async (req, res) => {
   try {
-    const { search, text } = req.body as { search: import('./storage/model').SearchConfig; text: string }
+    const { text } = req.body as { search: import('./storage/model').SearchConfig, text: string }
     // TODO: Implement actual search test logic with Tavily API
     // For now, just return a success response
     res.send({ status: 'Success', message: '搜索测试成功 | Search test successful', data: { query: text, results: [] } })
@@ -869,7 +869,7 @@ router.get('/setting-keys', rootAuth, async (req, res) => {
 
 router.post('/setting-key-status', rootAuth, async (req, res) => {
   try {
-    const { id, status } = req.body as { id: string; status: Status }
+    const { id, status } = req.body as { id: string, status: Status }
     await updateApiKeyStatus(id, status)
     clearApiKeyCache()
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
@@ -895,7 +895,7 @@ router.post('/setting-key-upsert', rootAuth, async (req, res) => {
 
 router.post('/statistics/by-day', auth, async (req, res) => {
   try {
-    let { userId, start, end } = req.body as { userId?: string; start: number; end: number }
+    let { userId, start, end } = req.body as { userId?: string, start: number, end: number }
     if (!userId)
       userId = req.headers.userId as string
     else if (!isAdmin(req.headers.userId as string))

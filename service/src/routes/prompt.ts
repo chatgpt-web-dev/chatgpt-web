@@ -1,3 +1,4 @@
+import type { UserPrompt } from '../storage/model'
 import Router from 'express'
 import { ObjectId } from 'mongodb'
 import { auth } from '../middleware/auth'
@@ -8,7 +9,6 @@ import {
   importUserPrompt,
   upsertUserPrompt,
 } from '../storage/mongo'
-import type { UserPrompt } from '../storage/model'
 
 export const router = Router()
 
