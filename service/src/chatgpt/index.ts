@@ -1,5 +1,4 @@
-import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
-import type { ModelConfig } from '../types'
+import type { AuditConfig, Config, KeyConfig, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
@@ -253,8 +252,8 @@ async function containsSensitiveWords(audit: AuditConfig, text: string): Promise
 }
 
 async function chatConfig() {
-  const config = await getOriginConfig() as ModelConfig
-  return sendResponse<ModelConfig>({
+  const config = await getOriginConfig()
+  return sendResponse<Config>({
     type: 'Success',
     data: config,
   })

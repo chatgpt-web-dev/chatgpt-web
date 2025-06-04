@@ -199,7 +199,6 @@ export class Config {
     public apiDisableDebug?: boolean,
     public accessToken?: string,
     public apiBaseUrl?: string,
-    public apiModel?: APIMODEL,
     public reverseProxy?: string,
     public socksProxy?: string,
     public socksAuth?: string,
@@ -306,4 +305,4 @@ export class UserPrompt {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI'
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM'

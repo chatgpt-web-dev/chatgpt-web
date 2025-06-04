@@ -146,7 +146,6 @@ router.post('/session', async (req, res) => {
     const hasAuth = config.siteConfig.loginEnabled || config.siteConfig.authProxyEnabled
     const authProxyEnabled = config.siteConfig.authProxyEnabled
     const allowRegister = config.siteConfig.registerEnabled
-    config.apiModel = 'ChatGPTAPI'
     const userId = await getUserId(req)
     const chatModels: {
       label: string
@@ -173,7 +172,6 @@ router.post('/session', async (req, res) => {
           data: {
             auth: hasAuth,
             allowRegister,
-            model: config.apiModel,
             title: config.siteConfig.siteTitle,
             chatModels,
             allChatModels: chatModelOptions,
@@ -227,7 +225,6 @@ router.post('/session', async (req, res) => {
           auth: hasAuth,
           authProxyEnabled,
           allowRegister,
-          model: config.apiModel,
           title: config.siteConfig.siteTitle,
           chatModels,
           allChatModels: chatModelOptions,
@@ -246,7 +243,6 @@ router.post('/session', async (req, res) => {
         auth: hasAuth,
         authProxyEnabled,
         allowRegister,
-        model: config.apiModel,
         title: config.siteConfig.siteTitle,
         chatModels: chatModelOptions,
         allChatModels: chatModelOptions,
@@ -659,11 +655,10 @@ router.post('/verifyadmin', authLimiter, async (req, res) => {
 
 router.post('/setting-base', rootAuth, async (req, res) => {
   try {
-    const { apiKey, apiModel, apiBaseUrl, accessToken, timeoutMs, reverseProxy, socksProxy, socksAuth, httpsProxy } = req.body as Config
+    const { apiKey, apiBaseUrl, accessToken, timeoutMs, reverseProxy, socksProxy, socksAuth, httpsProxy } = req.body as Config
 
     const thisConfig = await getOriginConfig()
     thisConfig.apiKey = apiKey
-    thisConfig.apiModel = apiModel
     thisConfig.apiBaseUrl = apiBaseUrl
     thisConfig.accessToken = accessToken
     thisConfig.reverseProxy = reverseProxy

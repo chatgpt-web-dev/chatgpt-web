@@ -17,20 +17,6 @@ export interface ChatContext {
   parentMessageId?: string
 }
 
-export interface ModelConfig {
-  apiModel?: APIMODEL
-  reverseProxy?: string
-  timeoutMs?: number
-  socksProxy?: string
-  socksAuth?: string
-  httpsProxy?: string
-  allowRegister?: boolean
-  balance?: string
-  accessTokenExpiredTime?: string
-}
-
-export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
-
 export interface AuthJwtPayload extends JwtPayload {
   name: string
   avatar: string

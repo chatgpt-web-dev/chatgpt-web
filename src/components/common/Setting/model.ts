@@ -1,10 +1,7 @@
 export class ConfigState {
   timeoutMs?: number
   apiKey?: string
-  accessToken?: string
-  accessTokenExpiredTime?: string
   apiBaseUrl?: string
-  apiModel?: APIMODEL
   reverseProxy?: string
   socksProxy?: string
   socksAuth?: string
@@ -123,9 +120,9 @@ export class UserPrompt {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM'
 
-export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {
+export const apiModelOptions = ['ChatGPTAPI', 'VLLM'].map((model: string) => {
   return {
     label: model,
     key: model,

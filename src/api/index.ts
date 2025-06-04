@@ -1,7 +1,7 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
-import { useAuthStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import { get, post } from '@/utils/request'
 
 export function fetchAnnouncement<T = any>() {
@@ -29,24 +29,17 @@ export function fetchChatAPIProcess<T = any>(
   },
 ) {
   const userStore = useUserStore()
-  const authStore = useAuthStore()
 
-  let data: Record<string, any> = {
+  const data: Record<string, any> = {
     roomId: params.roomId,
     uuid: params.uuid,
     regenerate: params.regenerate || false,
     prompt: params.prompt,
     uploadFileKeys: params.uploadFileKeys,
     options: params.options,
-  }
-
-  if (authStore.isChatGPTAPI) {
-    data = {
-      ...data,
-      systemMessage: userStore.userInfo.advanced.systemMessage,
-      temperature: userStore.userInfo.advanced.temperature,
-      top_p: userStore.userInfo.advanced.top_p,
-    }
+    systemMessage: userStore.userInfo.advanced.systemMessage,
+    temperature: userStore.userInfo.advanced.temperature,
+    top_p: userStore.userInfo.advanced.top_p,
   }
 
   return post<T>({
