@@ -143,7 +143,7 @@ export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: 
 }
 
 export async function createChatRoom(userId: string, title: string, roomId: number, chatModel: string) {
-  const room = new ChatRoom(userId, title, roomId, chatModel, false, false)
+  const room = new ChatRoom(userId, title, roomId, chatModel, true, false)
   await roomCol.insertOne(room)
   return room
 }

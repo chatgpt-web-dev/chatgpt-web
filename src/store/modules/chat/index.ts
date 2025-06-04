@@ -133,7 +133,9 @@ export const useChatStore = defineStore('chat-store', {
     },
 
     async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
-      await fetchCreateChatRoom(history.title, history.uuid, history.chatModel)
+      const result = await fetchCreateChatRoom(history.title, history.uuid, history.chatModel)
+      history.searchEnabled = result.data?.searchEnabled
+      history.thinkEnabled = result.data?.thinkEnabled
       this.history.unshift(history)
       this.chat.unshift({ uuid: history.uuid, data: chatData })
       this.active = history.uuid
