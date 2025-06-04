@@ -27,7 +27,7 @@ export async function getCacheConfig(): Promise<Config> {
 export async function getOriginConfig() {
   let config = await getConfig()
   if (config == null) {
-    config = new Config(new ObjectId(), !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000, process.env.OPENAI_API_KEY, process.env.OPENAI_API_DISABLE_DEBUG === 'true', process.env.OPENAI_ACCESS_TOKEN, process.env.OPENAI_API_BASE_URL, 'ChatGPTAPI', process.env.API_REVERSE_PROXY, (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
+    config = new Config(new ObjectId(), !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000, process.env.OPENAI_API_KEY, process.env.OPENAI_API_DISABLE_DEBUG === 'true', process.env.OPENAI_ACCESS_TOKEN, process.env.OPENAI_API_BASE_URL, process.env.API_REVERSE_PROXY, (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
       ? (`${process.env.SOCKS_PROXY_HOST}:${process.env.SOCKS_PROXY_PORT}`)
       : '', (process.env.SOCKS_PROXY_USERNAME && process.env.SOCKS_PROXY_PASSWORD)
       ? (`${process.env.SOCKS_PROXY_USERNAME}:${process.env.SOCKS_PROXY_PASSWORD}`)
@@ -149,9 +149,7 @@ export async function getApiKeys() {
   const result = await getKeys()
   const config = await getCacheConfig()
   if (result.keys.length <= 0) {
-    if (config.apiModel === 'ChatGPTAPI')
-      result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
-
+    result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
     result.total++
   }
   result.keys.forEach((key) => {

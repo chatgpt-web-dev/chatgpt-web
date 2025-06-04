@@ -83,7 +83,8 @@ export class ChatRoom {
   status: Status = Status.Normal
   chatModel: string
   searchEnabled: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean) {
+  thinkEnabled: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean, thinkEnabled: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
@@ -91,6 +92,7 @@ export class ChatRoom {
     this.usingContext = true
     this.chatModel = chatModel
     this.searchEnabled = searchEnabled
+    this.thinkEnabled = thinkEnabled
   }
 }
 
@@ -197,7 +199,6 @@ export class Config {
     public apiDisableDebug?: boolean,
     public accessToken?: string,
     public apiBaseUrl?: string,
-    public apiModel?: APIMODEL,
     public reverseProxy?: string,
     public socksProxy?: string,
     public socksAuth?: string,
@@ -304,4 +305,4 @@ export class UserPrompt {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI'
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM'

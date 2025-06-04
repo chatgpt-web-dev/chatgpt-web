@@ -2,7 +2,7 @@
 import { SvgIcon } from '@/components/common'
 import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useAuthStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import About from './About.vue'
 import Advanced from './Advanced.vue'
 import Announcement from './Anonuncement.vue'
@@ -23,10 +23,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
 const userStore = useUserStore()
-const authStore = useAuthStore()
 const { isMobile } = useBasicLayout()
-
-const isChatGPTAPI = computed<boolean>(() => !!authStore.isChatGPTAPI)
 
 interface Props {
   visible: boolean
@@ -75,7 +72,7 @@ const show = computed({
           </template>
           <TwoFA />
         </NTabPane>
-        <NTabPane v-if="isChatGPTAPI" name="Advanced" tab="Advanced">
+        <NTabPane name="Advanced" tab="Advanced">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:equalizer-line" />
             <span class="ml-2">{{ $t('setting.advanced') }}</span>

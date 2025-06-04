@@ -252,10 +252,6 @@ onMounted(async () => {
               @update-value="value => keyConfig.keyModel = value"
             />
           </div>
-          <p v-if="!isMobile">
-            <a v-if="keyConfig.keyModel === 'ChatGPTAPI'" target="_blank" href="https://platform.openai.com/account/api-keys">Get Api Key</a>
-            <a v-else target="_blank" href="https://chat.openai.com/api/auth/session">Get Access Token</a>
-          </p>
         </div>
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]">{{ $t('setting.api') }}</span>

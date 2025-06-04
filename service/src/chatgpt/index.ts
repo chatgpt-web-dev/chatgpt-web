@@ -1,5 +1,4 @@
-import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
-import type { ModelConfig } from '../types'
+import type { AuditConfig, Config, KeyConfig, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
@@ -102,10 +101,18 @@ async function chatReplyProcess(options: RequestOptions) {
     const searchConfig = globalConfig.searchConfig
     if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
       messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
-      const completion = await openai.chat.completions.create({
+
+      const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
         model,
         messages,
-      })
+      }
+      if (key.keyModel === 'VLLM') {
+        // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+        getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
+          enable_thinking: false,
+        }
+      }
+      const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
       let searchQuery: string = completion.choices[0].message.content
       const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
       if (match)
@@ -144,7 +151,7 @@ search result: <search_result>${searchResult}</search_result>`,
       messages[0].content = systemMessage
 
     // Create the chat completion with streaming
-    const stream = await openai.chat.completions.create({
+    const chatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsStreaming = {
       model,
       messages,
       temperature: temperature ?? undefined,
@@ -153,9 +160,19 @@ search result: <search_result>${searchResult}</search_result>`,
       stream_options: {
         include_usage: true,
       },
-    }, {
-      signal: abort.signal,
-    })
+    }
+    if (key.keyModel === 'VLLM') {
+      // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+      chatCompletionCreateBody.chat_template_kwargs = {
+        enable_thinking: options.room.thinkEnabled,
+      }
+    }
+    const stream = await openai.chat.completions.create(
+      chatCompletionCreateBody,
+      {
+        signal: abort.signal,
+      },
+    )
 
     // Process the stream
     let responseReasoning = ''
@@ -253,8 +270,8 @@ async function containsSensitiveWords(audit: AuditConfig, text: string): Promise
 }
 
 async function chatConfig() {
-  const config = await getOriginConfig() as ModelConfig
-  return sendResponse<ModelConfig>({
+  const config = await getOriginConfig()
+  return sendResponse<Config>({
     type: 'Success',
     data: config,
   })

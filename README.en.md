@@ -34,6 +34,8 @@ Some unique features have been added:
 
 [✓] Web Search functionality (Real-time web search based on Tavily API)
 
+[✓] VLLM API model support & Optional disable deep thinking mode
+
 > [!CAUTION]
 > This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
 
@@ -124,6 +126,10 @@ For all parameter variables, check [here](#docker-parameter-example) or see:
 [✓] Multilingual interface
 
 [✓] Interface themes
+
+[✓] VLLM API model support
+
+[✓] Deep thinking mode switch
 
 [✗] More...
 
@@ -317,6 +323,63 @@ PS: You can also run `pnpm start` directly on the server without packaging.
 ```shell
 pnpm build
 ```
+
+## VLLM API Deep Thinking Mode Control
+
+> [!TIP]
+> Deep thinking mode control is only available when the backend is configured to use VLLM API, allowing users to choose whether to enable the model's deep thinking functionality.
+
+### Features
+
+- **VLLM API Exclusive Feature**: Only available when the backend uses VLLM API
+- **Per-conversation Control**: Each conversation can independently enable or disable deep thinking mode
+- **Real-time Switching**: Deep thinking mode can be switched at any time during conversation
+- **Performance Optimization**: Disabling deep thinking can improve response speed and reduce computational costs
+
+### Prerequisites
+
+**The following conditions must be met to use this feature:**
+
+1. **Backend Configuration**: Backend must be configured to use VLLM API interface
+2. **Model Support**: The model used must support deep thinking functionality
+3. **API Compatibility**: VLLM API version needs to support thinking mode control parameters
+
+### Usage
+
+#### 1. Enable/Disable Deep Thinking Mode
+
+1. **Enter Conversation Interface**: In a conversation session that supports VLLM API
+2. **Find Control Switch**: Locate the "Deep Thinking" toggle button in the conversation interface
+3. **Switch Mode**: 
+   - Enable: Model will perform deep thinking, providing more detailed and in-depth responses
+   - Disable: Model will respond directly, faster but potentially more concise
+
+#### 2. Usage Scenarios
+
+**Recommended to enable deep thinking when:**
+- Complex problems require in-depth analysis
+- Logical reasoning and multi-step thinking are needed
+- High-quality responses are required
+- Time is not sensitive
+
+**Recommended to disable deep thinking when:**
+- Simple questions need quick answers
+- Fast response is required
+- Need to reduce computational costs
+- Batch processing simple tasks
+
+#### 3. Technical Implementation
+
+- **API Parameter**: Controlled through VLLM API's `disable_thinking` parameter
+- **State Persistence**: Each conversation session independently saves the deep thinking switch state
+- **Real-time Effect**: Takes effect immediately for the next message after switching
+
+### Notes
+
+- **VLLM API Only**: This feature is only available when the backend uses VLLM API, other APIs (such as OpenAI API) do not support this feature
+- **Model Dependency**: Not all models support deep thinking mode, please confirm that your model supports this feature
+- **Response Differences**: Disabling deep thinking may affect the detail and quality of responses
+- **Cost Considerations**: Enabling deep thinking typically increases computational costs and response time
 
 ## Frequently Asked Questions
 

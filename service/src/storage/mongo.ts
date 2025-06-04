@@ -143,7 +143,7 @@ export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: 
 }
 
 export async function createChatRoom(userId: string, title: string, roomId: number, chatModel: string) {
-  const room = new ChatRoom(userId, title, roomId, chatModel, false)
+  const room = new ChatRoom(userId, title, roomId, chatModel, false, false)
   await roomCol.insertOne(room)
   return room
 }
@@ -203,6 +203,17 @@ export async function updateRoomSearchEnabled(userId: string, roomId: number, se
   const update = {
     $set: {
       searchEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomThinkEnabled(userId: string, roomId: number, thinkEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      thinkEnabled,
     },
   }
   const result = await roomCol.updateOne(query, update)

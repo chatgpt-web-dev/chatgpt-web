@@ -10,7 +10,6 @@ import { getToken, removeToken, setToken } from './helper'
 interface SessionResponse {
   auth: boolean
   authProxyEnabled: boolean
-  model: 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI'
   allowRegister: boolean
   title: string
   chatModels: {
@@ -38,12 +37,6 @@ export const useAuthStore = defineStore('auth-store', {
     token: getToken(),
     session: null,
   }),
-
-  getters: {
-    isChatGPTAPI(state): boolean {
-      return state.session?.model === 'ChatGPTAPI'
-    },
-  },
 
   actions: {
     async getSession() {
