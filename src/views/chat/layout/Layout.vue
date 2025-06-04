@@ -1,7 +1,7 @@
 <script setup lang='ts'>
-import Sider from './sider/index.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAppStore, useChatStore } from '@/store'
+import Sider from './sider/index.vue'
 
 const router = useRouter()
 const appStore = useAppStore()

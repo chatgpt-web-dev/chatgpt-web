@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { HoverButton, SvgIcon } from '@/components/common'
-import { useAppStore, useChatStore } from '@/store'
 import IconPrompt from '@/icons/Prompt.vue'
+import { useAppStore, useChatStore } from '@/store'
 
 interface Props {
   usingContext: boolean

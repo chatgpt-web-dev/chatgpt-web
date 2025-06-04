@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import type { DataTableColumns } from 'naive-ui'
 import { NButton, NTag } from 'naive-ui'
-import { Status, UserInfo, UserRole, userRoleOptions } from './model'
 import { fetchDisableUser2FAByAdmin, fetchGetUsers, fetchUpdateUser, fetchUpdateUserStatus } from '@/api'
-import { t } from '@/locales'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { t } from '@/locales'
+import { Status, UserInfo, UserRole, userRoleOptions } from './model'
 
 const ms = useMessage()
 const dialog = useDialog()

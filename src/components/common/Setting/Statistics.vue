@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import type { ChartData, ChartOptions } from 'chart.js'
-import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js'
-import { Bar } from 'vue-chartjs'
-import dayjs from 'dayjs'
 import type { UserInfo } from './model'
-import { t } from '@/locales'
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js'
+import dayjs from 'dayjs'
+import { Bar } from 'vue-chartjs'
 import { fetchGetUsers, fetchUserStatistics } from '@/api'
 import { SvgIcon } from '@/components/common'
+import { t } from '@/locales'
 import { useUserStore } from '@/store'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
@@ -44,7 +44,7 @@ const summary = ref({
   totalTokens: 0,
 })
 
-const usersOptions: Ref<{ label: string; filter: string; value: string }[]> = ref([])
+const usersOptions: Ref<{ label: string, filter: string, value: string }[]> = ref([])
 const user: Ref<string | null> = ref(null)
 
 const loading = ref(false)
@@ -116,7 +116,7 @@ function reRenderChart() {
 }
 
 function filter(pattern: string, option: object): boolean {
-  const a = option as { label: string; filter: string; value: string }
+  const a = option as { label: string, filter: string, value: string }
   return !a.filter ? false : a.filter.includes(pattern)
 }
 

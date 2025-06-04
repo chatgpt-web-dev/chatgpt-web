@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import type { ConfigState } from './model'
-import { SiteConfig } from './model'
 import { fetchChatConfig, fetchUpdateSite } from '@/api'
 import { t } from '@/locales'
+import { SiteConfig } from './model'
 
 const ms = useMessage()
 

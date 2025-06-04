@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { t } from '@/locales'
 import { fetchUpdateChatRoomPrompt } from '@/api'
+import { t } from '@/locales'
 import { useChatStore } from '@/store'
 
 const props = defineProps<Props>()
@@ -36,7 +36,7 @@ async function handleSaveChatRoomPrompt() {
 
   testing.value = true
   try {
-    const { message } = await fetchUpdateChatRoomPrompt(currentChatHistory.value.prompt ?? '', +props.roomId) as { status: string; message: string }
+    const { message } = await fetchUpdateChatRoomPrompt(currentChatHistory.value.prompt ?? '', +props.roomId) as { status: string, message: string }
     ms.success(message)
     show.value = false
   }

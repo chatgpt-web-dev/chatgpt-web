@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import MarkdownIt from 'markdown-it'
 import mdKatex from '@vscode/markdown-it-katex'
-import mila from 'markdown-it-link-attributes'
 import hljs from 'highlight.js/lib/common'
+import MarkdownIt from 'markdown-it'
+import mila from 'markdown-it-link-attributes'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { t } from '@/locales'
 import { copyToClip } from '@/utils/copy'

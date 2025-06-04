@@ -1,8 +1,8 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
-import { get, post } from '@/utils/request'
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
-import { useAuthStore, useUserStore } from '@/store'
 import type { SettingsState } from '@/store/modules/user/helper'
+import { useAuthStore, useUserStore } from '@/store'
+import { get, post } from '@/utils/request'
 
 export function fetchAnnouncement<T = any>() {
   return post<T>({
@@ -23,9 +23,10 @@ export function fetchChatAPIProcess<T = any>(
     regenerate?: boolean
     prompt: string
     uploadFileKeys?: string[]
-    options?: { conversationId?: string; parentMessageId?: string }
+    options?: { conversationId?: string, parentMessageId?: string }
     signal?: GenericAbortSignal
-    onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
+    onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
+  },
 ) {
   const userStore = useUserStore()
   const authStore = useAuthStore()

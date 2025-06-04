@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
 import { t } from '@/locales'
+import { useUserStore } from '@/store'
 
 const userStore = useUserStore()
 

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { SvgIcon } from '@/components/common'
-import { useAppStore, useChatStore } from '@/store'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useAppStore, useChatStore } from '@/store'
 import { useAuthStoreWithout } from '@/store/modules/auth'
 import { debounce } from '@/utils/functions/debounce'
 
