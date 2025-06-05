@@ -4,6 +4,7 @@ import Button from './Button.vue'
 
 interface Props {
   tooltip?: string
+  tooltipHelp?: string
   placement?: PopoverPlacement
 }
 
@@ -13,6 +14,7 @@ interface Emit {
 
 const props = withDefaults(defineProps<Props>(), {
   tooltip: '',
+  tooltipHelp: '',
   placement: 'bottom',
 })
 
@@ -33,7 +35,11 @@ function handleClick() {
           <slot />
         </Button>
       </template>
-      {{ tooltip }}
+      <span>{{ tooltip }}</span>
+      <div v-if="tooltipHelp" class="whitespace-pre-line text-xs">
+        <br>
+        {{ tooltipHelp }}
+      </div>
     </NTooltip>
   </div>
   <div v-else>

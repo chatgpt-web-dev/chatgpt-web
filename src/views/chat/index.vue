@@ -790,11 +790,6 @@ onUnmounted(() => {
                 <IconPrompt class="w-[20px] m-auto" />
               </span>
             </HoverButton>
-            <HoverButton v-if="!isMobile" :tooltip="usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="handleToggleUsingContext">
-              <span class="text-xl">
-                <SvgIcon icon="ri:chat-history-line" />
-              </span>
-            </HoverButton>
             <NSelect
               style="width: 250px"
               :value="currentChatModel"
@@ -802,19 +797,43 @@ onUnmounted(() => {
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
               @update-value="(val) => handleSyncChatModel(val)"
             />
-            <HoverButton v-if="!isMobile" :tooltip="currentChatHistory?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')" :class="{ 'text-[#4b9e5f]': currentChatHistory?.searchEnabled, 'text-[#a8071a]': !currentChatHistory?.searchEnabled }" @click="handleToggleSearchEnabled">
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatHistory?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')"
+              :tooltip-help="$t('chat.searchHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatHistory?.searchEnabled, 'text-[#a8071a]': !currentChatHistory?.searchEnabled }"
+              @click="handleToggleSearchEnabled"
+            >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:web" />
                 <span class="ml-1 text-sm">{{ currentChatHistory?.searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
               </span>
             </HoverButton>
-            <HoverButton v-if="!isMobile" :tooltip="currentChatHistory?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')" :class="{ 'text-[#4b9e5f]': currentChatHistory?.thinkEnabled, 'text-[#a8071a]': !currentChatHistory?.thinkEnabled }" @click="handleToggleThinkEnabled">
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatHistory?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')"
+              :tooltip-help="$t('chat.thinkHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatHistory?.thinkEnabled, 'text-[#a8071a]': !currentChatHistory?.thinkEnabled }"
+              @click="handleToggleThinkEnabled"
+            >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:lightbulb-outline" />
                 <span class="ml-1 text-sm">{{ currentChatHistory?.thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
-            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')"
+              :tooltip-help="$t('chat.contextHelp')"
+              :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }"
+              @click="handleToggleUsingContext"
+            >
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="ri:chat-history-line" />
+                <span class="ml-1 text-sm">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
+              </span>
+            </HoverButton>
+            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :disabled="!usingContext" :max="40" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
           </div>
           <div class="flex items-center justify-between space-x-2">
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
