@@ -36,6 +36,8 @@ Some unique features have been added:
 
 [✓] VLLM API model support & Optional disable deep thinking mode
 
+[✓] Context Window Control
+
 > [!CAUTION]
 > This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
 
@@ -324,6 +326,71 @@ PS: You can also run `pnpm start` directly on the server without packaging.
 pnpm build
 ```
 
+## Context Window Control
+
+> [!TIP]
+> Context Window Control allows users to flexibly manage context information in AI conversations, optimizing model performance and conversation effectiveness.
+
+### Features
+
+- **Context Management**: Control the amount of chat history the model can reference
+- **Per-conversation Control**: Each conversation can independently enable or disable context window
+- **Real-time Switching**: Context mode can be switched at any time during conversation
+- **Memory Management**: Flexibly control AI's memory scope and continuity
+- **Configurable Quantity**: Administrators can set the maximum number of context messages
+
+### How It Works
+
+The context window determines the amount of chat history from the current session that the model can reference during generation:
+
+- **Reasonable context window size** helps the model generate coherent and relevant text
+- **Avoid confusion or irrelevant output** caused by referencing too much context
+- **Turning off the context window** will cause the session to lose memory, making each question completely independent
+
+### Usage
+
+#### 1. Enable/Disable Context Window
+
+1. **Enter Conversation Interface**: This feature can be used in any conversation session
+2. **Find Control Switch**: Locate the "Context Window" toggle button in the conversation interface
+3. **Switch Mode**:
+   - **Enable**: Model will reference previous chat history, maintaining conversation coherence
+   - **Disable**: Model will not reference history, treating each question independently
+
+#### 2. Usage Scenarios
+
+**Recommended to enable context window when:**
+- Need continuous dialogue and context correlation
+- In-depth discussion of complex topics
+- Multi-turn Q&A and step-by-step problem solving
+- Need AI to remember previously mentioned information
+
+**Recommended to disable context window when:**
+- Independent simple questions
+- Avoid historical information interfering with new questions
+- Handling multiple unrelated topics
+- Need a "fresh start" scenario
+
+#### 3. Administrator Configuration
+
+Administrators can configure in system settings:
+- **Maximum Context Count**: Set the number of context messages included in the conversation
+- **Default State**: Set the default context window state for new conversations
+
+### Technical Implementation
+
+- **Context Truncation**: Automatically truncate specified number of historical messages
+- **State Persistence**: Each conversation independently saves context window switch state
+- **Real-time Effect**: Takes effect immediately for the next message after switching
+- **Memory Optimization**: Reasonably control context length, avoiding model limits
+
+### Notes
+
+- **Conversation Coherence**: Disabling context window will affect conversation continuity
+- **Token Consumption**: More context will increase token usage
+- **Response Quality**: Appropriate context helps improve answer quality
+- **Model Limitations**: Need to consider context length limits of different models
+
 ## VLLM API Deep Thinking Mode Control
 
 > [!TIP]
@@ -335,6 +402,14 @@ pnpm build
 - **Per-conversation Control**: Each conversation can independently enable or disable deep thinking mode
 - **Real-time Switching**: Deep thinking mode can be switched at any time during conversation
 - **Performance Optimization**: Disabling deep thinking can improve response speed and reduce computational costs
+
+### How It Works
+
+After enabling deep thinking, the model will use more computational resources and take longer time to simulate more complex thinking chains for logical reasoning:
+
+- **Suitable for complex tasks or high-requirement scenarios**, such as mathematical derivations and project planning
+- **Daily simple queries do not need to be enabled** deep thinking mode
+- **Disabling deep thinking** can achieve faster response speed
 
 ### Prerequisites
 
