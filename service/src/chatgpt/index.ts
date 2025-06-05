@@ -1,11 +1,13 @@
+import type { ClientOptions } from 'openai'
+import type { RequestInit } from 'undici'
 import type { AuditConfig, Config, KeyConfig, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
 import dayjs from 'dayjs'
 import * as dotenv from 'dotenv'
-import { HttpsProxyAgent } from 'https-proxy-agent'
 import OpenAI from 'openai'
+import * as undici from 'undici'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
 import { Status, UsageResponse } from '../storage/model'
 import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
@@ -36,19 +38,23 @@ export async function initApi(key: KeyConfig) {
   const config = await getCacheConfig()
   const openaiBaseUrl = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
 
-  let httpAgent: HttpsProxyAgent<any> | undefined
-  if (isNotEmptyString(config.httpsProxy)) {
-    const httpsProxy = config.httpsProxy
-    if (httpsProxy)
-      httpAgent = new HttpsProxyAgent(httpsProxy)
-  }
-
-  const client = new OpenAI({
+  const clientOptions: ClientOptions = {
     baseURL: openaiBaseUrl,
     apiKey: key.key,
-    httpAgent,
-  })
-  return client
+  }
+
+  const httpsProxy = config.httpsProxy
+  if (httpsProxy && isNotEmptyString(httpsProxy)) {
+    clientOptions.fetch = (input: string | URL | Request, init: RequestInit) => {
+      return undici.fetch(input, {
+        ...init,
+        dispatcher: new undici.ProxyAgent({
+          uri: httpsProxy,
+        }),
+      })
+    }
+  }
+  return new OpenAI(clientOptions)
 }
 
 const processThreads: { userId: string, abort: AbortController, messageId: string }[] = []

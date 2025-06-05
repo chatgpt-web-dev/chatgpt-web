@@ -26,9 +26,6 @@ dependencies:
   file-type:
     specifier: ^19.0.0
     version: 19.0.0
-  https-proxy-agent:
-    specifier: ^7.0.6
-    version: 7.0.6
   jsonwebtoken:
     specifier: ^9.0.0
     version: 9.0.0
@@ -53,6 +50,9 @@ dependencies:
   tsx:
     specifier: ^4.7.0
     version: 4.7.0
+  undici:
+    specifier: ^6.21.3
+    version: 6.21.3
 
 devDependencies:
   '@antfu/eslint-config':
@@ -4269,6 +4269,11 @@ packages:
   /undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
     dev: true
+
+  /undici@6.21.3:
+    resolution: {integrity: sha512-gBLkYIlEnSp8pFbT64yFgGE6UIB9tAkhukC23PmMDCe5Nd+cRqKxSjw5y54MK2AZMgZfJWMaNE4nYUHgi1XEOw==}
+    engines: {node: '>=18.17'}
+    dev: false
 
   /unist-util-is@6.0.0:
     resolution: {integrity: sha512-2qCTHimwdxLfz+YzdGfkqNlH0tLi9xjTnHddPmJwtIG9MGsdbutfTc4P+haPD7l7Cjxf/WZj+we5qfVPvvxfYw==}
