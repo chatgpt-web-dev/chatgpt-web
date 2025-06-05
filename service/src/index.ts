@@ -60,7 +60,9 @@ app.use(express.static('public', {
   },
 }))
 
-app.use(express.json())
+app.use(express.json({
+  limit: '100mb',
+}))
 
 app.use('/uploads', express.static('uploads'))
 
