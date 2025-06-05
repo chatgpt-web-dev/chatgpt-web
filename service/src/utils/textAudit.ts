@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-
 export interface TextAuditServiceOptions {
   apiKey: string
   apiSecret: string

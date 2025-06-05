@@ -39,9 +39,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongodb": "^6.16.0",
     "multer": "^2.0.0",
-    "node-fetch": "^3.3.0",
     "nodemailer": "^6.9.13",
-    "openai": "^4.96.0",
+    "openai": "^5.1.0",
     "request-ip": "^3.3.0",
     "speakeasy": "^2.0.0",
     "tsx": "^4.7.0"
