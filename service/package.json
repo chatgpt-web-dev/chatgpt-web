@@ -20,6 +20,7 @@
     "dev": "tsx watch --inspect ./src/index.ts",
     "prod": "node --import tsx/esm ./build/index.js",
     "prod-node18": "node --loader tsx/esm ./build/index.js",
+    "type-check": "tsc --noEmit",
     "build": "pnpm clean && tsc && pnpm copy",
     "copy": "copyfiles -u 1 src/utils/templates/* build",
     "clean": "rimraf build",

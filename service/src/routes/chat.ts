@@ -241,7 +241,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   try {
     // If use the fixed fakeuserid(some probability of duplicated with real ones), redefine user which is send to chatReplyProcess
     if (userId === '6406d8c50aedd633885fa16f') {
-      user = { _id: userId, roles: [UserRole.User], useAmount: 999, advanced: { maxContextCount: 999 }, limit_switch: false } as UserInfo
+      user = { _id: userId, roles: [UserRole.User], useAmount: 999, limit_switch: false } as UserInfo
     }
     else {
       // If global usage count limit is enabled, check can use amount before process chat.
