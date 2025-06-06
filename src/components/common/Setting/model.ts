@@ -16,6 +16,7 @@ export class ConfigState {
 
 export class UserConfig {
   chatModel?: string
+  maxContextCount?: number
 }
 
 // https://platform.openai.com/docs/models/overview

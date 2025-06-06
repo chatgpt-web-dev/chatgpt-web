@@ -1,4 +1,4 @@
-import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserConfig, UserInfo } from './storage/model'
+import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserInfo } from './storage/model'
 import type { AuthJwtPayload } from './types'
 import * as path from 'node:path'
 import * as process from 'node:process'
@@ -16,7 +16,7 @@ import { router as promptRouter } from './routes/prompt'
 import { router as roomRouter } from './routes/room'
 import { router as uploadRouter } from './routes/upload'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import { AdvancedConfig, Status, UserRole } from './storage/model'
+import { AdvancedConfig, Status, UserConfig, UserRole } from './storage/model'
 import {
   createUser,
   disableUser2FA,
@@ -35,6 +35,7 @@ import {
   updateUserAmount,
   updateUserChatModel,
   updateUserInfo,
+  updateUserMaxContextCount,
   updateUserPassword,
   updateUserPasswordWithVerifyOld,
   updateUserStatus,
@@ -181,6 +182,16 @@ router.post('/session', async (req, res) => {
           },
         })
         return
+      }
+
+      if (!user?.config) {
+        user.config = new UserConfig()
+      }
+      if (!user.config?.chatModel) {
+        user.config.chatModel = config?.siteConfig?.chatModels.split(',')[0]
+      }
+      if (user.config?.maxContextCount === undefined) {
+        user.config.maxContextCount = 10
       }
 
       userInfo = {
@@ -444,6 +455,22 @@ router.post('/user-chat-model', auth, async (req, res) => {
     if (user == null || user.status !== Status.Normal)
       throw new Error('用户不存在 | User does not exist.')
     await updateUserChatModel(userId, chatModel)
+    res.send({ status: 'Success', message: '更新成功 | Update successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/user-max-context-count', auth, async (req, res) => {
+  try {
+    const { maxContextCount } = req.body as { maxContextCount: number }
+    const userId = req.headers.userId.toString()
+
+    const user = await getUserById(userId)
+    if (user == null || user.status !== Status.Normal)
+      throw new Error('用户不存在 | User does not exist.')
+    await updateUserMaxContextCount(userId, maxContextCount)
     res.send({ status: 'Success', message: '更新成功 | Update successfully' })
   }
   catch (error) {
@@ -811,7 +838,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
       systemMessage: string
       temperature: number
       top_p: number
-      maxContextCount: number
       sync: boolean
     }
     if (config.sync) {
@@ -824,7 +850,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
         config.systemMessage,
         config.temperature,
         config.top_p,
-        config.maxContextCount,
       )
       await updateConfig(thisConfig)
       clearConfigCache()
@@ -834,7 +859,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
       config.systemMessage,
       config.temperature,
       config.top_p,
-      config.maxContextCount,
     ))
     res.send({ status: 'Success', message: '操作成功 | Successfully' })
   }

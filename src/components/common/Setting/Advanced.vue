@@ -42,13 +42,6 @@ function handleReset() {
         <span>{{ userStore.userInfo.advanced.top_p }}</span>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="shrink-0 w-[120px]">{{ $t('setting.maxContextCount') }} </span>
-        <div class="flex-1">
-          <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" />
-        </div>
-        <span>{{ userStore.userInfo.advanced.maxContextCount }}</span>
-      </div>
-      <div class="flex items-center space-x-4">
         <span class="shrink-0 w-[120px]">&nbsp;</span>
         <NButton type="primary" @click="updateSettings(false)">
           {{ $t('common.save') }}

@@ -132,25 +132,25 @@ export const useChatStore = defineStore('chat-store', {
       }
     },
 
-    async addHistory(history: Chat.History, chatData: Chat.Chat[] = []) {
-      const result = await fetchCreateChatRoom(history.title, history.uuid, history.chatModel)
-      history.searchEnabled = result.data?.searchEnabled
-      history.thinkEnabled = result.data?.thinkEnabled
-      this.history.unshift(history)
-      this.chat.unshift({ uuid: history.uuid, data: chatData })
-      this.active = history.uuid
-      await this.reloadRoute(history.uuid)
-    },
-
     async addNewHistory() {
-      const userStore = useUserStore()
-      await this.addHistory({
-        title: 'New Chat',
-        uuid: Date.now(),
+      const title = 'New Chat'
+      const roomId = Date.now()
+      const result = await fetchCreateChatRoom(title, roomId)
+      const chatRoom: Chat.History = {
+        title,
+        uuid: roomId,
         isEdit: false,
-        usingContext: true,
-        chatModel: userStore.userInfo.config.chatModel,
-      })
+        chatModel: result.data?.chatModel,
+        usingContext: result.data?.usingContext,
+        maxContextCount: result.data?.maxContextCount,
+        searchEnabled: result.data?.searchEnabled,
+        thinkEnabled: result.data?.thinkEnabled,
+      }
+
+      this.history.unshift(chatRoom)
+      this.chat.unshift({ uuid: roomId, data: [] })
+      this.active = roomId
+      await this.reloadRoute(roomId)
     },
 
     updateHistory(uuid: number, edit: Partial<Chat.History>) {
@@ -217,7 +217,7 @@ export const useChatStore = defineStore('chat-store', {
         if (this.history.length === 0) {
           const uuid = Date.now()
           fetchCreateChatRoom(chat.text, uuid)
-          this.history.push({ uuid, title: chat.text, isEdit: false, usingContext: true })
+          this.history.push({ uuid, title: chat.text, isEdit: false, usingContext: true, maxContextCount: 10 })
           this.chat.push({ uuid, data: [chat] })
           this.active = uuid
           this.recordState()

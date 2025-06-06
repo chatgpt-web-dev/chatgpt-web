@@ -71,6 +71,7 @@ export class UserInfo {
 
 export class UserConfig {
   chatModel: string
+  maxContextCount: number
 }
 
 export class ChatRoom {
@@ -80,16 +81,18 @@ export class ChatRoom {
   title: string
   prompt: string
   usingContext: boolean
+  maxContextCount: number
   status: Status = Status.Normal
   chatModel: string
   searchEnabled: boolean
   thinkEnabled: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, searchEnabled: boolean, thinkEnabled: boolean) {
+  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
-    this.usingContext = true
+    this.usingContext = usingContext
+    this.maxContextCount = maxContextCount
     this.chatModel = chatModel
     this.searchEnabled = searchEnabled
     this.thinkEnabled = thinkEnabled
@@ -263,7 +266,6 @@ export class AdvancedConfig {
     public systemMessage: string,
     public temperature: number,
     public top_p: number,
-    public maxContextCount: number,
   ) { }
 }
 

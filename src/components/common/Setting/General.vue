@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Language, Theme } from '@/store/modules/app/helper'
 import type { UserInfo } from '@/store/modules/user/helper'
-import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
+import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel, fetchUpdateUserMaxContextCount } from '@/api'
 import { SvgIcon } from '@/components/common'
 import { UserConfig } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
@@ -104,6 +104,19 @@ async function updateUserChatModel(chatModel: string) {
   await fetchUpdateUserChatModel(chatModel)
 }
 
+async function updateUserMaxContextCount(maxContextCount: number) {
+  if (!userStore.userInfo.config)
+    userStore.userInfo.config = new UserConfig()
+  userStore.userInfo.config.maxContextCount = maxContextCount
+  userStore.recordState()
+}
+
+async function syncUserMaxContextCount() {
+  if (userStore.userInfo.config.maxContextCount) {
+    await fetchUpdateUserMaxContextCount(userStore.userInfo.config.maxContextCount)
+  }
+}
+
 function exportData(): void {
   const date = getCurrentDate()
   const data: string = localStorage.getItem('chatStorage') || '{}'
@@ -203,6 +216,20 @@ function handleImportButtonClick(): void {
             :value="userInfo.config.chatModel"
             :options="authStore.session?.chatModels"
             @update-value="(val) => updateUserChatModel(val)"
+          />
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="shrink-0 w-[100px]">{{ $t('setting.maxContextCount') }}</span>
+        <div class="w-[300px]">
+          <NSlider
+            :value="userInfo.config.maxContextCount"
+            :max="40"
+            :min="0"
+            :step="1"
+            style="width: 300px"
+            :on-dragend="syncUserMaxContextCount"
+            @update:value="(val) => updateUserMaxContextCount(val)"
           />
         </div>
       </div>

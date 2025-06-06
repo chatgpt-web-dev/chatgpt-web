@@ -70,6 +70,7 @@ export default {
     thinkHelp: 'After enabling deep thinking, the model will use more computational resources and take longer time to simulate more complex thinking chains for logical reasoning.\nSuitable for complex tasks or high-requirement scenarios, such as mathematical derivations and project planning.\nDaily simple queries do not need to be enabled.',
     showOnContext: 'Include context',
     showOffContext: 'Not include context',
+    maxContextCount: 'Maximum number of messages included in the context window',
     searchEnabled: 'Search enabled',
     searchDisabled: 'Search disabled',
     thinkEnabled: 'Think enabled',
@@ -214,7 +215,7 @@ export default {
     info2FAStep3Tip1: 'Note: How to turn off two-step verification?',
     info2FAStep3Tip2: '1. After logging in, use the two-step verification on the Two-Step Verification page to disable it.',
     info2FAStep3Tip3: '2. Contact the administrator to disable two-step verification.',
-    maxContextCount: 'Number of context messages included in the conversation',
+    maxContextCount: 'Maximum number of messages included in the context window for default new sessions',
     fastDelMsg: 'Fast Delete Message',
   },
   store: {

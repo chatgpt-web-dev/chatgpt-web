@@ -161,6 +161,13 @@ export function fetchUpdateUserChatModel<T = any>(chatModel: string) {
   })
 }
 
+export function fetchUpdateUserMaxContextCount<T = any>(maxContextCount: number) {
+  return post<T>({
+    url: '/user-max-context-count',
+    data: { maxContextCount },
+  })
+}
+
 export function fetchGetUsers<T = any>(page: number, size: number) {
   return get<T>({
     url: '/users',
@@ -255,6 +262,13 @@ export function fetchUpdateChatRoomChatModel<T = any>(chatModel: string, roomId:
   return post<T>({
     url: '/room-chatmodel',
     data: { chatModel, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomMaxContextCount<T = any>(maxContextCount: number, roomId: number) {
+  return post<T>({
+    url: '/room-max-context-count',
+    data: { maxContextCount, roomId },
   })
 }
 

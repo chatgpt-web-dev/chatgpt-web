@@ -70,6 +70,7 @@ export default {
     thinkHelp: '開啟深度思考後，模型會用更多的計算資源以及消耗更長時間，模擬更複雜的思維鏈路進行邏輯推理\n適合複雜任務或高要求場景，比如數學題推導、專案規劃\n日常簡單查詢無需開啟',
     showOnContext: '包含上下文',
     showOffContext: '不含上下文',
+    maxContextCount: '上下文窗口中包含的最大訊息數量',
     searchEnabled: '搜尋已開啟',
     searchDisabled: '搜尋已關閉',
     thinkEnabled: '思考已開啟',
@@ -202,7 +203,7 @@ export default {
     info2FAStep3Tip1: '注意：如何关闭两步验证？',
     info2FAStep3Tip2: '1. 登录后，在 两步验证 页面使用两步验证码关闭。',
     info2FAStep3Tip3: '2. 联系管理员来关闭两步验证。',
-    maxContextCount: '對話中包含的上下文訊息數量',
+    maxContextCount: '預設新對話的上下文窗口中包含的最大訊息數量',
     fastDelMsg: '快速刪除訊息',
   },
   store: {

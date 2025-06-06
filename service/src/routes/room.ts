@@ -6,8 +6,10 @@ import {
   existsChatRoom,
   getChatRooms,
   getChatRoomsCount,
+  getUserById,
   renameChatRoom,
   updateRoomChatModel,
+  updateRoomMaxContextCount,
   updateRoomPrompt,
   updateRoomSearchEnabled,
   updateRoomThinkEnabled,
@@ -28,6 +30,7 @@ router.get('/chatrooms', auth, async (req, res) => {
         isEdit: false,
         prompt: r.prompt,
         usingContext: r.usingContext === undefined ? true : r.usingContext,
+        maxContextCount: r.maxContextCount === undefined ? 10 : r.maxContextCount,
         chatModel: r.chatModel,
         searchEnabled: !!r.searchEnabled,
         thinkEnabled: !!r.thinkEnabled,
@@ -81,8 +84,9 @@ router.get('/chatrooms-count', auth, async (req, res) => {
 router.post('/room-create', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const { title, roomId, chatModel } = req.body as { title: string, roomId: number, chatModel: string }
-    const room = await createChatRoom(userId, title, roomId, chatModel)
+    const user = await getUserById(userId)
+    const { title, roomId } = req.body as { title: string, roomId: number }
+    const room = await createChatRoom(userId, title, roomId, user.config?.chatModel, user.config?.maxContextCount)
     res.send({ status: 'Success', message: null, data: room })
   }
   catch (error) {
@@ -136,6 +140,22 @@ router.post('/room-chatmodel', auth, async (req, res) => {
   catch (error) {
     console.error(error)
     res.send({ status: 'Fail', message: 'Rename error', data: null })
+  }
+})
+
+router.post('/room-max-context-count', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const { maxContextCount, roomId } = req.body as { maxContextCount: number, roomId: number }
+    const success = await updateRoomMaxContextCount(userId, roomId, maxContextCount)
+    if (success)
+      res.send({ status: 'Success', message: 'Saved successfully', data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Update error', data: null })
   }
 })
 

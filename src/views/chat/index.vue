@@ -5,6 +5,8 @@ import {
   fetchChatAPIProcess,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
+  fetchUpdateChatRoomMaxContextCount,
+  fetchUpdateUserMaxContextCount,
 } from '@/api'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
@@ -634,8 +636,26 @@ async function handleSyncChatModel(chatModel: string) {
   await chatStore.setChatModel(chatModel, +uuid)
 }
 
-function formatTooltip(value: number) {
-  return `${t('setting.maxContextCount')}: ${value}`
+function handleUpdateMaxContextCount(maxContextCount: number) {
+  if (currentChatHistory.value) {
+    currentChatHistory.value.maxContextCount = maxContextCount
+  }
+}
+
+async function handleSyncMaxContextCount() {
+  try {
+    if (currentChatHistory?.value) {
+      // Sync to both user and room
+      await Promise.all([
+        fetchUpdateUserMaxContextCount(currentChatHistory?.value.maxContextCount),
+        fetchUpdateChatRoomMaxContextCount(currentChatHistory?.value.maxContextCount, +uuid),
+      ])
+      userStore.userInfo.config.maxContextCount = currentChatHistory?.value.maxContextCount
+    }
+  }
+  catch (error) {
+    console.error('Failed to sync max context count:', error)
+  }
 }
 
 // https://github.com/tusen-ai/naive-ui/issues/4887
@@ -833,7 +853,17 @@ onUnmounted(() => {
                 <span class="ml-1 text-sm">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
               </span>
             </HoverButton>
-            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :disabled="!usingContext" :max="40" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
+            <NSlider
+              :value="currentChatHistory?.maxContextCount"
+              :disabled="!usingContext"
+              :max="40"
+              :min="0"
+              :step="1"
+              style="width: 180px"
+              :format-tooltip="(value: number) => `${t('chat.maxContextCount')}: ${value}`"
+              :on-dragend="handleSyncMaxContextCount"
+              @update:value="handleUpdateMaxContextCount"
+            />
           </div>
           <div class="flex items-center justify-between space-x-2">
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
