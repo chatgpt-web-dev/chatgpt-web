@@ -70,6 +70,7 @@ export default {
     thinkHelp: '깊은 사고를 활성화한 후 모델은 더 많은 계산 리소스를 사용하고 더 오랜 시간을 소비하여 더 복잡한 사고 체인을 시뮬레이션하여 논리적 추론을 수행합니다.\n복잡한 작업이나 높은 요구 사항 시나리오에 적합합니다. 예: 수학 문제 유도, 프로젝트 계획.\n일상적인 간단한 조회는 활성화할 필요가 없습니다.',
     showOnContext: '컨텍스트 포함됨',
     showOffContext: '컨텍스트 미포함',
+    maxContextCount: '컨텍스트 창에 포함된 최대 메시지 수',
     searchEnabled: '검색 활성화됨',
     searchDisabled: '검색 비활성화됨',
     thinkEnabled: '사고 활성화됨',
@@ -200,7 +201,7 @@ export default {
     info2FAStep3Tip1: 'Note: How to turn off two-step verification?',
     info2FAStep3Tip2: '1. After logging in, use the two-step verification on the Two-Step Verification page to disable it.',
     info2FAStep3Tip3: '2. Contact the administrator to disable two-step verification.',
-    maxContextCount: '대화에 포함된 컨텍스트 메시지 수량',
+    maxContextCount: '기본 새 세션의 컨텍스트 창에 포함된 최대 메시지 수',
     fastDelMsg: '빠르게 메시지 삭제',
   },
   store: {

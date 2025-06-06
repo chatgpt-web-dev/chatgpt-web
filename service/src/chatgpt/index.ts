@@ -65,7 +65,7 @@ async function chatReplyProcess(options: RequestOptions) {
   const searchEnabled = options.room.searchEnabled
   const key = await getRandomApiKey(options.user, model)
   const userId = options.user._id.toString()
-  const maxContextCount = options.user.advanced.maxContextCount ?? 20
+  const maxContextCount = options.room.maxContextCount ?? 10
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')

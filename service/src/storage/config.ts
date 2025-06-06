@@ -82,7 +82,6 @@ export async function getOriginConfig() {
       'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
       0.8,
       1,
-      20,
     )
   }
 

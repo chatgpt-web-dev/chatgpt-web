@@ -25,7 +25,6 @@ export interface SettingsState {
   systemMessage: string
   temperature: number
   top_p: number
-  maxContextCount: number
 }
 
 export function defaultSetting(): UserState {
@@ -41,7 +40,6 @@ export function defaultSetting(): UserState {
         systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
         temperature: 0.8,
         top_p: 1,
-        maxContextCount: 20,
       },
       useAmount: 1, // chat usage amount
     },
@@ -60,7 +58,6 @@ export function getLocalState(): UserState {
         systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
         temperature: 0.8,
         top_p: 1,
-        maxContextCount: 20,
       }
     }
   }

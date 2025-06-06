@@ -28,6 +28,7 @@ declare namespace Chat {
     all?: boolean
     prompt?: string
     usingContext: boolean
+    maxContextCount: number
     chatModel?: string
     searchEnabled?: boolean
     thinkEnabled?: boolean
