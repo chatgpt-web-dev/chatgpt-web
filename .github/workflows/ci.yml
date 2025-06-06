@@ -11,6 +11,7 @@ on:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,11 +21,17 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
       - name: Lint
         run: pnpm lint
+      - name: Install service dependencies
+        run: cd service && pnpm install
+      - name: Lint service
+        run: cd service && pnpm lint
 
   typecheck:
+    name: Typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +41,11 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-      - run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
       - name: Typecheck
         run: pnpm type-check
+      - name: Install service dependencies
+        run: cd service && pnpm install
+      - name: Typecheck service
+        run: cd service && pnpm type-check
