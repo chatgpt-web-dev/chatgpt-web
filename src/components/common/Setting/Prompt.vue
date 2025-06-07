@@ -7,7 +7,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
 const chatStore = useChatStore()
-const currentChatHistory = computed(() => chatStore.getChatHistoryByCurrentActive)
+const currentChatHistory = computed(() => chatStore.getChatRoomByCurrentActive)
 const ms = useMessage()
 const testing = ref(false)
 const title = `Prompt For [${currentChatHistory.value?.title}]`

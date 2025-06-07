@@ -26,7 +26,7 @@ const appStore = useAppStore()
 const chatStore = useChatStore()
 
 const collapsed = computed(() => appStore.siderCollapsed)
-const currentChatHistory = computed(() => chatStore.getChatHistoryByCurrentActive)
+const currentChatHistory = computed(() => chatStore.getChatRoomByCurrentActive)
 
 function handleUpdateCollapsed() {
   appStore.setSiderCollapsed(!collapsed.value)

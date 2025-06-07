@@ -20,7 +20,7 @@ const show = ref(false)
 const collapsed = computed(() => appStore.siderCollapsed)
 
 async function handleAdd() {
-  await chatStore.addNewHistory()
+  await chatStore.addNewChatRoom()
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }

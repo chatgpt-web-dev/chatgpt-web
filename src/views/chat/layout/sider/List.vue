@@ -13,7 +13,7 @@ const authStore = useAuthStoreWithout()
 
 const loadingRoom = ref(false)
 
-const dataSources = computed(() => chatStore.history)
+const dataSources = computed(() => chatStore.chatRooms)
 
 onMounted(async () => {
   if (authStore.session == null || !authStore.session.auth || authStore.token || authStore.session?.authProxyEnabled)
@@ -27,7 +27,7 @@ async function handleSyncChatRoom() {
     // 本来这里不需要的, 但是 vue 渲染的时候 chat 可能优先渲染等原因 导致概率不刷新
     if (chatStore.active) {
       const uuid = chatStore.active
-      chatStore.syncChat({ uuid } as Chat.History, undefined, () => {
+      chatStore.syncChat({ uuid } as Chat.ChatRoom, undefined, () => {
         const scrollRef = document.querySelector('#scrollRef')
         if (scrollRef)
           nextTick(() => scrollRef.scrollTop = scrollRef.scrollHeight)
@@ -36,37 +36,34 @@ async function handleSyncChatRoom() {
   })
 }
 
-async function handleSelect({ uuid }: Chat.History) {
+async function handleSelect({ uuid }: Chat.ChatRoom) {
   if (isActive(uuid))
     return
 
-  // 这里不需要 不然每次切换都rename
-  // if (chatStore.active)
-  //   chatStore.updateHistory(chatStore.active, { isEdit: false })
   await chatStore.setActive(uuid)
 
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }
 
-function handleEdit({ uuid }: Chat.History, isEdit: boolean, event?: MouseEvent) {
+function handleEdit({ uuid }: Chat.ChatRoom, isEdit: boolean, event?: MouseEvent) {
   event?.stopPropagation()
-  chatStore.updateHistory(uuid, { isEdit })
+  chatStore.updateChatRoom(uuid, { isEdit })
 }
 
 function handleDelete(index: number, event?: MouseEvent | TouchEvent) {
   event?.stopPropagation()
-  chatStore.deleteHistory(index)
+  chatStore.deleteChatRoom(index)
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }
 
 const handleDeleteDebounce = debounce(handleDelete, 600)
 
-function handleEnter({ uuid }: Chat.History, isEdit: boolean, event: KeyboardEvent) {
+function handleEnter({ uuid }: Chat.ChatRoom, isEdit: boolean, event: KeyboardEvent) {
   event?.stopPropagation()
   if (event.key === 'Enter')
-    chatStore.updateHistory(uuid, { isEdit })
+    chatStore.updateChatRoom(uuid, { isEdit })
 }
 
 function isActive(uuid: number) {
