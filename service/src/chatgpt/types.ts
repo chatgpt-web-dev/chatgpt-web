@@ -1,5 +1,5 @@
 import type OpenAI from 'openai'
-import type { ChatRoom, UserInfo } from 'src/storage/model'
+import type { ChatRoom, SearchResult, UserInfo } from 'src/storage/model'
 
 export interface ChatMessage {
   id: string
@@ -12,11 +12,14 @@ export interface ChatMessage {
 }
 
 export interface ResponseChunk {
-  id: string
-  text: string
-  reasoning: string
-  role: string
-  finish_reason: string
+  id?: string
+  searchQuery?: string
+  searchResults?: SearchResult[]
+  searchUsageTime?: number
+  text?: string
+  reasoning?: string
+  role?: string
+  finish_reason?: string
 }
 
 export interface RequestOptions {

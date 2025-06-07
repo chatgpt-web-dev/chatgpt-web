@@ -88,6 +88,9 @@ router.get('/chat-history', auth, async (req, res) => {
         result.push({
           uuid: c.uuid,
           dateTime: new Date(c.dateTime).toLocaleString(),
+          searchQuery: c.searchQuery,
+          searchResults: c.searchResults,
+          searchUsageTime: c.searchUsageTime,
           reasoning: c.reasoning,
           text: c.response,
           inversion: false,

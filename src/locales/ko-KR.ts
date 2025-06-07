@@ -98,6 +98,12 @@ export default {
     reasoningProcess: '추론 과정',
     noReasoningProcess: '추론 과정 없음',
     expandCollapseReasoningProcess: '추론 과정 펼치기/접기',
+    searching: '검색 중',
+    searchQuery: '검색어',
+    searchResults: '검색 결과',
+    searchUsageTime: '검색 시간',
+    noSearchResults: '검색 결과 없음',
+    expandCollapseSearchResults: '검색 결과 펼치기/접기',
   },
   setting: {
     overRide: '덮어쓰기 활성화',

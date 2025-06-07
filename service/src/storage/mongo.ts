@@ -1,5 +1,14 @@
 import type { WithId } from 'mongodb'
-import type { AdvancedConfig, ChatOptions, Config, GiftCard, KeyConfig, UsageResponse, UserPrompt } from './model'
+import type {
+  AdvancedConfig,
+  ChatOptions,
+  Config,
+  GiftCard,
+  KeyConfig,
+  SearchResult,
+  UsageResponse,
+  UserPrompt,
+} from './model'
 import * as process from 'node:process'
 import dayjs from 'dayjs'
 import * as dotenv from 'dotenv'
@@ -125,11 +134,12 @@ export async function updateChatSearchQuery(chatId: string, searchQuery: string)
   return result.modifiedCount > 0
 }
 
-export async function updateChatSearchResult(chatId: string, searchResult: string) {
+export async function updateChatSearchResult(chatId: string, searchResults: SearchResult[], searchUsageTime: number) {
   const query = { _id: new ObjectId(chatId) }
   const update = {
     $set: {
-      searchResult,
+      searchResults,
+      searchUsageTime,
     },
   }
   const result = await chatCol.updateOne(query, update)

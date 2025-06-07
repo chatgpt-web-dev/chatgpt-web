@@ -1,7 +1,16 @@
 declare namespace Chat {
+  interface SearchResult {
+    title: string
+    url: string
+    content: string
+  }
+
   interface Chat {
     uuid?: number
     dateTime: string
+    searchQuery?: string
+    searchResults?: SearchResult[]
+    searchUsageTime?: number
     reasoning?: string
     finish_reason?: string
     text: string

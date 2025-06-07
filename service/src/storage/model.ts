@@ -117,6 +117,12 @@ export class previousResponse {
   options: ChatOptions
 }
 
+export class SearchResult {
+  title: string
+  url: string
+  content: string
+}
+
 export class ChatInfo {
   _id: ObjectId
   roomId: number
@@ -126,7 +132,8 @@ export class ChatInfo {
   prompt: string
   images?: string[]
   searchQuery?: string
-  searchResult?: string
+  searchResults?: SearchResult[]
+  searchUsageTime?: number
   reasoning?: string
   response?: string
   status: Status = Status.Normal
