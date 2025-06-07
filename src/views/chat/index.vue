@@ -137,6 +137,10 @@ async function onConversation() {
   try {
     let lastText = ''
     const fetchChatAPIOnce = async () => {
+      let searchQuery: string
+      let searchResults: Chat.SearchResult[]
+      let searchUsageTime: number
+
       await fetchChatAPIProcess<Chat.ConversationResponse>({
         roomId: +uuid,
         uuid: chatUuid,
@@ -154,6 +158,13 @@ async function onConversation() {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
+            if (data.searchQuery)
+              searchQuery = data.searchQuery
+            if (data.searchResults)
+              searchResults = data.searchResults
+            if (data.searchUsageTime)
+              searchUsageTime = data.searchUsageTime
+
             lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
@@ -168,6 +179,9 @@ async function onConversation() {
               dataSources.value.length - 1,
               {
                 dateTime: new Date().toLocaleString(),
+                searchQuery,
+                searchResults,
+                searchUsageTime,
                 reasoning: data?.reasoning,
                 text: lastText + (data.text ?? ''),
                 inversion: false,
@@ -734,6 +748,9 @@ onUnmounted(() => {
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
+                  :search-query="item?.searchQuery"
+                  :search-results="item?.searchResults"
+                  :search-usage-time="item?.searchUsageTime"
                   :reasoning="item?.reasoning"
                   :finish-reason="item?.finish_reason"
                   :text="item.text"

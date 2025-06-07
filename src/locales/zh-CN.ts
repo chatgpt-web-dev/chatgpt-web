@@ -98,6 +98,12 @@ export default {
     reasoningProcess: '推理过程',
     noReasoningProcess: '无推理过程',
     expandCollapseReasoningProcess: '展开/折叠推理过程',
+    searching: '搜索中',
+    searchQuery: '搜索查询词',
+    searchResults: '搜索结果',
+    searchUsageTime: '搜索用时',
+    noSearchResults: '无搜索结果',
+    expandCollapseSearchResults: '展开/折叠搜索结果',
   },
   setting: {
     overRide: '开启覆写',

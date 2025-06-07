@@ -98,6 +98,12 @@ export default {
     reasoningProcess: 'Reasoning Process',
     noReasoningProcess: 'No Reasoning Process',
     expandCollapseReasoningProcess: 'Expand/Collapse Reasoning Process',
+    searching: 'Searching',
+    searchQuery: 'Search query',
+    searchResults: 'Search Results',
+    searchUsageTime: 'Search time',
+    noSearchResults: 'No Search Results',
+    expandCollapseSearchResults: 'Expand/Collapse Search Results',
   },
   setting: {
     overRide: 'Enable Override',

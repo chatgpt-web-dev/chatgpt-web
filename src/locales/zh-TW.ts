@@ -98,6 +98,12 @@ export default {
     reasoningProcess: '推理過程',
     noReasoningProcess: '無推理過程',
     expandCollapseReasoningProcess: '展開/收合推理過程',
+    searching: '搜尋中',
+    searchQuery: '搜尋詞',
+    searchResults: '搜尋結果',
+    searchUsageTime: '搜尋用時',
+    noSearchResults: '無搜尋結果',
+    expandCollapseSearchResults: '展開/收合搜尋結果',
   },
   setting: {
     overRide: '開啟覆寫',

@@ -7,6 +7,7 @@ import { useAppStore } from '@/store'
 import { copyToClip } from '@/utils/copy'
 import AvatarComponent from './Avatar.vue'
 import Reasoning from './Reasoning.vue'
+import Search from './Search.vue'
 import TextComponent from './Text.vue'
 
 const props = defineProps<Props>()
@@ -20,6 +21,9 @@ interface Props {
   currentNavIndex: number
   dateTime?: string
   model?: string
+  searchQuery?: string
+  searchResults?: Chat.SearchResult[]
+  searchUsageTime?: number
   reasoning?: string
   finishReason?: string
   text?: string
@@ -224,7 +228,20 @@ function isEventTargetValid(event: any) {
           </template>
         </NSpace>
       </p>
-      <Reasoning v-if="reasoning" :reasoning="reasoning" :reason-end="text ? text.length > 0 : false" :loading="loading" />
+      <Search
+        v-if="searchQuery"
+        :search-query="searchQuery"
+        :search-results="searchResults"
+        :search-usage-time="searchUsageTime"
+        :search-end="!!searchResults || !!reasoning || !!text"
+        :loading="loading"
+      />
+      <Reasoning
+        v-if="reasoning"
+        :reasoning="reasoning"
+        :reason-end="!!text"
+        :loading="loading"
+      />
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"
