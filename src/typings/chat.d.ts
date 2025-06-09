@@ -29,10 +29,10 @@ declare namespace Chat {
     }
   }
 
-  interface History {
+  interface ChatRoom {
     title: string
     isEdit: boolean
-    uuid: number
+    roomId: number
     loading?: boolean
     all?: boolean
     prompt?: string
@@ -46,8 +46,8 @@ declare namespace Chat {
   interface ChatState {
     active: number | null
     usingContext: boolean
-    history: History[]
-    chat: { uuid: number, data: Chat[] }[]
+    chatRooms: ChatRoom[]
+    chat: { roomId: number, data: Chat[] }[]
   }
 
   interface ConversationRequest {

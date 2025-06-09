@@ -25,7 +25,7 @@ router.get('/chatrooms', auth, async (req, res) => {
     const result = []
     rooms.forEach((r) => {
       result.push({
-        uuid: r.roomId,
+        roomId: r.roomId,
         title: r.title,
         isEdit: false,
         prompt: r.prompt,
@@ -65,7 +65,7 @@ router.get('/chatrooms-count', auth, async (req, res) => {
     const result = []
     rooms.data.forEach((r) => {
       result.push({
-        uuid: r.roomId,
+        roomId: r.roomId,
         title: r.title,
         userId: r.userId,
         name: r.username,
