@@ -518,14 +518,14 @@ async function handleStop() {
 }
 
 async function loadMoreMessage(event: any) {
-  const chatIndex = chatStore.chat.findIndex(d => d.uuid === +uuid)
+  const chatIndex = chatStore.chat.findIndex(d => d.roomId === +uuid)
   if (chatIndex <= -1 || chatStore.chat[chatIndex].data.length <= 0)
     return
 
   const scrollPosition = event.target.scrollHeight - event.target.scrollTop
 
   const lastId = chatStore.chat[chatIndex].data[0].uuid
-  await chatStore.syncChat({ uuid: +uuid } as Chat.ChatRoom, lastId, () => {
+  await chatStore.syncChat({ roomId: +uuid } as Chat.ChatRoom, lastId, () => {
     loadingms && loadingms.destroy()
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
@@ -547,7 +547,7 @@ const handleLoadMoreMessage = debounce(loadMoreMessage, 300)
 const handleSyncChat
   = debounce(() => {
     // 直接刷 极小概率不请求
-    chatStore.syncChat({ uuid: Number(uuid) } as Chat.ChatRoom, undefined, () => {
+    chatStore.syncChat({ roomId: Number(uuid) } as Chat.ChatRoom, undefined, () => {
       firstLoading.value = false
       const scrollRef = document.querySelector('#scrollRef')
       if (scrollRef)

@@ -22,33 +22,23 @@ onMounted(async () => {
 
 async function handleSyncChatRoom() {
   loadingRoom.value = true
-  chatStore.syncHistory(() => {
-    loadingRoom.value = false
-    // 本来这里不需要的, 但是 vue 渲染的时候 chat 可能优先渲染等原因 导致概率不刷新
-    if (chatStore.active) {
-      const uuid = chatStore.active
-      chatStore.syncChat({ uuid } as Chat.ChatRoom, undefined, () => {
-        const scrollRef = document.querySelector('#scrollRef')
-        if (scrollRef)
-          nextTick(() => scrollRef.scrollTop = scrollRef.scrollHeight)
-      })
-    }
-  })
+  await chatStore.syncHistory()
+  loadingRoom.value = false
 }
 
-async function handleSelect({ uuid }: Chat.ChatRoom) {
-  if (isActive(uuid))
+async function handleSelect({ roomId }: Chat.ChatRoom) {
+  if (isActive(roomId))
     return
 
-  await chatStore.setActive(uuid)
+  await chatStore.setActive(roomId)
 
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }
 
-function handleEdit({ uuid }: Chat.ChatRoom, isEdit: boolean, event?: MouseEvent) {
+function handleEdit({ roomId }: Chat.ChatRoom, isEdit: boolean, event?: MouseEvent) {
   event?.stopPropagation()
-  chatStore.updateChatRoom(uuid, { isEdit })
+  chatStore.updateChatRoom(roomId, { isEdit })
 }
 
 function handleDelete(index: number, event?: MouseEvent | TouchEvent) {
@@ -60,10 +50,10 @@ function handleDelete(index: number, event?: MouseEvent | TouchEvent) {
 
 const handleDeleteDebounce = debounce(handleDelete, 600)
 
-function handleEnter({ uuid }: Chat.ChatRoom, isEdit: boolean, event: KeyboardEvent) {
+function handleEnter({ roomId }: Chat.ChatRoom, isEdit: boolean, event: KeyboardEvent) {
   event?.stopPropagation()
   if (event.key === 'Enter')
-    chatStore.updateChatRoom(uuid, { isEdit })
+    chatStore.updateChatRoom(roomId, { isEdit })
 }
 
 function isActive(uuid: number) {
@@ -85,7 +75,7 @@ function isActive(uuid: number) {
           <div v-for="(item, index) of dataSources" :key="index">
             <a
               class="relative flex items-center gap-3 px-3 py-3 break-all border rounded-md cursor-pointer hover:bg-neutral-100 group dark:border-neutral-800 dark:hover:bg-[#24272e]"
-              :class="isActive(item.uuid) && ['border-[#4b9e5f]', 'bg-neutral-100', 'text-[#4b9e5f]', 'dark:bg-[#24272e]', 'dark:border-[#4b9e5f]', 'pr-14']"
+              :class="isActive(item.roomId) && ['border-[#4b9e5f]', 'bg-neutral-100', 'text-[#4b9e5f]', 'dark:bg-[#24272e]', 'dark:border-[#4b9e5f]', 'pr-14']"
               @click="handleSelect(item)"
             >
               <span>
@@ -99,7 +89,7 @@ function isActive(uuid: number) {
                 />
                 <span v-else>{{ item.title }}</span>
               </div>
-              <div v-if="isActive(item.uuid)" class="absolute z-10 flex visible right-1">
+              <div v-if="isActive(item.roomId)" class="absolute z-10 flex visible right-1">
                 <template v-if="item.isEdit">
                   <button class="p-1" @click="handleEdit(item, false, $event)">
                     <SvgIcon icon="ri:save-line" />

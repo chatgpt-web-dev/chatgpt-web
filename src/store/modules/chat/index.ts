@@ -16,320 +16,282 @@ import { router } from '@/router'
 import { useUserStore } from '../user'
 import { getLocalState, setLocalState } from './helper'
 
-export const useChatStore = defineStore('chat-store', {
-  state: (): Chat.ChatState => getLocalState(),
+export const useChatStore = defineStore('chat-store', () => {
+  const initialState = getLocalState()
+  const chat = ref(initialState.chat)
+  const chatRooms = ref(initialState.chatRooms)
+  const active = ref(initialState.active)
 
-  getters: {
-    getChatRoomByCurrentActive(state: Chat.ChatState) {
-      const index = state.chatRooms.findIndex(item => item.uuid === state.active)
-      if (index !== -1)
-        return state.chatRooms[index]
-      return null
-    },
+  // Helpers
+  const recordState = () => setLocalState({ chat: chat.value, chatRooms: chatRooms.value, active: active.value, usingContext: true })
 
-    getChatByUuid(state: Chat.ChatState) {
-      return (uuid?: number) => {
-        if (uuid)
-          return state.chat.find(item => item.uuid === uuid)?.data ?? []
-        return state.chat.find(item => item.uuid === state.active)?.data ?? []
-      }
-    },
-  },
+  const reloadRoute = async (roomId?: number) => {
+    recordState()
+    await router.push({ name: 'Chat', params: { uuid: roomId } })
+  }
 
-  actions: {
-    async syncHistory(callback: () => void) {
-      const rooms = (await fetchGetChatRooms()).data
-      let uuid = this.active
-      this.chatRooms = []
-      this.chat = []
-      if (rooms.findIndex((item: { uuid: number | null }) => item.uuid === uuid) <= -1)
-        uuid = null
+  const findChatIndex = (uuid: number) => chat.value.findIndex(item => item.roomId === uuid)
+  const findRoomIndex = (uuid: number) => chatRooms.value.findIndex(item => item.roomId === uuid)
+  const getCurrentUuid = (uuid?: number) => uuid || active.value || chat.value[0]?.roomId
 
-      for (const r of rooms) {
-        this.chatRooms.unshift(r)
-        if (uuid == null)
-          uuid = r.uuid
-        this.chat.unshift({ uuid: r.uuid, data: [] })
-      }
-      if (uuid == null) {
-        await this.addNewChatRoom()
-      }
-      else {
-        this.active = uuid
-        this.reloadRoute(uuid)
-      }
-      callback && callback()
-    },
+  // Getters
+  const getChatRoomByCurrentActive = computed(() =>
+    chatRooms.value.find(item => item.roomId === active.value) || null,
+  )
 
-    async syncChat(h: Chat.ChatRoom, lastId?: number, callback?: () => void, callbackForStartRequest?: () => void, callbackForEmptyMessage?: () => void) {
-      if (!h.uuid) {
-        callback && callback()
-        return
-      }
-      const hisroty = this.chatRooms.filter(item => item.uuid === h.uuid)[0]
-      if (hisroty === undefined || hisroty.loading || hisroty.all) {
-        if (lastId === undefined) {
-          // 加载更多不回调 避免加载概率消失
-          callback && callback()
+  const getChatByUuid = computed(() => (uuid?: number) => {
+    const targetUuid = getCurrentUuid(uuid)
+    return chat.value.find(item => item.roomId === targetUuid)?.data ?? []
+  })
+
+  // Actions
+  const addNewChatRoom = async () => {
+    const title = 'New Chat'
+    const roomId = Date.now()
+    const result = await fetchCreateChatRoom(title, roomId)
+
+    chatRooms.value.unshift({
+      title,
+      roomId,
+      isEdit: false,
+      chatModel: result.data?.chatModel,
+      usingContext: result.data?.usingContext ?? true,
+      maxContextCount: result.data?.maxContextCount ?? 10,
+      searchEnabled: result.data?.searchEnabled,
+      thinkEnabled: result.data?.thinkEnabled,
+    })
+
+    chat.value.unshift({ roomId, data: [] })
+    active.value = roomId
+    await reloadRoute(roomId)
+  }
+
+  const syncHistory = async () => {
+    const rooms = (await fetchGetChatRooms()).data
+    if (rooms.length === 0) {
+      return await addNewChatRoom()
+    }
+
+    chatRooms.value = []
+    chat.value = []
+
+    rooms.forEach((r: Chat.ChatRoom) => {
+      chatRooms.value.unshift(r)
+      chat.value.unshift({ roomId: r.roomId, data: [] })
+    })
+    if (!rooms.find((item: Chat.ChatRoom) => item.roomId === active.value)) {
+      active.value = chatRooms.value[0].roomId
+      await reloadRoute(active.value!)
+    }
+  }
+
+  const syncChat = async (room: Chat.ChatRoom, lastId?: number, callback?: () => void, onStart?: () => void, onEmpty?: () => void) => {
+    if (!room.roomId)
+      return callback?.()
+
+    const roomIndex = findRoomIndex(room.roomId)
+    if (roomIndex === -1 || chatRooms.value[roomIndex].loading || chatRooms.value[roomIndex].all) {
+      if (lastId === undefined)
+        callback?.()
+      if (chatRooms.value[roomIndex]?.all)
+        onEmpty?.()
+      return
+    }
+
+    try {
+      chatRooms.value[roomIndex].loading = true
+      const chatIndex = findChatIndex(room.roomId)
+
+      if (chatIndex === -1 || chat.value[chatIndex].data.length === 0 || lastId !== undefined) {
+        onStart?.()
+        const chatData = (await fetchGetChatHistory(room.roomId, lastId)).data
+
+        if (chatData.length === 0) {
+          chatRooms.value[roomIndex].all = true
         }
-        if (hisroty?.all ?? false)
-          callbackForEmptyMessage && callbackForEmptyMessage()
-        return
-      }
-      try {
-        hisroty.loading = true
-        const chatIndex = this.chat.findIndex(item => item.uuid === h.uuid)
-        if (chatIndex <= -1 || this.chat[chatIndex].data.length <= 0 || lastId !== undefined) {
-          callbackForStartRequest && callbackForStartRequest()
-          const chatData = (await fetchGetChatHistory(h.uuid, lastId)).data
-          if (chatData.length <= 0)
-            hisroty.all = true
-
-          if (chatIndex <= -1)
-            this.chat.unshift({ uuid: h.uuid, data: chatData })
-          else
-            this.chat[chatIndex].data.unshift(...chatData)
+        else {
+          if (chatIndex === -1) {
+            chat.value.unshift({ roomId: room.roomId, data: chatData })
+          }
+          else {
+            chat.value[chatIndex].data.unshift(...chatData)
+          }
         }
       }
-      finally {
-        hisroty.loading = false
-        if (hisroty.all)
-          callbackForEmptyMessage && callbackForEmptyMessage()
-        this.recordState()
-        callback && callback()
-      }
-    },
+    }
+    finally {
+      chatRooms.value[roomIndex].loading = false
+      if (chatRooms.value[roomIndex].all)
+        onEmpty?.()
+      recordState()
+      callback?.()
+    }
+  }
 
-    async setUsingContext(context: boolean, roomId: number) {
-      await fetchUpdateChatRoomUsingContext(context, roomId)
-      this.recordState()
-    },
+  const setUsingContext = async (context: boolean, roomId: number) => {
+    await fetchUpdateChatRoomUsingContext(context, roomId)
+    recordState()
+  }
 
-    async setChatModel(chatModel: string, roomId: number) {
-      const index = this.chatRooms.findIndex(item => item.uuid === this.active)
-      this.chatRooms[index].chatModel = chatModel
+  const setChatModel = async (chatModel: string, roomId: number) => {
+    const index = findRoomIndex(active.value!)
+    if (index !== -1) {
+      chatRooms.value[index].chatModel = chatModel
       await fetchUpdateChatRoomChatModel(chatModel, roomId)
       const userStore = useUserStore()
       userStore.userInfo.config.chatModel = chatModel
       await fetchUpdateUserChatModel(chatModel)
-    },
+    }
+  }
 
-    async setChatSearchEnabled(searchEnabled: boolean, roomId: number) {
-      const index = this.chatRooms.findIndex(item => item.uuid === this.active)
-      if (index !== -1) {
-        this.chatRooms[index].searchEnabled = searchEnabled
-        await fetchUpdateChatRoomSearchEnabled(searchEnabled, roomId)
-        this.recordState()
+  const setChatSearchEnabled = async (searchEnabled: boolean, roomId: number) => {
+    const index = findRoomIndex(active.value!)
+    if (index !== -1) {
+      chatRooms.value[index].searchEnabled = searchEnabled
+      await fetchUpdateChatRoomSearchEnabled(searchEnabled, roomId)
+      recordState()
+    }
+  }
+
+  const setChatThinkEnabled = async (thinkEnabled: boolean, roomId: number) => {
+    const index = findRoomIndex(active.value!)
+    if (index !== -1) {
+      chatRooms.value[index].thinkEnabled = thinkEnabled
+      await fetchUpdateChatRoomThinkEnabled(thinkEnabled, roomId)
+      recordState()
+    }
+  }
+
+  const updateChatRoom = async (uuid: number, edit: Partial<Chat.ChatRoom>) => {
+    const index = findRoomIndex(uuid)
+    if (index === -1)
+      return
+
+    chatRooms.value[index] = { ...chatRooms.value[index], ...edit }
+    recordState()
+
+    if (!edit.isEdit)
+      await fetchRenameChatRoom(chatRooms.value[index].title, uuid)
+  }
+
+  const deleteChatRoom = async (index: number) => {
+    await fetchDeleteChatRoom(chatRooms.value[index].roomId)
+    chatRooms.value.splice(index, 1)
+    chat.value.splice(index, 1)
+
+    if (chatRooms.value.length === 0)
+      return await addNewChatRoom()
+
+    const nextIndex = Math.min(index, chatRooms.value.length - 1)
+    const roomId = chatRooms.value[nextIndex].roomId
+    active.value = roomId
+    await reloadRoute(roomId)
+  }
+
+  const setActive = async (roomId: number) => {
+    active.value = roomId
+    return await reloadRoute(roomId)
+  }
+
+  const getChatByUuidAndIndex = (uuid: number, index: number) => {
+    const targetUuid = getCurrentUuid(uuid)
+    const chatIndex = findChatIndex(targetUuid)
+    return chatIndex !== -1 ? chat.value[chatIndex].data[index] : null
+  }
+
+  const addChatByUuid = async (uuid: number, chatItem: Chat.Chat) => {
+    const targetUuid = getCurrentUuid(uuid)
+    let chatIndex = findChatIndex(targetUuid)
+
+    if (chatIndex === -1 && chatRooms.value.length === 0) {
+      const newUuid = Date.now()
+      await fetchCreateChatRoom(chatItem.text, newUuid)
+      chatRooms.value.push({ roomId: newUuid, title: chatItem.text, isEdit: false, usingContext: true, maxContextCount: 10 })
+      chat.value.push({ roomId: newUuid, data: [chatItem] })
+      active.value = newUuid
+    }
+    else {
+      if (chatIndex === -1)
+        chatIndex = 0
+      chat.value[chatIndex].data.push(chatItem)
+
+      if (chatRooms.value[chatIndex]?.title === 'New Chat') {
+        chatRooms.value[chatIndex].title = chatItem.text
+        await fetchRenameChatRoom(chatItem.text, chatRooms.value[chatIndex].roomId)
       }
-    },
+    }
+    recordState()
+  }
 
-    async setChatThinkEnabled(thinkEnabled: boolean, roomId: number) {
-      const index = this.chatRooms.findIndex(item => item.uuid === this.active)
-      if (index !== -1) {
-        this.chatRooms[index].thinkEnabled = thinkEnabled
-        await fetchUpdateChatRoomThinkEnabled(thinkEnabled, roomId)
-        this.recordState()
-      }
-    },
+  const updateChatByUuid = (uuid: number, index: number, chatItem: Chat.Chat | Partial<Chat.Chat>) => {
+    const targetUuid = getCurrentUuid(uuid)
+    const chatIndex = findChatIndex(targetUuid)
 
-    async addNewChatRoom() {
-      const title = 'New Chat'
-      const roomId = Date.now()
-      const result = await fetchCreateChatRoom(title, roomId)
-      const chatRoom: Chat.ChatRoom = {
-        title,
-        uuid: roomId,
-        isEdit: false,
-        chatModel: result.data?.chatModel,
-        usingContext: result.data?.usingContext,
-        maxContextCount: result.data?.maxContextCount,
-        searchEnabled: result.data?.searchEnabled,
-        thinkEnabled: result.data?.thinkEnabled,
-      }
+    if (chatIndex !== -1 && chat.value[chatIndex].data[index]) {
+      const existingUuid = chat.value[chatIndex].data[index].uuid
+      chat.value[chatIndex].data[index] = { ...chat.value[chatIndex].data[index], ...chatItem, uuid: existingUuid }
+      recordState()
+    }
+  }
 
-      this.chatRooms.unshift(chatRoom)
-      this.chat.unshift({ uuid: roomId, data: [] })
-      this.active = roomId
-      await this.reloadRoute(roomId)
-    },
+  const deleteChatByUuid = async (uuid: number, index: number) => {
+    const targetUuid = getCurrentUuid(uuid)
+    const chatIndex = findChatIndex(targetUuid)
 
-    async updateChatRoom(uuid: number, edit: Partial<Chat.ChatRoom>) {
-      const index = this.chatRooms.findIndex(item => item.uuid === uuid)
-      if (index !== -1) {
-        this.chatRooms[index] = { ...this.chatRooms[index], ...edit }
-        this.recordState()
-        if (!edit.isEdit)
-          await fetchRenameChatRoom(this.chatRooms[index].title, this.chatRooms[index].uuid)
-      }
-    },
+    if (chatIndex !== -1 && chat.value[chatIndex].data[index]) {
+      const chatData = chat.value[chatIndex].data[index]
+      await fetchDeleteChat(targetUuid, chatData.uuid || 0, chatData.inversion)
+      chat.value[chatIndex].data.splice(index, 1)
+      recordState()
+    }
+  }
 
-    async deleteChatRoom(index: number) {
-      await fetchDeleteChatRoom(this.chatRooms[index].uuid)
-      this.chatRooms.splice(index, 1)
-      this.chat.splice(index, 1)
+  const clearChatByUuid = async (uuid: number) => {
+    const targetUuid = getCurrentUuid(uuid)
+    const chatIndex = findChatIndex(targetUuid)
 
-      if (this.chatRooms.length === 0) {
-        await this.addNewChatRoom()
-        return
-      }
+    if (chatIndex !== -1) {
+      await fetchClearChat(targetUuid)
+      chat.value[chatIndex].data = []
+      recordState()
+    }
+  }
 
-      if (index > 0 && index <= this.chatRooms.length) {
-        const uuid = this.chatRooms[index - 1].uuid
-        this.active = uuid
-        this.reloadRoute(uuid)
-        return
-      }
+  const clearLocalChat = async () => {
+    chat.value = []
+    chatRooms.value = []
+    active.value = null
+    recordState()
+    await router.push({ name: 'Chat' })
+  }
 
-      if (index === 0) {
-        if (this.chatRooms.length > 0) {
-          const uuid = this.chatRooms[0].uuid
-          this.active = uuid
-          this.reloadRoute(uuid)
-        }
-      }
+  return {
+    // State
+    chat,
+    chatRooms,
+    active,
 
-      if (index > this.chatRooms.length) {
-        const uuid = this.chatRooms[this.chatRooms.length - 1].uuid
-        this.active = uuid
-        this.reloadRoute(uuid)
-      }
-    },
+    // Getters
+    getChatRoomByCurrentActive,
+    getChatByUuid,
 
-    async setActive(uuid: number) {
-      this.active = uuid
-      return await this.reloadRoute(uuid)
-    },
-
-    getChatByUuidAndIndex(uuid: number, index: number) {
-      if (!uuid || uuid === 0) {
-        if (this.chat.length)
-          return this.chat[0].data[index]
-        return null
-      }
-      const chatIndex = this.chat.findIndex(item => item.uuid === uuid)
-      if (chatIndex !== -1)
-        return this.chat[chatIndex].data[index]
-      return null
-    },
-
-    async addChatByUuid(uuid: number, chat: Chat.Chat) {
-      if (!uuid || uuid === 0) {
-        if (this.chatRooms.length === 0) {
-          const uuid = Date.now()
-          await fetchCreateChatRoom(chat.text, uuid)
-          this.chatRooms.push({ uuid, title: chat.text, isEdit: false, usingContext: true, maxContextCount: 10 })
-          this.chat.push({ uuid, data: [chat] })
-          this.active = uuid
-          this.recordState()
-        }
-        else {
-          this.chat[0].data.push(chat)
-          if (this.chatRooms[0].title === 'New Chat') {
-            this.chatRooms[0].title = chat.text
-            await fetchRenameChatRoom(chat.text, this.chatRooms[0].uuid)
-          }
-          this.recordState()
-        }
-      }
-
-      const index = this.chat.findIndex(item => item.uuid === uuid)
-      if (index !== -1) {
-        this.chat[index].data.push(chat)
-        if (this.chatRooms[index].title === 'New Chat') {
-          this.chatRooms[index].title = chat.text
-          await fetchRenameChatRoom(chat.text, this.chatRooms[index].uuid)
-        }
-        this.recordState()
-      }
-    },
-
-    updateChatByUuid(uuid: number, index: number, chat: Chat.Chat) {
-      if (!uuid || uuid === 0) {
-        if (this.chat.length) {
-          chat.uuid = this.chat[0].data[index].uuid
-          this.chat[0].data[index] = chat
-          this.recordState()
-        }
-        return
-      }
-
-      const chatIndex = this.chat.findIndex(item => item.uuid === uuid)
-      if (chatIndex !== -1) {
-        chat.uuid = this.chat[chatIndex].data[index].uuid
-        this.chat[chatIndex].data[index] = chat
-        this.recordState()
-      }
-    },
-
-    updateChatSomeByUuid(uuid: number, index: number, chat: Partial<Chat.Chat>) {
-      if (!uuid || uuid === 0) {
-        if (this.chat.length) {
-          chat.uuid = this.chat[0].data[index].uuid
-          this.chat[0].data[index] = { ...this.chat[0].data[index], ...chat }
-          this.recordState()
-        }
-        return
-      }
-
-      const chatIndex = this.chat.findIndex(item => item.uuid === uuid)
-      if (chatIndex !== -1) {
-        chat.uuid = this.chat[chatIndex].data[index].uuid
-        this.chat[chatIndex].data[index] = { ...this.chat[chatIndex].data[index], ...chat }
-        this.recordState()
-      }
-    },
-
-    async deleteChatByUuid(uuid: number, index: number) {
-      if (!uuid || uuid === 0) {
-        if (this.chat.length) {
-          await fetchDeleteChat(uuid, this.chat[0].data[index].uuid || 0, this.chat[0].data[index].inversion)
-          this.chat[0].data.splice(index, 1)
-          this.recordState()
-        }
-        return
-      }
-
-      const chatIndex = this.chat.findIndex(item => item.uuid === uuid)
-      if (chatIndex !== -1) {
-        await fetchDeleteChat(uuid, this.chat[chatIndex].data[index].uuid || 0, this.chat[chatIndex].data[index].inversion)
-        this.chat[chatIndex].data.splice(index, 1)
-        this.recordState()
-      }
-    },
-
-    async clearChatByUuid(uuid: number) {
-      if (!uuid || uuid === 0) {
-        if (this.chat.length) {
-          await fetchClearChat(this.chat[0].uuid)
-          this.chat[0].data = []
-          this.recordState()
-        }
-        return
-      }
-
-      const index = this.chat.findIndex(item => item.uuid === uuid)
-      if (index !== -1) {
-        await fetchClearChat(uuid)
-        this.chat[index].data = []
-        this.recordState()
-      }
-    },
-
-    async clearLocalChat() {
-      this.chat = []
-      this.chatRooms = []
-      this.active = null
-      this.recordState()
-      await router.push({ name: 'Chat' })
-    },
-
-    async reloadRoute(uuid?: number) {
-      this.recordState()
-      await router.push({ name: 'Chat', params: { uuid } })
-    },
-
-    recordState() {
-      setLocalState(this.$state)
-    },
-  },
+    // Actions
+    syncHistory,
+    syncChat,
+    setUsingContext,
+    setChatModel,
+    setChatSearchEnabled,
+    setChatThinkEnabled,
+    addNewChatRoom,
+    updateChatRoom,
+    deleteChatRoom,
+    setActive,
+    getChatByUuidAndIndex,
+    addChatByUuid,
+    updateChatByUuid,
+    updateChatSomeByUuid: updateChatByUuid,
+    deleteChatByUuid,
+    clearChatByUuid,
+    clearLocalChat,
+  }
 })

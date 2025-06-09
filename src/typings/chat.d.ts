@@ -32,7 +32,7 @@ declare namespace Chat {
   interface ChatRoom {
     title: string
     isEdit: boolean
-    uuid: number
+    roomId: number
     loading?: boolean
     all?: boolean
     prompt?: string
@@ -47,7 +47,7 @@ declare namespace Chat {
     active: number | null
     usingContext: boolean
     chatRooms: ChatRoom[]
-    chat: { uuid: number, data: Chat[] }[]
+    chat: { roomId: number, data: Chat[] }[]
   }
 
   interface ConversationRequest {

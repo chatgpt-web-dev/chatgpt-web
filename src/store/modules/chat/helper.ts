@@ -3,12 +3,12 @@ import { ss } from '@/utils/storage'
 const LOCAL_NAME = 'chatStorage'
 
 export function defaultState(): Chat.ChatState {
-  const uuid = 1002
+  const roomId = null
   return {
-    active: uuid,
+    active: roomId,
     usingContext: true,
-    chatRooms: [{ uuid, title: 'New Chat', isEdit: false, usingContext: true, maxContextCount: 10 }],
-    chat: [{ uuid, data: [] }],
+    chatRooms: [{ roomId: 0, title: 'New Chat', isEdit: false, usingContext: true, maxContextCount: 10 }],
+    chat: [{ roomId: 0, data: [] }],
   }
 }
 
