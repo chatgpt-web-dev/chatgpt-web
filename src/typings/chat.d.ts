@@ -43,13 +43,6 @@ declare namespace Chat {
     thinkEnabled?: boolean
   }
 
-  interface ChatState {
-    active: number | null
-    usingContext: boolean
-    chatRooms: ChatRoom[]
-    chat: { roomId: number, data: Chat[] }[]
-  }
-
   interface ConversationRequest {
     conversationId?: string
     parentMessageId?: string
