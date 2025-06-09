@@ -7,10 +7,12 @@ import {
   fetchGetChatRooms,
   fetchRenameChatRoom,
   fetchUpdateChatRoomChatModel,
+  fetchUpdateChatRoomMaxContextCount,
   fetchUpdateChatRoomSearchEnabled,
   fetchUpdateChatRoomThinkEnabled,
   fetchUpdateChatRoomUsingContext,
   fetchUpdateUserChatModel,
+  fetchUpdateUserMaxContextCount,
 } from '@/api'
 import { router } from '@/router'
 import { useUserStore } from '../user'
@@ -125,40 +127,58 @@ export const useChatStore = defineStore('chat-store', () => {
     }
   }
 
-  const setUsingContext = async (context: boolean, roomId: number) => {
-    await fetchUpdateChatRoomUsingContext(context, roomId)
+  const setUsingContext = async (usingContext: boolean) => {
+    const index = findRoomIndex(state.active)
+    if (index === -1)
+      return
+
+    state.chatRooms[index].usingContext = usingContext
+    await fetchUpdateChatRoomUsingContext(usingContext, state.active!)
   }
 
-  const setChatModel = async (chatModel: string, roomId: number) => {
+  const setMaxContextCount = async (maxContextCount: number) => {
+    const index = findRoomIndex(state.active)
+    if (index === -1)
+      return
+
+    state.chatRooms[index].maxContextCount = maxContextCount
+    await fetchUpdateChatRoomMaxContextCount(maxContextCount, state.active!)
+
+    const userStore = useUserStore()
+    userStore.userInfo.config.maxContextCount = maxContextCount
+    await fetchUpdateUserMaxContextCount(maxContextCount)
+  }
+
+  const setChatModel = async (chatModel: string) => {
     const index = findRoomIndex(state.active)
     if (index === -1)
       return
 
     state.chatRooms[index].chatModel = chatModel
-    await fetchUpdateChatRoomChatModel(chatModel, roomId)
+    await fetchUpdateChatRoomChatModel(chatModel, state.active!)
 
     const userStore = useUserStore()
     userStore.userInfo.config.chatModel = chatModel
     await fetchUpdateUserChatModel(chatModel)
   }
 
-  const setChatSearchEnabled = async (searchEnabled: boolean, roomId: number) => {
+  const setChatSearchEnabled = async (searchEnabled: boolean) => {
     const index = findRoomIndex(state.active)
     if (index === -1)
       return
 
     state.chatRooms[index].searchEnabled = searchEnabled
-    await fetchUpdateChatRoomSearchEnabled(searchEnabled, roomId)
+    await fetchUpdateChatRoomSearchEnabled(searchEnabled, state.active!)
   }
 
-  const setChatThinkEnabled = async (thinkEnabled: boolean, roomId: number) => {
+  const setChatThinkEnabled = async (thinkEnabled: boolean) => {
     const index = findRoomIndex(state.active)
     if (index === -1) {
       return
     }
 
     state.chatRooms[index].thinkEnabled = thinkEnabled
-    await fetchUpdateChatRoomThinkEnabled(thinkEnabled, roomId)
+    await fetchUpdateChatRoomThinkEnabled(thinkEnabled, state.active!)
   }
 
   const updateChatRoom = async (uuid: number, edit: Partial<Chat.ChatRoom>) => {
@@ -199,24 +219,11 @@ export const useChatStore = defineStore('chat-store', () => {
 
   const addChatByUuid = async (uuid: number, chatItem: Chat.Chat) => {
     const targetUuid = getCurrentUuid(uuid)
-    let chatIndex = findChatIndex(targetUuid)
+    const chatIndex = findChatIndex(targetUuid)
 
-    if (chatIndex === -1 && state.chatRooms.length === 0) {
-      const newUuid = Date.now()
-      await fetchCreateChatRoom(chatItem.text, newUuid)
-      state.chatRooms.push({ roomId: newUuid, title: chatItem.text, isEdit: false, usingContext: true, maxContextCount: 10 })
-      state.chat.push({ roomId: newUuid, data: [chatItem] })
-      state.active = newUuid
-    }
-    else {
-      if (chatIndex === -1)
-        chatIndex = 0
-      state.chat[chatIndex].data.push(chatItem)
-
-      if (state.chatRooms[chatIndex]?.title === 'New Chat') {
-        state.chatRooms[chatIndex].title = chatItem.text
-        await fetchRenameChatRoom(chatItem.text, state.chatRooms[chatIndex].roomId)
-      }
+    if (state.chatRooms[chatIndex]?.title === 'New Chat') {
+      state.chatRooms[chatIndex].title = chatItem.text
+      await fetchRenameChatRoom(chatItem.text, state.chatRooms[chatIndex].roomId)
     }
   }
 
@@ -270,6 +277,7 @@ export const useChatStore = defineStore('chat-store', () => {
     syncHistory,
     syncChat,
     setUsingContext,
+    setMaxContextCount,
     setChatModel,
     setChatSearchEnabled,
     setChatThinkEnabled,

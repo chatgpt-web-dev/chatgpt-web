@@ -4,7 +4,7 @@ import IconPrompt from '@/icons/Prompt.vue'
 import { useAppStore, useChatStore } from '@/store'
 
 interface Props {
-  usingContext: boolean
+  usingContext?: boolean
   showPrompt: boolean
   searchEnabled?: boolean
   thinkEnabled?: boolean
