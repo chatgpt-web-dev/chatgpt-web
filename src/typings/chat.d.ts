@@ -38,16 +38,9 @@ declare namespace Chat {
     prompt?: string
     usingContext: boolean
     maxContextCount: number
-    chatModel?: string
-    searchEnabled?: boolean
-    thinkEnabled?: boolean
-  }
-
-  interface ChatState {
-    active: number | null
-    usingContext: boolean
-    chatRooms: ChatRoom[]
-    chat: { roomId: number, data: Chat[] }[]
+    chatModel: string
+    searchEnabled: boolean
+    thinkEnabled: boolean
   }
 
   interface ConversationRequest {

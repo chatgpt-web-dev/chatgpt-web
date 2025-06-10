@@ -5,8 +5,6 @@ import {
   fetchChatAPIProcess,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
-  fetchUpdateChatRoomMaxContextCount,
-  fetchUpdateUserMaxContextCount,
 } from '@/api'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
@@ -39,8 +37,7 @@ const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom, scrollTo } = useScr
 
 const { uuid } = route.params as { uuid: string }
 
-const currentChatHistory = computed(() => chatStore.getChatRoomByCurrentActive)
-const usingContext = computed(() => currentChatHistory?.value?.usingContext ?? true)
+const currentChatRoom = computed(() => chatStore.getChatRoomByCurrentActive)
 const dataSources = computed(() => chatStore.getChatByUuid(+uuid))
 const conversationList = computed(() => dataSources.value.filter(item => (!item.inversion && !!item.conversationOptions)))
 
@@ -49,8 +46,6 @@ const firstLoading = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 const showPrompt = ref(false)
-const nowSelectChatModel = ref<string | null>(null)
-const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatHistory.value?.chatModel ?? userStore.userInfo.config.chatModel)
 
 const currentNavIndexRef = ref<number>(-1)
 
@@ -86,9 +81,6 @@ async function onConversation() {
   if (!message || message.trim() === '')
     return
 
-  if (nowSelectChatModel.value && currentChatHistory.value)
-    currentChatHistory.value.chatModel = nowSelectChatModel.value
-
   const uploadFileKeys = uploadFileKeysRef.value
   uploadFileKeysRef.value = []
 
@@ -116,7 +108,7 @@ async function onConversation() {
   let options: Chat.ConversationRequest = {}
   const lastContext = conversationList.value[conversationList.value.length - 1]?.conversationOptions
 
-  if (lastContext && usingContext.value)
+  if (lastContext && currentChatRoom.value?.usingContext)
     options = { ...lastContext }
 
   addChat(
@@ -565,38 +557,33 @@ async function handleScroll(event: any) {
 }
 
 async function handleToggleSearchEnabled() {
-  if (!currentChatHistory.value)
+  if (!currentChatRoom.value)
     return
 
-  const searchEnabled = currentChatHistory.value.searchEnabled ?? false
-  currentChatHistory.value.searchEnabled = !searchEnabled
-  await chatStore.setChatSearchEnabled(!searchEnabled, +uuid)
-  if (currentChatHistory.value.searchEnabled)
+  await chatStore.setChatSearchEnabled(!currentChatRoom.value.searchEnabled)
+  if (currentChatRoom.value.searchEnabled)
     ms.success(t('chat.turnOnSearch'))
   else
     ms.warning(t('chat.turnOffSearch'))
 }
 
 async function handleToggleThinkEnabled() {
-  if (!currentChatHistory.value)
+  if (!currentChatRoom.value)
     return
 
-  const thinkEnabled = currentChatHistory.value.thinkEnabled ?? false
-  currentChatHistory.value.thinkEnabled = !thinkEnabled
-  await chatStore.setChatThinkEnabled(!thinkEnabled, +uuid)
-  if (currentChatHistory.value.thinkEnabled)
+  await chatStore.setChatThinkEnabled(!currentChatRoom.value.thinkEnabled)
+  if (currentChatRoom.value.thinkEnabled)
     ms.success(t('chat.turnOnThink'))
   else
     ms.warning(t('chat.turnOffThink'))
 }
 
 async function handleToggleUsingContext() {
-  if (!currentChatHistory.value)
+  if (!currentChatRoom.value)
     return
 
-  currentChatHistory.value.usingContext = !currentChatHistory.value.usingContext
-  chatStore.setUsingContext(currentChatHistory.value.usingContext, +uuid)
-  if (currentChatHistory.value.usingContext)
+  await chatStore.setUsingContext(!currentChatRoom.value.usingContext)
+  if (currentChatRoom.value.usingContext)
     ms.success(t('chat.turnOnContext'))
   else
     ms.warning(t('chat.turnOffContext'))
@@ -646,30 +633,20 @@ const footerClass = computed(() => {
 })
 
 async function handleSyncChatModel(chatModel: string) {
-  nowSelectChatModel.value = chatModel
-  await chatStore.setChatModel(chatModel, +uuid)
+  await chatStore.setChatModel(chatModel)
 }
 
 function handleUpdateMaxContextCount(maxContextCount: number) {
-  if (currentChatHistory.value) {
-    currentChatHistory.value.maxContextCount = maxContextCount
+  if (currentChatRoom.value) {
+    currentChatRoom.value.maxContextCount = maxContextCount
   }
 }
 
 async function handleSyncMaxContextCount() {
-  try {
-    if (currentChatHistory?.value) {
-      // Sync to both user and room
-      await Promise.all([
-        fetchUpdateUserMaxContextCount(currentChatHistory?.value.maxContextCount),
-        fetchUpdateChatRoomMaxContextCount(currentChatHistory?.value.maxContextCount, +uuid),
-      ])
-      userStore.userInfo.config.maxContextCount = currentChatHistory?.value.maxContextCount
-    }
-  }
-  catch (error) {
-    console.error('Failed to sync max context count:', error)
-  }
+  if (!currentChatRoom.value)
+    return
+
+  await chatStore.setMaxContextCount(currentChatRoom.value.maxContextCount)
 }
 
 // https://github.com/tusen-ai/naive-ui/issues/4887
@@ -716,10 +693,10 @@ onUnmounted(() => {
   <div class="flex flex-col w-full h-full">
     <HeaderComponent
       v-if="isMobile"
-      :using-context="usingContext"
+      :using-context="currentChatRoom?.usingContext"
       :show-prompt="showPrompt"
-      :search-enabled="currentChatHistory?.searchEnabled"
-      :think-enabled="currentChatHistory?.thinkEnabled"
+      :search-enabled="currentChatRoom?.searchEnabled"
+      :think-enabled="currentChatRoom?.thinkEnabled"
       @export="handleExport"
       @toggle-using-context="handleToggleUsingContext"
       @toggle-search-enabled="handleToggleSearchEnabled"
@@ -829,50 +806,50 @@ onUnmounted(() => {
             </HoverButton>
             <NSelect
               style="width: 250px"
-              :value="currentChatModel"
+              :value="currentChatRoom?.chatModel"
               :options="authStore.session?.chatModels"
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
-              @update-value="(val) => handleSyncChatModel(val)"
+              @update:value="handleSyncChatModel"
             />
             <HoverButton
               v-if="!isMobile"
-              :tooltip="currentChatHistory?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')"
+              :tooltip="currentChatRoom?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')"
               :tooltip-help="$t('chat.searchHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatHistory?.searchEnabled, 'text-[#a8071a]': !currentChatHistory?.searchEnabled }"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.searchEnabled, 'text-[#a8071a]': !currentChatRoom?.searchEnabled }"
               @click="handleToggleSearchEnabled"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:web" />
-                <span class="ml-1 text-sm">{{ currentChatHistory?.searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
-              :tooltip="currentChatHistory?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')"
+              :tooltip="currentChatRoom?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')"
               :tooltip-help="$t('chat.thinkHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatHistory?.thinkEnabled, 'text-[#a8071a]': !currentChatHistory?.thinkEnabled }"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.thinkEnabled, 'text-[#a8071a]': !currentChatRoom?.thinkEnabled }"
               @click="handleToggleThinkEnabled"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:lightbulb-outline" />
-                <span class="ml-1 text-sm">{{ currentChatHistory?.thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
-              :tooltip="usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')"
+              :tooltip="currentChatRoom?.usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')"
               :tooltip-help="$t('chat.contextHelp')"
-              :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.usingContext, 'text-[#a8071a]': !currentChatRoom?.usingContext }"
               @click="handleToggleUsingContext"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="ri:chat-history-line" />
-                <span class="ml-1 text-sm">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
               </span>
             </HoverButton>
             <NSlider
-              :value="currentChatHistory?.maxContextCount"
-              :disabled="!usingContext"
+              :value="currentChatRoom?.maxContextCount"
+              :disabled="!currentChatRoom?.usingContext"
               :max="40"
               :min="0"
               :step="1"
