@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { fetchRenameChatRoom } from '@/api'
 import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAppStore, useChatStore } from '@/store'
@@ -36,9 +37,10 @@ async function handleSelect({ roomId }: Chat.ChatRoom) {
     appStore.setSiderCollapsed(true)
 }
 
-function handleEdit({ roomId }: Chat.ChatRoom, isEdit: boolean, event?: MouseEvent) {
-  event?.stopPropagation()
-  chatStore.updateChatRoom(roomId, { isEdit })
+async function handleEdit(chatRoom: Chat.ChatRoom, isEdit: boolean) {
+  chatRoom.isEdit = isEdit
+  if (!chatRoom.isEdit)
+    await fetchRenameChatRoom(chatRoom.title, chatRoom.roomId)
 }
 
 function handleDelete(index: number, event?: MouseEvent | TouchEvent) {
@@ -49,12 +51,6 @@ function handleDelete(index: number, event?: MouseEvent | TouchEvent) {
 }
 
 const handleDeleteDebounce = debounce(handleDelete, 600)
-
-function handleEnter({ roomId }: Chat.ChatRoom, isEdit: boolean, event: KeyboardEvent) {
-  event?.stopPropagation()
-  if (event.key === 'Enter')
-    chatStore.updateChatRoom(roomId, { isEdit })
-}
 
 function isActive(uuid: number) {
   return chatStore.active === uuid
@@ -85,19 +81,19 @@ function isActive(uuid: number) {
                 <NInput
                   v-if="item.isEdit"
                   v-model:value="item.title" size="tiny"
-                  @keypress="handleEnter(item, false, $event)"
+                  @keydown.enter.stop="handleEdit(item, false)"
                 />
                 <span v-else>{{ item.title }}</span>
               </div>
               <div v-if="isActive(item.roomId)" class="absolute z-10 flex visible right-1">
                 <template v-if="item.isEdit">
-                  <button class="p-1" @click="handleEdit(item, false, $event)">
+                  <button class="p-1" @click="handleEdit(item, false)">
                     <SvgIcon icon="ri:save-line" />
                   </button>
                 </template>
                 <template v-else>
                   <button class="p-1">
-                    <SvgIcon icon="ri:edit-line" @click="handleEdit(item, true, $event)" />
+                    <SvgIcon icon="ri:edit-line" @click.stop="handleEdit(item, true)" />
                   </button>
                   <NPopconfirm placement="bottom" @positive-click="handleDeleteDebounce(index, $event)">
                     <template #trigger>

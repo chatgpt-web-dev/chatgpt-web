@@ -181,17 +181,6 @@ export const useChatStore = defineStore('chat-store', () => {
     await fetchUpdateChatRoomThinkEnabled(thinkEnabled, state.active!)
   }
 
-  const updateChatRoom = async (uuid: number, edit: Partial<Chat.ChatRoom>) => {
-    const index = findRoomIndex(uuid)
-    if (index === -1)
-      return
-
-    state.chatRooms[index] = { ...state.chatRooms[index], ...edit }
-
-    if (!edit.isEdit)
-      await fetchRenameChatRoom(state.chatRooms[index].title, uuid)
-  }
-
   const deleteChatRoom = async (index: number) => {
     await fetchDeleteChatRoom(state.chatRooms[index].roomId)
     state.chatRooms.splice(index, 1)
@@ -282,7 +271,6 @@ export const useChatStore = defineStore('chat-store', () => {
     setChatSearchEnabled,
     setChatThinkEnabled,
     addNewChatRoom,
-    updateChatRoom,
     deleteChatRoom,
     setActive,
     getChatByUuidAndIndex,
