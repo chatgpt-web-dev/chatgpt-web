@@ -57,7 +57,7 @@ export async function initApi(key: KeyConfig) {
   return new OpenAI(clientOptions)
 }
 
-const processThreads: { userId: string, abort: AbortController, messageId: string }[] = []
+const processThreads: { userId: string, chatUuid: number, abort: AbortController }[] = []
 
 async function chatReplyProcess(options: RequestOptions) {
   const globalConfig = await getCacheConfig()
@@ -70,7 +70,7 @@ async function chatReplyProcess(options: RequestOptions) {
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p } = options
+  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p, chatUuid } = options
 
   try {
     // Initialize OpenAI client
@@ -78,7 +78,7 @@ async function chatReplyProcess(options: RequestOptions) {
 
     // Create abort controller for cancellation
     const abort = new AbortController()
-    processThreads.push({ userId, abort, messageId })
+    processThreads.push({ userId, chatUuid, abort })
 
     // Prepare messages array for the chat completion
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = []
@@ -262,14 +262,12 @@ search result: <search_result>${searchResultContent}</search_result>`,
   }
 }
 
-export function abortChatProcess(userId: string) {
-  const index = processThreads.findIndex(d => d.userId === userId)
+export function abortChatProcess(userId: string, chatUuid: number) {
+  const index = processThreads.findIndex(d => d.userId === userId && d.chatUuid === chatUuid)
   if (index <= -1)
     return
-  const messageId = processThreads[index].messageId
   processThreads[index].abort.abort()
   processThreads.splice(index, 1)
-  return messageId
 }
 
 export function initAuditService(audit: AuditConfig) {

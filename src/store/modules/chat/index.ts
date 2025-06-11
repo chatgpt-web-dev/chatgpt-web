@@ -206,9 +206,10 @@ export const useChatStore = defineStore('chat-store', () => {
     return chatIndex !== -1 ? state.chat[chatIndex].data[index] : null
   }
 
-  const addChatByUuid = async (uuid: number, chatItem: Chat.Chat) => {
-    const targetUuid = getCurrentUuid(uuid)
-    const chatIndex = findChatIndex(targetUuid)
+  const addChatMessage = async (roomId: number, chatItem: Chat.Chat) => {
+    const chatIndex = findChatIndex(roomId)
+
+    state.chat[chatIndex].data.push(chatItem)
 
     if (state.chatRooms[chatIndex]?.title === 'New Chat') {
       state.chatRooms[chatIndex].title = chatItem.text
@@ -216,9 +217,8 @@ export const useChatStore = defineStore('chat-store', () => {
     }
   }
 
-  const updateChatByUuid = (uuid: number, index: number, chatItem: Chat.Chat | Partial<Chat.Chat>) => {
-    const targetUuid = getCurrentUuid(uuid)
-    const chatIndex = findChatIndex(targetUuid)
+  const updateChatMessage = async (roomId: number, index: number, chatItem: Chat.Chat | Partial<Chat.Chat>) => {
+    const chatIndex = findChatIndex(roomId)
 
     if (chatIndex !== -1 && state.chat[chatIndex].data[index]) {
       const existingUuid = state.chat[chatIndex].data[index].uuid
@@ -274,9 +274,10 @@ export const useChatStore = defineStore('chat-store', () => {
     deleteChatRoom,
     setActive,
     getChatByUuidAndIndex,
-    addChatByUuid,
-    updateChatByUuid,
-    updateChatSomeByUuid: updateChatByUuid,
+    addChatMessage,
+    updateChatMessage,
+    updateChatByUuid: updateChatMessage,
+    updateChatSomeByUuid: updateChatMessage,
     deleteChatByUuid,
     clearChatByUuid,
     clearLocalChat,

@@ -50,10 +50,10 @@ export function fetchChatAPIProcess<T = any>(
   })
 }
 
-export function fetchChatStopResponding<T = any>(text: string, messageId: string, conversationId: string) {
+export function fetchChatStopResponding<T = any>(chatUuid: number) {
   return post<T>({
     url: '/chat-abort',
-    data: { text, messageId, conversationId },
+    data: { chatUuid },
   })
 }
 
