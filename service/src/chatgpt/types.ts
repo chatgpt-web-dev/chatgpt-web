@@ -33,6 +33,7 @@ export interface RequestOptions {
   user: UserInfo
   messageId: string
   room: ChatRoom
+  chatUuid: number
 }
 
 export interface BalanceResponse {

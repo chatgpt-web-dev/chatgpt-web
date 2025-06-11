@@ -20,7 +20,6 @@ import { useScroll } from './hooks/useScroll'
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
 let controller = new AbortController()
-let lastChatInfo: any = {}
 
 const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
@@ -32,7 +31,7 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 
 const { isMobile } = useBasicLayout()
-const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
+const { updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
 const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom, scrollTo } = useScroll()
 
 const { uuid } = route.params as { uuid: string }
@@ -46,6 +45,8 @@ const firstLoading = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 const showPrompt = ref(false)
+
+const loadingChatUuid = ref<number>(-1)
 
 const currentNavIndexRef = ref<number>(-1)
 
@@ -87,8 +88,10 @@ async function onConversation() {
   controller = new AbortController()
 
   const chatUuid = Date.now()
-  addChat(
-    +uuid,
+  loadingChatUuid.value = chatUuid
+
+  await chatStore.addChatMessage(
+    currentChatRoom.value!.roomId,
     {
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
@@ -100,7 +103,7 @@ async function onConversation() {
       requestOptions: { prompt: message, options: null },
     },
   )
-  scrollToBottom()
+  await scrollToBottom()
 
   loading.value = true
   prompt.value = ''
@@ -111,8 +114,8 @@ async function onConversation() {
   if (lastContext && currentChatRoom.value?.usingContext)
     options = { ...lastContext }
 
-  addChat(
-    +uuid,
+  await chatStore.addChatMessage(
+    currentChatRoom.value!.roomId,
     {
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
@@ -124,7 +127,7 @@ async function onConversation() {
       requestOptions: { prompt: message, options: { ...options } },
     },
   )
-  scrollToBottom()
+  await scrollToBottom()
 
   try {
     let lastText = ''
@@ -134,13 +137,13 @@ async function onConversation() {
       let searchUsageTime: number
 
       await fetchChatAPIProcess<Chat.ConversationResponse>({
-        roomId: +uuid,
+        roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid,
         prompt: message,
         uploadFileKeys,
         options,
         signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
+        onDownloadProgress: async ({ event }) => {
           const xhr = event.target
           const { responseText } = xhr
           // Always process the final line
@@ -157,7 +160,6 @@ async function onConversation() {
             if (data.searchUsageTime)
               searchUsageTime = data.searchUsageTime
 
-            lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
                   completion_tokens: data.detail.usage.completion_tokens || null,
@@ -166,8 +168,8 @@ async function onConversation() {
                   estimated: data.detail.usage.estimated || null,
                 }
               : undefined
-            updateChat(
-              +uuid,
+            await chatStore.updateChatMessage(
+              currentChatRoom.value!.roomId,
               dataSources.value.length - 1,
               {
                 dateTime: new Date().toLocaleString(),
@@ -192,14 +194,14 @@ async function onConversation() {
               return fetchChatAPIOnce()
             }
 
-            scrollToBottomIfAtBottom()
+            await scrollToBottomIfAtBottom()
           }
           catch {
             //
           }
         },
       })
-      updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
+      updateChatSome(currentChatRoom.value!.roomId, dataSources.value.length - 1, { loading: false })
     }
 
     await fetchChatAPIOnce()
@@ -209,21 +211,21 @@ async function onConversation() {
 
     if (error.message === 'canceled') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         dataSources.value.length - 1,
         {
           loading: false,
         },
       )
-      scrollToBottomIfAtBottom()
+      await scrollToBottomIfAtBottom()
       return
     }
 
-    const currentChat = getChatByUuidAndIndex(+uuid, dataSources.value.length - 1)
+    const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, dataSources.value.length - 1)
 
     if (currentChat?.text && currentChat.text !== '') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         dataSources.value.length - 1,
         {
           text: `${currentChat.text}\n[${errorMessage}]`,
@@ -235,7 +237,7 @@ async function onConversation() {
     }
 
     updateChat(
-      +uuid,
+      currentChatRoom.value!.roomId,
       dataSources.value.length - 1,
       {
         dateTime: new Date().toLocaleString(),
@@ -273,8 +275,9 @@ async function onRegenerate(index: number) {
 
   loading.value = true
   const chatUuid = dataSources.value[index].uuid
+  loadingChatUuid.value = chatUuid!
   updateChat(
-    +uuid,
+    currentChatRoom.value!.roomId,
     index,
     {
       dateTime: new Date().toLocaleString(),
@@ -292,7 +295,7 @@ async function onRegenerate(index: number) {
     let lastText = ''
     const fetchChatAPIOnce = async () => {
       await fetchChatAPIProcess<Chat.ConversationResponse>({
-        roomId: +uuid,
+        roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid || Date.now(),
         regenerate: true,
         prompt: message,
@@ -308,7 +311,6 @@ async function onRegenerate(index: number) {
             chunk = responseText.substring(lastIndex)
           try {
             const data = JSON.parse(chunk)
-            lastChatInfo = data
             const usage = (data.detail && data.detail.usage)
               ? {
                   completion_tokens: data.detail.usage.completion_tokens || null,
@@ -318,7 +320,7 @@ async function onRegenerate(index: number) {
                 }
               : undefined
             updateChat(
-              +uuid,
+              currentChatRoom.value!.roomId,
               index,
               {
                 dateTime: new Date().toLocaleString(),
@@ -347,14 +349,14 @@ async function onRegenerate(index: number) {
           }
         },
       })
-      updateChatSome(+uuid, index, { loading: false })
+      updateChatSome(currentChatRoom.value!.roomId, index, { loading: false })
     }
     await fetchChatAPIOnce()
   }
   catch (error: any) {
     if (error.message === 'canceled') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         index,
         {
           loading: false,
@@ -366,7 +368,7 @@ async function onRegenerate(index: number) {
     const errorMessage = error?.message ?? t('common.wrong')
 
     updateChat(
-      +uuid,
+      currentChatRoom.value!.roomId,
       index,
       {
         dateTime: new Date().toLocaleString(),
@@ -386,9 +388,9 @@ async function onRegenerate(index: number) {
 }
 
 async function onResponseHistory(index: number, historyIndex: number) {
-  const chat = (await fetchChatResponseoHistory(+uuid, dataSources.value[index].uuid || Date.now(), historyIndex)).data
+  const chat = (await fetchChatResponseoHistory(currentChatRoom.value!.roomId, dataSources.value[index].uuid || Date.now(), historyIndex)).data
   updateChat(
-    +uuid,
+    currentChatRoom.value!.roomId,
     index,
     {
       dateTime: chat.dateTime,
@@ -452,7 +454,7 @@ function handleDelete(index: number, fast: boolean) {
     return
 
   if (fast === true) {
-    chatStore.deleteChatByUuid(+uuid, index)
+    chatStore.deleteChatByUuid(currentChatRoom.value!.roomId, index)
   }
   else {
     dialog.warning({
@@ -461,7 +463,7 @@ function handleDelete(index: number, fast: boolean) {
       positiveText: t('common.yes'),
       negativeText: t('common.no'),
       onPositiveClick: () => {
-        chatStore.deleteChatByUuid(+uuid, index)
+        chatStore.deleteChatByUuid(currentChatRoom.value!.roomId, index)
       },
     })
   }
@@ -481,7 +483,7 @@ function handleClear() {
     positiveText: t('common.yes'),
     negativeText: t('common.no'),
     onPositiveClick: () => {
-      chatStore.clearChatByUuid(+uuid)
+      chatStore.clearChatByUuid(currentChatRoom.value!.roomId)
     },
   })
 }
@@ -505,19 +507,19 @@ async function handleStop() {
   if (loading.value) {
     controller.abort()
     loading.value = false
-    await fetchChatStopResponding(lastChatInfo.text, lastChatInfo.id, lastChatInfo.conversationId)
+    await fetchChatStopResponding(loadingChatUuid.value)
   }
 }
 
 async function loadMoreMessage(event: any) {
-  const chatIndex = chatStore.chat.findIndex(d => d.roomId === +uuid)
+  const chatIndex = chatStore.chat.findIndex(d => d.roomId === currentChatRoom.value!.roomId)
   if (chatIndex <= -1 || chatStore.chat[chatIndex].data.length <= 0)
     return
 
   const scrollPosition = event.target.scrollHeight - event.target.scrollTop
 
   const lastId = chatStore.chat[chatIndex].data[0].uuid
-  await chatStore.syncChat({ roomId: +uuid } as Chat.ChatRoom, lastId, () => {
+  await chatStore.syncChat({ roomId: currentChatRoom.value!.roomId } as Chat.ChatRoom, lastId, () => {
     loadingms && loadingms.destroy()
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {

@@ -281,6 +281,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       user,
       messageId: message._id.toString(),
       room,
+      chatUuid: uuid,
     })
     // return the whole response including usage
     res.write(`\n${JSON.stringify(result.data)}`)
@@ -329,12 +330,11 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 router.post('/chat-abort', [auth, limiter], async (req, res) => {
   try {
     const userId = req.headers.userId.toString()
-    const { text, messageId, conversationId } = req.body as { text: string, messageId: string, conversationId: string }
-    const msgId = abortChatProcess(userId)
-    await updateChat(msgId, text, messageId, conversationId, null, null)
+    const { chatUuid } = req.body as { chatUuid: number }
+    abortChatProcess(userId, chatUuid)
     res.send({ status: 'Success', message: 'OK', data: null })
   }
   catch {
-    res.send({ status: 'Fail', message: '重置邮件已发送 | Reset email has been sent', data: null })
+    res.send({ status: 'Fail', message: '中止会话失败 | Chat abort error', data: null })
   }
 })
