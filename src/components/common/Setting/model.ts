@@ -115,6 +115,7 @@ export class UserPrompt {
   _id?: string
   title: string
   value: string
+  type?: 'built-in' | 'user-defined'
   constructor(title: string, value: string) {
     this.title = title
     this.value = value

@@ -6,7 +6,7 @@ import {
   fetchChatResponseoHistory,
   fetchChatStopResponding,
 } from '@/api'
-import { HoverButton, SvgIcon } from '@/components/common'
+import { HoverButton, PromptTypeTag, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
 import { t } from '@/locales'
@@ -611,8 +611,13 @@ const searchOptions = computed(() => {
 // value反渲染key
 function renderOption(option: { label: string }) {
   for (const i of promptTemplate.value) {
-    if (i.value === option.label)
-      return [i.title]
+    if (i.value === option.label) {
+      return [
+        h(PromptTypeTag, { type: i.type }),
+        h('span', { style: { marginLeft: '8px' } }),
+        i.title,
+      ]
+    }
   }
   return []
 }
@@ -870,7 +875,7 @@ onUnmounted(() => {
                   :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
                   type="textarea"
                   :placeholder="placeholder"
-                  :autosize="{ minRows: isMobile ? 1 : 4, maxRows: isMobile ? 4 : 8 }"
+                  :autosize="{ minRows: isMobile ? 1 : 2, maxRows: isMobile ? 4 : 12 }"
                   @input="handleInput"
                   @focus="handleFocus"
                   @blur="handleBlur"

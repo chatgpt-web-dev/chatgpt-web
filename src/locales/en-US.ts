@@ -241,5 +241,7 @@ export default {
     importRepeatContent: 'Content is repeatedly skipped: {msg}',
     onlineImportWarning: 'Note: Please check the JSON file source!',
     downloadError: 'Please check the network status and JSON file validity',
+    builtIn: 'Built-in',
+    userDefined: 'User defined',
   },
 }
