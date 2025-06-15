@@ -1,6 +1,7 @@
 import type { WithId } from 'mongodb'
 import type {
   AdvancedConfig,
+  BuiltInPrompt,
   ChatOptions,
   Config,
   GiftCard,
@@ -39,6 +40,7 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
+const builtInPromptCol = client.db(dbName).collection<BuiltInPrompt>('built_in_prompt')
 const userPromptCol = client.db(dbName).collection<UserPrompt>('user_prompt')
 // 新增兑换券的数据库
 // {
@@ -662,6 +664,13 @@ export async function upsertKey(key: KeyConfig): Promise<KeyConfig> {
 
 export async function updateApiKeyStatus(id: string, status: Status) {
   await keyCol.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
+}
+
+export async function getBuiltInPromptList(): Promise<{ data: BuiltInPrompt[], total: number }> {
+  const total = await builtInPromptCol.countDocuments()
+  const cursor = builtInPromptCol.find().sort({ _id: -1 })
+  const data = await cursor.toArray()
+  return { data, total }
 }
 
 export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {

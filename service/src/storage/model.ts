@@ -302,6 +302,16 @@ export class KeyConfig {
   }
 }
 
+export class BuiltInPrompt {
+  _id: ObjectId
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
 export class UserPrompt {
   _id: ObjectId
   userId: string

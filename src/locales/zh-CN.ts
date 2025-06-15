@@ -241,5 +241,7 @@ export default {
     importRepeatContent: '内容重复跳过：{msg}',
     onlineImportWarning: '注意：请检查 JSON 文件来源！',
     downloadError: '请检查网络状态与 JSON 文件有效性',
+    builtIn: '平台预置',
+    userDefined: '用户自定义',
   },
 }

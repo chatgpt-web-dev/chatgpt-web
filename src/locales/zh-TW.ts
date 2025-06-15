@@ -229,5 +229,7 @@ export default {
     importRepeatContent: '因內容重複跳過：{msg}',
     onlineImportWarning: '注意：請檢查 JSON 檔案來源！',
     downloadError: '請檢查網路狀態與 JSON 檔案有效性',
+    builtIn: '平台預置',
+    userDefined: '使用者自定義',
   },
 }

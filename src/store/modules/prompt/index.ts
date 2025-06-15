@@ -1,16 +1,24 @@
-import type { PromptStore } from './helper'
-import { getLocalPromptList, setLocalPromptList } from './helper'
+import type { UserPrompt } from '@/components/common/Setting/model'
 
-export const usePromptStore = defineStore('prompt-store', {
-  state: (): PromptStore => getLocalPromptList(),
+class PromptState {
+  promptList: UserPrompt[] = []
+}
 
-  actions: {
-    updatePromptList(promptList: []) {
-      this.$patch({ promptList })
-      setLocalPromptList({ promptList })
-    },
-    getPromptList() {
-      return this.$state
-    },
-  },
+export const usePromptStore = defineStore('prompt-store', () => {
+  const state = reactive(new PromptState())
+
+  const updatePromptList = (promptList: []) => {
+    state.promptList = promptList
+  }
+
+  const getPromptList = () => {
+    return state.promptList
+  }
+
+  return {
+    ...toRefs(state),
+
+    updatePromptList,
+    getPromptList,
+  }
 })

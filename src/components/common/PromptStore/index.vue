@@ -13,8 +13,10 @@ interface DataProps {
   _id?: string
   renderKey: string
   renderValue: string
+  renderType: string
   title: string
   value: string
+  type: 'built-in' | 'user-defined'
 }
 
 interface Props {
@@ -280,9 +282,11 @@ function renderTemplate() {
     return {
       renderKey: item.title.length <= keyLimit ? item.title : `${item.title.substring(0, keyLimit)}...`,
       renderValue: item.value.length <= valueLimit ? item.value : `${item.value.substring(0, valueLimit)}...`,
+      renderType: item.type === 'built-in' ? t('store.builtIn') : t('store.userDefined'),
       title: item.title,
       value: item.value,
       _id: item._id,
+      type: item.type,
     }
   })
 }
@@ -299,6 +303,10 @@ const pagination = computed(() => {
 function createColumns(): DataTableColumns<DataProps> {
   return [
     {
+      title: 'type',
+      key: 'renderType',
+    },
+    {
       title: t('store.title'),
       key: 'renderKey',
     },
@@ -312,6 +320,9 @@ function createColumns(): DataTableColumns<DataProps> {
       width: 100,
       align: 'center',
       render(row) {
+        if (row.type === 'built-in') {
+          return ''
+        }
         return h('div', { class: 'flex items-center flex-col gap-2' }, {
           default: () => [h(
             NButton,
@@ -349,12 +360,10 @@ watch(
 )
 
 onMounted(async () => {
-  if (!!authStore.session?.auth && !authStore.token)
+  if (!authStore.session?.auth)
     return
-  if (promptStore.getPromptList().promptList.length === 0) {
-    await handleGetUserPromptList()
-    promptStore.updatePromptList(promptList.value)
-  }
+  await handleGetUserPromptList()
+  promptStore.updatePromptList(promptList.value)
 })
 
 const dataSource = computed(() => {

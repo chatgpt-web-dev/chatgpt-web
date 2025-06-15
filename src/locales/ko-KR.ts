@@ -227,5 +227,7 @@ export default {
     importRepeatContent: '중복 콘텐츠 건너뛰기: {msg}',
     onlineImportWarning: '참고: JSON 파일 소스를 확인하세요!',
     downloadError: '네트워크 상태와 JSON 파일 유효성을 확인하세요',
+    builtIn: '내장',
+    userDefined: '사용자 정의',
   },
 }
