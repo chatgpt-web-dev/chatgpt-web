@@ -5,6 +5,7 @@ import { auth } from '../middleware/auth'
 import {
   clearUserPrompt,
   deleteUserPrompt,
+  getBuiltInPromptList,
   getUserPromptList,
   importUserPrompt,
   upsertUserPrompt,
@@ -15,16 +16,45 @@ export const router = Router()
 router.get('/prompt-list', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
-    const prompts = await getUserPromptList(userId)
-    const result = []
-    prompts.data.forEach((p) => {
-      result.push({
+
+    // 获取用户自定义提示词
+    const userPrompts = await getUserPromptList(userId)
+    const userResult = []
+    userPrompts.data.forEach((p) => {
+      userResult.push({
         _id: p._id,
         title: p.title,
         value: p.value,
+        type: 'user-defined',
       })
     })
-    res.send({ status: 'Success', message: null, data: { data: result, total: prompts.total } })
+
+    // 获取平台预置提示词
+    const builtInPrompts = await getBuiltInPromptList()
+    const builtInResult = []
+    builtInPrompts.data.forEach((p) => {
+      builtInResult.push({
+        _id: p._id,
+        title: p.title,
+        value: p.value,
+        type: 'built-in',
+      })
+    })
+
+    // 合并两种类型的提示词
+    const allPrompts = [...userResult, ...builtInResult]
+    const totalCount = userPrompts.total + builtInPrompts.total
+
+    res.send({
+      status: 'Success',
+      message: null,
+      data: {
+        data: allPrompts,
+        total: totalCount,
+        userTotal: userPrompts.total,
+        builtInTotal: builtInPrompts.total,
+      },
+    })
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
