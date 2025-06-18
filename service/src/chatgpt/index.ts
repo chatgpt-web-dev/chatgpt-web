@@ -137,9 +137,13 @@ async function chatReplyProcess(options: RequestOptions) {
         const response = await tvly.search(
           searchQuery,
           {
+            // https://docs.tavily.com/documentation/best-practices/best-practices-search#search-depth%3Dadvanced-ideal-for-higher-relevance-in-search-results
+            searchDepth: 'advanced',
+            chunksPerSource: 3,
             includeRawContent: true,
             // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
-            maxResults: 20,
+            // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
+            maxResults: 10,
             // Max 120s, default to 60 https://github.com/tavily-ai/tavily-js/blob/de69e479c5d3f6c5d443465fa2c29407c0d3515d/src/search.ts#L118
             timeout: 120,
           },
@@ -156,9 +160,9 @@ async function chatReplyProcess(options: RequestOptions) {
         })
 
         let searchResultContent = JSON.stringify(searchResults)
-        // remove base64 image content
-        const base64Pattern = /data:image\/[a-zA-Z0-9+.-]+;base64,[A-Za-z0-9+/=]+/g
-        searchResultContent = searchResultContent.replace(base64Pattern, '')
+        // remove image url
+        const base64Pattern = /!\[([^\]]*)\]\([^)]*\)/g
+        searchResultContent = searchResultContent.replace(base64Pattern, '$1')
 
         messages.push({
           role: 'user',
