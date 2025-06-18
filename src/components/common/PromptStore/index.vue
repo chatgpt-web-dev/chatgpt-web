@@ -11,8 +11,6 @@ import PromptRecommend from '../../../assets/recommend.json'
 
 interface DataProps {
   _id?: string
-  renderKey: string
-  renderValue: string
   title: string
   value: string
   type: 'built-in' | 'user-defined'
@@ -276,11 +274,8 @@ async function downloadPromptTemplate() {
 
 // 移动端自适应相关
 function renderTemplate() {
-  const [keyLimit, valueLimit] = isMobile.value ? [10, 30] : [15, 50]
   return promptList.value.map((item: UserPrompt) => {
     return {
-      renderKey: item.title.length <= keyLimit ? item.title : `${item.title.substring(0, keyLimit)}...`,
-      renderValue: item.value.length <= valueLimit ? item.value : `${item.value.substring(0, valueLimit)}...`,
       title: item.title,
       value: item.value,
       _id: item._id,
@@ -455,9 +450,19 @@ async function handleGetUserPromptList() {
           />
           <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
             <NListItem v-for="(item, index) of dataSource" :key="index">
-              <NThing :title="item.renderKey" :description="item.renderValue" />
+              <NThing :title="item.title" :description="item.value" description-class="text-xs">
+                <template #description>
+                  <NEllipsis
+                    class="max-w-240 whitespace-pre-line"
+                    :tooltip="{ contentClass: 'whitespace-pre-line text-xs max-h-100 max-w-90', scrollable: true }"
+                    :line-clamp="3"
+                  >
+                    {{ item.value }}
+                  </NEllipsis>
+                </template>
+              </NThing>>
               <template #suffix>
-                <div class="flex flex-col items-center gap-2">
+                <div v-if="item.type !== 'built-in'" class="flex flex-col items-center gap-2">
                   <NButton tertiary size="small" type="info" @click="changeShowModal('modify', item)">
                     {{ t('common.edit') }}
                   </NButton>
