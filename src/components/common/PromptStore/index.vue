@@ -11,9 +11,6 @@ import PromptRecommend from '../../../assets/recommend.json'
 
 interface DataProps {
   _id?: string
-  renderKey: string
-  renderValue: string
-  renderType: string
   title: string
   value: string
   type: 'built-in' | 'user-defined'
@@ -277,12 +274,8 @@ async function downloadPromptTemplate() {
 
 // 移动端自适应相关
 function renderTemplate() {
-  const [keyLimit, valueLimit] = isMobile.value ? [10, 30] : [15, 50]
   return promptList.value.map((item: UserPrompt) => {
     return {
-      renderKey: item.title.length <= keyLimit ? item.title : `${item.title.substring(0, keyLimit)}...`,
-      renderValue: item.value.length <= valueLimit ? item.value : `${item.value.substring(0, valueLimit)}...`,
-      renderType: item.type === 'built-in' ? t('store.builtIn') : t('store.userDefined'),
       title: item.title,
       value: item.value,
       _id: item._id,
@@ -304,15 +297,27 @@ function createColumns(): DataTableColumns<DataProps> {
   return [
     {
       title: 'type',
-      key: 'renderType',
+      key: 'type',
+      width: 100,
+      align: 'center',
+      render: (row: DataProps) => row.type === 'built-in' ? t('store.builtIn') : t('store.userDefined'),
     },
     {
       title: t('store.title'),
-      key: 'renderKey',
+      key: 'title',
+      width: 200,
     },
     {
       title: t('store.description'),
-      key: 'renderValue',
+      key: 'value',
+      ellipsis: {
+        lineClamp: 6,
+        tooltip: {
+          contentClass: 'whitespace-pre-line text-xs max-h-100 max-w-200',
+          scrollable: true,
+        },
+      },
+      className: 'whitespace-pre-line',
     },
     {
       title: t('common.action'),
@@ -371,7 +376,7 @@ const dataSource = computed(() => {
   const value = searchValue.value
   if (value && value !== '') {
     return data.filter((item: DataProps) => {
-      return item.renderKey.includes(value) || item.renderValue.includes(value)
+      return item.title.includes(value) || item.value.includes(value)
     })
   }
   return data
@@ -445,9 +450,19 @@ async function handleGetUserPromptList() {
           />
           <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
             <NListItem v-for="(item, index) of dataSource" :key="index">
-              <NThing :title="item.renderKey" :description="item.renderValue" />
+              <NThing :title="item.title" :description="item.value" description-class="text-xs">
+                <template #description>
+                  <NEllipsis
+                    class="max-w-240 whitespace-pre-line"
+                    :tooltip="{ contentClass: 'whitespace-pre-line text-xs max-h-100 max-w-90', scrollable: true }"
+                    :line-clamp="3"
+                  >
+                    {{ item.value }}
+                  </NEllipsis>
+                </template>
+              </NThing>>
               <template #suffix>
-                <div class="flex flex-col items-center gap-2">
+                <div v-if="item.type !== 'built-in'" class="flex flex-col items-center gap-2">
                   <NButton tertiary size="small" type="info" @click="changeShowModal('modify', item)">
                     {{ t('common.edit') }}
                   </NButton>
