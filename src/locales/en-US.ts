@@ -183,6 +183,7 @@ export default {
     searchEnabled: 'Search Enabled',
     searchProvider: 'Search Provider',
     searchApiKey: 'Search API Key',
+    searchMaxResults: 'Max Search Results',
     systemMessageWithSearchResult: 'System message for conversations with search results',
     systemMessageGetSearchQuery: 'System message for getting search query',
     systemMessageWithSearchResultPlaceholder: 'System message template when with search results. Use {\'{current_time}\'} as placeholder for current time.',

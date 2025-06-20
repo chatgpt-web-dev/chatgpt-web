@@ -25,6 +25,8 @@ async function fetchConfig() {
       data.searchConfig = new SearchConfig(false, '', { apiKey: '' }, '', '')
     if (!data.searchConfig.options)
       data.searchConfig.options = { apiKey: '' }
+    if (!data.searchConfig.options.maxResults)
+      data.searchConfig.options.maxResults = 10
     config.value = data.searchConfig
   }
   finally {
@@ -93,6 +95,18 @@ onMounted(() => {
               v-model:value="config.options.apiKey"
               placeholder=""
               show-password-on="click"
+            />
+          </div>
+        </div>
+        <div v-if="config && config.enabled" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ $t('setting.searchMaxResults') }}</span>
+          <div class="flex-1">
+            <NInputNumber
+              v-model:value="config.options.maxResults"
+              :min="1"
+              :max="20"
+              placeholder="1-20"
+              style="width: 140px"
             />
           </div>
         </div>

@@ -199,6 +199,7 @@ export enum SearchServiceProvider {
 
 export class SearchServiceOptions {
   public apiKey: string
+  public maxResults?: number
 }
 
 export class Config {

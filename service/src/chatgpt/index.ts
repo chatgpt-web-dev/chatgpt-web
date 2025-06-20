@@ -144,7 +144,7 @@ async function chatReplyProcess(options: RequestOptions) {
               includeRawContent: true,
               // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
               // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
-              maxResults: 10,
+              maxResults: searchConfig.options?.maxResults || 10,
               // Max 120s, default to 60 https://github.com/tavily-ai/tavily-js/blob/de69e479c5d3f6c5d443465fa2c29407c0d3515d/src/search.ts#L118
               timeout: 120,
             },

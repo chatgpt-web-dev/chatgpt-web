@@ -523,6 +523,7 @@ Recommended for current IdP to use OIDC protocol, using [oauth2-proxy](https://o
 4. Fill in the following configurations:
    - **Enable Status**: Turn on/off global search functionality
    - **API Key**: Enter Tavily API Key
+   - **Max Search Results**: Set the maximum number of search results returned per search (1-20, default 10)
    - **Search Query System Message**: Prompt template for extracting search keywords
    - **Search Result System Message**: Prompt template for processing search results
 
@@ -571,6 +572,7 @@ Current time: {current_time}
 - **Result Format**: JSON format to store complete search results
 - **Data Storage**: MongoDB stores search queries and results
 - **Timeout Setting**: Search request timeout is 300 seconds
+- **Result Count Control**: Support configuration of maximum search results returned per search (1-20)
 
 ### Notes
 
@@ -579,6 +581,7 @@ Current time: {current_time}
 - It is recommended to enable selectively based on actual needs
 - Administrators can control the global search functionality status
 - Each session can independently control whether to use search functionality
+- The maximum search results setting affects the detail level of search and API costs
 
 
 ## Contributing
