@@ -185,6 +185,7 @@ export type SearchServiceProvider = 'tavily' | ''
 
 export interface SearchServiceOptions {
   apiKey: string
+  maxResults?: number
 }
 
 export class SearchConfig {
@@ -199,5 +200,8 @@ export class SearchConfig {
     this.options = options
     this.systemMessageWithSearchResult = systemMessageWithSearchResult
     this.systemMessageGetSearchQuery = systemMessageGetSearchQuery
+    if (!this.options.maxResults) {
+      this.options.maxResults = 10
+    }
   }
 }

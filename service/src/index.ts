@@ -1,4 +1,4 @@
-import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SiteConfig, UserInfo } from './storage/model'
+import type { AnnounceConfig, AuditConfig, Config, GiftCard, KeyConfig, MailConfig, SearchResult, SiteConfig, UserInfo } from './storage/model'
 import type { AuthJwtPayload } from './types'
 import * as path from 'node:path'
 import * as process from 'node:process'
@@ -822,13 +822,66 @@ router.post('/setting-search', rootAuth, async (req, res) => {
 
 router.post('/search-test', rootAuth, async (req, res) => {
   try {
-    const { text } = req.body as { search: import('./storage/model').SearchConfig, text: string }
-    // TODO: Implement actual search test logic with Tavily API
-    // For now, just return a success response
-    res.send({ status: 'Success', message: '搜索测试成功 | Search test successful', data: { query: text, results: [] } })
+    const { search, text } = req.body as { search: import('./storage/model').SearchConfig, text: string }
+
+    // Validate search configuration
+    if (!search.enabled) {
+      res.send({ status: 'Fail', message: '搜索功能未启用 | Search functionality is not enabled', data: null })
+      return
+    }
+
+    if (!search.options?.apiKey) {
+      res.send({ status: 'Fail', message: '搜索 API 密钥未配置 | Search API key is not configured', data: null })
+      return
+    }
+
+    if (!text || text.trim() === '') {
+      res.send({ status: 'Fail', message: '搜索文本不能为空 | Search text cannot be empty', data: null })
+      return
+    }
+
+    // Validate maxResults range
+    const maxResults = search.options?.maxResults || 10
+    if (maxResults < 1 || maxResults > 20) {
+      res.send({ status: 'Fail', message: '最大搜索结果数必须在 1-20 之间 | Max search results must be between 1-20', data: null })
+      return
+    }
+
+    // Import required modules
+    const { tavily } = await import('@tavily/core')
+
+    // Execute search
+    const tvly = tavily({ apiKey: search.options.apiKey })
+    const response = await tvly.search(
+      text.trim(),
+      {
+        searchDepth: 'advanced',
+        chunksPerSource: 3,
+        includeRawContent: true,
+        maxResults,
+        timeout: 120,
+      },
+    )
+
+    const searchResults = response.results as SearchResult[]
+    const searchUsageTime = response.responseTime
+
+    // Return search results
+    res.send({
+      status: 'Success',
+      message: `搜索测试成功 | Search test successful (用时 ${searchUsageTime}ms, 找到 ${searchResults.length} 个结果)`,
+      data: {
+        query: text.trim(),
+        results: searchResults,
+        usageTime: searchUsageTime,
+        resultCount: searchResults.length,
+        maxResults,
+      },
+    })
   }
-  catch (error) {
-    res.send({ status: 'Fail', message: error.message, data: null })
+  catch (error: any) {
+    console.error('Search test error:', error)
+    res.send({ status: 'Fail', message: `搜索测试失败 | Search test failed: ${error.message}`, data: null })
   }
 })
 

@@ -106,73 +106,78 @@ async function chatReplyProcess(options: RequestOptions) {
     let hasSearchResult = false
     const searchConfig = globalConfig.searchConfig
     if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
-      messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+      try {
+        messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
 
-      const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
-        model,
-        messages,
-      }
-      if (key.keyModel === 'VLLM') {
-        // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
-        getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
-          enable_thinking: false,
+        const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
+          model,
+          messages,
         }
-      }
-      const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
-      let searchQuery: string = completion.choices[0].message.content
-      const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
-      if (match)
-        searchQuery = match[1].trim()
-      else
-        searchQuery = ''
+        if (key.keyModel === 'VLLM') {
+          // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+          getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
+            enable_thinking: false,
+          }
+        }
+        const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
+        let searchQuery: string = completion.choices[0].message.content
+        const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
+        if (match)
+          searchQuery = match[1].trim()
+        else
+          searchQuery = ''
 
-      if (searchQuery) {
-        await updateChatSearchQuery(messageId, searchQuery)
+        if (searchQuery) {
+          await updateChatSearchQuery(messageId, searchQuery)
 
-        process?.({
-          searchQuery,
-        })
+          process?.({
+            searchQuery,
+          })
 
-        const tvly = tavily({ apiKey: searchConfig.options?.apiKey })
-        const response = await tvly.search(
-          searchQuery,
-          {
-            // https://docs.tavily.com/documentation/best-practices/best-practices-search#search-depth%3Dadvanced-ideal-for-higher-relevance-in-search-results
-            searchDepth: 'advanced',
-            chunksPerSource: 3,
-            includeRawContent: true,
-            // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
-            // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
-            maxResults: 10,
-            // Max 120s, default to 60 https://github.com/tavily-ai/tavily-js/blob/de69e479c5d3f6c5d443465fa2c29407c0d3515d/src/search.ts#L118
-            timeout: 120,
-          },
-        )
+          const tvly = tavily({ apiKey: searchConfig.options?.apiKey })
+          const response = await tvly.search(
+            searchQuery,
+            {
+              // https://docs.tavily.com/documentation/best-practices/best-practices-search#search-depth%3Dadvanced-ideal-for-higher-relevance-in-search-results
+              searchDepth: 'advanced',
+              chunksPerSource: 3,
+              includeRawContent: true,
+              // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
+              // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
+              maxResults: searchConfig.options?.maxResults || 10,
+              // Max 120s, default to 60 https://github.com/tavily-ai/tavily-js/blob/de69e479c5d3f6c5d443465fa2c29407c0d3515d/src/search.ts#L118
+              timeout: 120,
+            },
+          )
 
-        const searchResults = response.results as SearchResult[]
-        const searchUsageTime = response.responseTime
+          const searchResults = response.results as SearchResult[]
+          const searchUsageTime = response.responseTime
 
-        await updateChatSearchResult(messageId, searchResults, searchUsageTime)
+          await updateChatSearchResult(messageId, searchResults, searchUsageTime)
 
-        process?.({
-          searchResults,
-          searchUsageTime,
-        })
+          process?.({
+            searchResults,
+            searchUsageTime,
+          })
 
-        let searchResultContent = JSON.stringify(searchResults)
-        // remove image url
-        const base64Pattern = /!\[([^\]]*)\]\([^)]*\)/g
-        searchResultContent = searchResultContent.replace(base64Pattern, '$1')
+          let searchResultContent = JSON.stringify(searchResults)
+          // remove image url
+          const base64Pattern = /!\[([^\]]*)\]\([^)]*\)/g
+          searchResultContent = searchResultContent.replace(base64Pattern, '$1')
 
-        messages.push({
-          role: 'user',
-          content: `Additional information from web searche engine.
+          messages.push({
+            role: 'user',
+            content: `Additional information from web searche engine.
 search query: <search_query>${searchQuery}</search_query>
 search result: <search_result>${searchResultContent}</search_result>`,
-        })
+          })
 
-        messages[0].content = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
-        hasSearchResult = true
+          messages[0].content = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+          hasSearchResult = true
+        }
+      }
+      catch (e) {
+        globalThis.console.error('search error from tavily, ', e)
       }
     }
 
