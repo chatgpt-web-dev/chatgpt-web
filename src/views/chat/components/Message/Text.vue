@@ -4,8 +4,11 @@ import hljs from 'highlight.js/lib/common'
 import MarkdownIt from 'markdown-it'
 import mila from 'markdown-it-link-attributes'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { copyToClip } from '@/utils/copy'
+
+const props = defineProps<Props>()
+
+const { t } = useI18n()
 
 interface Props {
   inversion?: boolean
@@ -15,8 +18,6 @@ interface Props {
   loading?: boolean
   asRawText?: boolean
 }
-
-const props = defineProps<Props>()
 
 const { isMobile } = useBasicLayout()
 

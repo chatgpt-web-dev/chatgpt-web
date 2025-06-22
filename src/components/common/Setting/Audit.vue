@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import type { AuditConfig, ConfigState, TextAuditServiceProvider } from './model'
 import { fetchChatConfig, fetchTestAudit, fetchUpdateAudit } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 
@@ -62,7 +63,7 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditCustomizeEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditCustomizeEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.customizeEnabled"
@@ -71,7 +72,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.customizeEnabled" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditCustomizeWords') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditCustomizeWords') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.sensitiveWords"
@@ -83,7 +84,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false" :value="config && config.enabled"
@@ -92,7 +93,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditProvider') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditProvider') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 140px"
@@ -103,7 +104,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditApiKey') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditApiKey') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.apiKey"
@@ -113,7 +114,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditApiSecret') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditApiSecret') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.apiSecret"
@@ -123,20 +124,20 @@ onMounted(() => {
           </div>
         </div>
         <div v-if="config && config.enabled" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditBaiduLabel') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditBaiduLabel') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.options && config.options.label"
-              :placeholder="$t('setting.auditBaiduLabelTip')"
+              :placeholder="t('setting.auditBaiduLabelTip')"
               @input="(val) => { if (config && config.options) config.options.label = val }"
             />
           </div>
           <p v-if="config && config.provider === 'baidu'">
-            <a target="_blank" href="https://ai.baidu.com/ai-doc/ANTIPORN/Nk3h6xbb2#%E7%BB%86%E5%88%86%E6%A0%87%E7%AD%BE%E5%AF%B9%E7%85%A7%E8%A1%A8">{{ $t('setting.auditBaiduLabelLink') }}</a>
+            <a target="_blank" href="https://ai.baidu.com/ai-doc/ANTIPORN/Nk3h6xbb2#%E7%BB%86%E5%88%86%E6%A0%87%E7%AD%BE%E5%AF%B9%E7%85%A7%E8%A1%A8">{{ t('setting.auditBaiduLabelLink') }}</a>
           </p>
         </div>
         <div v-if="config && (config.enabled || config.customizeEnabled)" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.auditTest') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.auditTest') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="testText"
@@ -148,13 +149,13 @@ onMounted(() => {
           <span class="shrink-0 w-[100px]" />
           <div class="flex flex-wrap items-center gap-4">
             <NButton :loading="saving" type="primary" @click="updateAuditInfo()">
-              {{ $t('common.save') }}
+              {{ t('common.save') }}
             </NButton>
             <NButton :loading="testing" type="info" @click="testAudit()">
-              {{ $t('common.test') }}
+              {{ t('common.test') }}
             </NButton>
             <p class="text-xs text-[#b4bbc4] text-left">
-              {{ $t('common.auditTip') }}
+              {{ t('common.auditTip') }}
             </p>
           </div>
         </div>

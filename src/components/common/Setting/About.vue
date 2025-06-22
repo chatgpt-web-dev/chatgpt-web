@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import { fetchChatConfig, fetchUpdateBaseSetting } from '@/api'
-import { t } from '@/locales'
 import { ConfigState } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 
@@ -46,37 +47,37 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.apiBaseUrl') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.apiBaseUrl') }}</span>
           <div class="flex-1">
             <NInput :value="config.apiBaseUrl" placeholder="https://api.openai.com, Only used by ChatGPTAPI" @input="(val) => { config.apiBaseUrl = val }" />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.reverseProxy') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.reverseProxy') }}</span>
           <div class="flex-1">
             <NInput :value="config.reverseProxy" placeholder="Only used by ChatGPTUnofficialProxyAPI" @input="(val) => { config.reverseProxy = val }" />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.timeout') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.timeout') }}</span>
           <div class="flex-1">
             <NInput :value="config.timeoutMs !== undefined ? String(config.timeoutMs) : undefined" placeholder="" @input="(val) => { config.timeoutMs = typeof val === 'string' ? Number(val) : undefined }" />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.socks') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.socks') }}</span>
           <div class="flex-1">
             <NInput :value="config.socksProxy" placeholder="ip:port" @input="(val) => { config.socksProxy = val }" />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.socksAuth') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.socksAuth') }}</span>
           <div class="flex-1">
             <NInput :value="config.socksAuth" placeholder="name:pasword" @input="(val) => { config.socksAuth = val }" />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.httpsProxy') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.httpsProxy') }}</span>
           <div class="flex-1">
             <NInput :value="config.httpsProxy" placeholder="" @input="(val) => { config.httpsProxy = val }" />
           </div>
@@ -84,7 +85,7 @@ onMounted(() => {
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]" />
           <NButton :loading="saving" type="primary" @click="updateBaseSetting(config)">
-            {{ $t('common.save') }}
+            {{ t('common.save') }}
           </NButton>
         </div>
       </div>

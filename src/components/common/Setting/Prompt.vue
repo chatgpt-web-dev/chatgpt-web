@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import { fetchUpdateChatRoomPrompt } from '@/api'
-import { t } from '@/locales'
 import { useChatStore } from '@/store'
 
 const props = defineProps<Props>()
+
 const emit = defineEmits<Emit>()
+
+const { t } = useI18n()
 
 const chatStore = useChatStore()
 const currentChatHistory = computed(() => chatStore.getChatRoomByCurrentActive)

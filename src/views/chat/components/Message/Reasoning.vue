@@ -1,14 +1,15 @@
 <script lang="ts" setup>
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
+
+const props = defineProps<Props>()
+
+const { t } = useI18n()
 
 interface Props {
   reasoning?: string
   reasonEnd?: boolean
   loading?: boolean
 }
-
-const props = defineProps<Props>()
 
 const { isMobile } = useBasicLayout()
 const instance = getCurrentInstance()
@@ -90,11 +91,11 @@ function toggleCollapse() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <span class="text-gray-700 dark:text-gray-200 truncate">{{ $t('chat.thinking') }}</span>
+          <span class="text-gray-700 dark:text-gray-200 truncate">{{ t('chat.thinking') }}</span>
           <span v-if="hasReasoningText" class="mx-1.5 text-gray-400 dark:text-gray-500">|</span>
         </template>
-        <span v-if="hasReasoningText" class="text-gray-800 dark:text-gray-100 truncate">{{ $t('chat.reasoningProcess') }}</span>
-        <span v-else-if="!shouldShowThinkingIndicator && !hasReasoningText" class="text-gray-500 dark:text-gray-400">({{ $t('chat.noReasoningProcess') }})</span>
+        <span v-if="hasReasoningText" class="text-gray-800 dark:text-gray-100 truncate">{{ t('chat.reasoningProcess') }}</span>
+        <span v-else-if="!shouldShowThinkingIndicator && !hasReasoningText" class="text-gray-500 dark:text-gray-400">({{ t('chat.noReasoningProcess') }})</span>
       </div>
       <button
         v-if="hasReasoningText"

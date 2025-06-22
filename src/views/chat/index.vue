@@ -9,13 +9,14 @@ import {
 import { HoverButton, PromptTypeTag, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
-import { t } from '@/locales'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
 import { debounce } from '@/utils/functions/debounce'
 import { Message } from './components'
 import HeaderComponent from './components/Header/index.vue'
 import { useChat } from './hooks/useChat'
 import { useScroll } from './hooks/useScroll'
+
+const { t } = useI18n()
 
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
@@ -820,38 +821,38 @@ onUnmounted(() => {
             />
             <HoverButton
               v-if="!isMobile"
-              :tooltip="currentChatRoom?.searchEnabled ? $t('chat.clickTurnOffSearch') : $t('chat.clickTurnOnSearch')"
-              :tooltip-help="$t('chat.searchHelp')"
+              :tooltip="currentChatRoom?.searchEnabled ? t('chat.clickTurnOffSearch') : t('chat.clickTurnOnSearch')"
+              :tooltip-help="t('chat.searchHelp')"
               :class="{ 'text-[#4b9e5f]': currentChatRoom?.searchEnabled, 'text-[#a8071a]': !currentChatRoom?.searchEnabled }"
               @click="handleToggleSearchEnabled"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:web" />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
-              :tooltip="currentChatRoom?.thinkEnabled ? $t('chat.clickTurnOffThink') : $t('chat.clickTurnOnThink')"
-              :tooltip-help="$t('chat.thinkHelp')"
+              :tooltip="currentChatRoom?.thinkEnabled ? t('chat.clickTurnOffThink') : t('chat.clickTurnOnThink')"
+              :tooltip-help="t('chat.thinkHelp')"
               :class="{ 'text-[#4b9e5f]': currentChatRoom?.thinkEnabled, 'text-[#a8071a]': !currentChatRoom?.thinkEnabled }"
               @click="handleToggleThinkEnabled"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:lightbulb-outline" />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
-              :tooltip="currentChatRoom?.usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')"
-              :tooltip-help="$t('chat.contextHelp')"
+              :tooltip="currentChatRoom?.usingContext ? t('chat.clickTurnOffContext') : t('chat.clickTurnOnContext')"
+              :tooltip-help="t('chat.contextHelp')"
               :class="{ 'text-[#4b9e5f]': currentChatRoom?.usingContext, 'text-[#a8071a]': !currentChatRoom?.usingContext }"
               @click="handleToggleUsingContext"
             >
               <span class="text-xl flex items-center">
                 <SvgIcon icon="ri:chat-history-line" />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
+                <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
               </span>
             </HoverButton>
             <NSlider

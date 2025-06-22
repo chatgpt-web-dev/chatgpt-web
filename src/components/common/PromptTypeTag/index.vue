@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { t } from '@/locales'
+defineProps<Props>()
+
+const { t } = useI18n()
 
 interface Props {
   type: 'built-in' | 'user-defined'
 }
-
-defineProps<Props>()
 </script>
 
 <template>
