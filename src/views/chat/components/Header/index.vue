@@ -3,6 +3,12 @@ import { HoverButton, SvgIcon } from '@/components/common'
 import IconPrompt from '@/icons/Prompt.vue'
 import { useAppStore, useChatStore } from '@/store'
 
+defineProps<Props>()
+
+const emit = defineEmits<Emit>()
+
+const { t } = useI18n()
+
 interface Props {
   usingContext?: boolean
   showPrompt: boolean
@@ -17,10 +23,6 @@ interface Emit {
   (ev: 'toggleSearchEnabled'): void
   (ev: 'toggleThinkEnabled'): void
 }
-
-defineProps<Props>()
-
-const emit = defineEmits<Emit>()
 
 const appStore = useAppStore()
 const chatStore = useChatStore()
@@ -89,19 +91,19 @@ function handleShowPrompt() {
           <span class="text-xl">
             <SvgIcon icon="ri:chat-history-line" />
           </span>
-          <span style="margin-left:.25em">{{ usingContext ? $t('chat.showOnContext') : $t('chat.showOffContext') }}</span>
+          <span style="margin-left:.25em">{{ usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
         </HoverButton>
         <HoverButton :class="{ 'text-[#4b9e5f]': searchEnabled, 'text-[#a8071a]': !searchEnabled }" @click="toggleSearchEnabled">
           <span class="text-xl">
             <SvgIcon icon="mdi:web" />
           </span>
-          <span style="margin-left:.25em">{{ searchEnabled ? $t('chat.searchEnabled') : $t('chat.searchDisabled') }}</span>
+          <span style="margin-left:.25em">{{ searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
         </HoverButton>
         <HoverButton :class="{ 'text-[#4b9e5f]': thinkEnabled, 'text-[#a8071a]': !thinkEnabled }" @click="toggleThinkEnabled">
           <span class="text-xl">
             <SvgIcon icon="mdi:lightbulb-outline" />
           </span>
-          <span style="margin-left:.25em">{{ thinkEnabled ? $t('chat.thinkEnabled') : $t('chat.thinkDisabled') }}</span>
+          <span style="margin-left:.25em">{{ thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
         </HoverButton>
         <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">

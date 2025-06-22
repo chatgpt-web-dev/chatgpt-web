@@ -58,7 +58,7 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpHost') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpHost') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.smtpHost" placeholder=""
@@ -67,7 +67,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpPort') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpPort') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.smtpPort !== undefined ? String(config.smtpPort) : undefined"
@@ -77,7 +77,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpTsl') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpTsl') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -87,7 +87,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpUserName') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpUserName') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.smtpUserName" placeholder=""
@@ -96,7 +96,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpPassword') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpPassword') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.smtpPassword" placeholder=""
@@ -105,7 +105,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.smtpFrom') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.smtpFrom') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.smtpFrom" placeholder=""
@@ -117,10 +117,10 @@ onMounted(() => {
           <span class="shrink-0 w-[100px]" />
           <div class="flex flex-wrap items-center gap-4">
             <NButton :loading="saving" type="primary" @click="updateMailInfo()">
-              {{ $t('common.save') }}
+              {{ t('common.save') }}
             </NButton>
             <NButton :loading="testing" type="info" @click="testMail()">
-              {{ $t('common.test') }}
+              {{ t('common.test') }}
             </NButton>
           </div>
         </div>

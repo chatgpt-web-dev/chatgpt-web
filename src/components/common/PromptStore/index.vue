@@ -400,7 +400,7 @@ async function handleGetUserPromptList() {
   <NModal v-model:show="show" style="width: 90%; max-width: 900px;" preset="card">
     <div class="space-y-4">
       <NTabs type="segment">
-        <NTabPane name="local" :tab="$t('store.local')">
+        <NTabPane name="local" :tab="t('store.local')">
           <div
             class="flex gap-3 mb-4"
             :class="[isMobile ? 'flex-col' : 'flex-row justify-between']"
@@ -411,28 +411,28 @@ async function handleGetUserPromptList() {
                 size="small"
                 @click="changeShowModal('add')"
               >
-                {{ $t('common.add') }}
+                {{ t('common.add') }}
               </NButton>
               <NButton
                 size="small"
                 @click="changeShowModal('local_import')"
               >
-                {{ $t('common.import') }}
+                {{ t('common.import') }}
               </NButton>
               <NButton
                 size="small"
                 :loading="exportLoading"
                 @click="exportPromptTemplate()"
               >
-                {{ $t('common.export') }}
+                {{ t('common.export') }}
               </NButton>
               <NPopconfirm @positive-click="clearPromptTemplate">
                 <template #trigger>
                   <NButton size="small">
-                    {{ $t('common.clear') }}
+                    {{ t('common.clear') }}
                   </NButton>
                 </template>
-                {{ $t('store.clearStoreConfirm') }}
+                {{ t('store.clearStoreConfirm') }}
               </NPopconfirm>
             </div>
             <div class="flex items-center">
@@ -475,9 +475,9 @@ async function handleGetUserPromptList() {
             </NListItem>
           </NList>
         </NTabPane>
-        <NTabPane name="download" :tab="$t('store.online')">
+        <NTabPane name="download" :tab="t('store.online')">
           <p class="mb-4">
-            {{ $t('store.onlineImportWarning') }}
+            {{ t('store.onlineImportWarning') }}
           </p>
           <div class="flex items-center gap-4">
             <NInput v-model:value="downloadURL" placeholder="" />
@@ -488,7 +488,7 @@ async function handleGetUserPromptList() {
               :loading="importLoading"
               @click="downloadPromptTemplate()"
             >
-              {{ $t('common.download') }}
+              {{ t('common.download') }}
             </NButton>
           </div>
           <NDivider />

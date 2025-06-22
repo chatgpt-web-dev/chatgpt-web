@@ -16,6 +16,7 @@ type MessageSchema = typeof enUS
 
 const i18n = createI18n<[MessageSchema], Language>({
   legacy: false,
+  globalInjection: false,
   locale: defaultLocale,
   fallbackLocale: 'en-US',
   messages: {

@@ -244,7 +244,7 @@ onMounted(async () => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.apiModel') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.apiModel') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 100%"
@@ -255,7 +255,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.api') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.api') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="keyConfig.key" type="textarea"
@@ -264,7 +264,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.apiBaseUrl') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.apiBaseUrl') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="keyConfig.baseUrl"
@@ -273,7 +273,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.chatModels') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.chatModels') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 100%"
@@ -285,7 +285,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.userRoles') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.userRoles') }}</span>
           <div class="flex-1">
             <NSelect
               style="width: 100%"
@@ -297,7 +297,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.status') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.status') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -307,7 +307,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.remark') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.remark') }}</span>
           <div class="flex-1">
             <NInput
               v-model:value="keyConfig.remark" type="textarea"
@@ -318,7 +318,7 @@ onMounted(async () => {
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]" />
           <NButton type="primary" :loading="handleSaving" @click="handleUpdateKeyConfig()">
-            {{ $t('common.save') }}
+            {{ t('common.save') }}
           </NButton>
         </div>
       </div>

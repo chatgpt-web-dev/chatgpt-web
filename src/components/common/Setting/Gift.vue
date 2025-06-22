@@ -148,13 +148,13 @@ async function uploadGiftCards() {
     </div>
     <NDivider />
     <div class="flex items-center space-x-4">
-      <span class="shrink-0 w-[100px]">{{ $t('setting.overRide') }}</span>
+      <span class="shrink-0 w-[100px]">{{ t('setting.overRide') }}</span>
       <div class="flex-1">
         <NSwitch v-model:value="overRideSwitch" />
       </div>
       <div class="flex-1">
         <NButton type="primary" :loading="handleSaving" size="large" @click="uploadGiftCards()">
-          {{ $t('setting.uploadgifts') }}
+          {{ t('setting.uploadgifts') }}
         </NButton>
       </div>
     </div>

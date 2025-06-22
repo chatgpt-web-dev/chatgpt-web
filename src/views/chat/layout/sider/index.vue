@@ -8,6 +8,8 @@ import { useAppStore, useAuthStore, useChatStore } from '@/store'
 import Footer from './Footer.vue'
 import List from './List.vue'
 
+const { t } = useI18n()
+
 const config = ref<AnnounceConfig>()
 
 const appStore = useAppStore()
@@ -118,7 +120,7 @@ onMounted(async () => {
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
           <NButton dashed block :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled" @click="handleAdd">
-            {{ $t('chat.newChatButton') }}
+            {{ t('chat.newChatButton') }}
           </NButton>
         </div>
         <div class="flex-1 min-h-0 pb-4 overflow-hidden">
@@ -126,7 +128,7 @@ onMounted(async () => {
         </div>
         <div class="p-4">
           <NButton block @click="show = true">
-            {{ $t('store.siderButton') }}
+            {{ t('store.siderButton') }}
           </NButton>
         </div>
       </main>

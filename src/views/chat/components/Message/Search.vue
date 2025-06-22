@@ -93,13 +93,13 @@ function toggleCollapse() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <span class="text-blue-700 dark:text-blue-200 truncate">{{ $t('chat.searching') }}</span>
+          <span class="text-blue-700 dark:text-blue-200 truncate">{{ t('chat.searching') }}</span>
           <span class="ml-1.5 mr-5 text-blue-400 dark:text-blue-500">|</span>
         </template>
-        <span class="text-blue-800 dark:text-blue-100 truncate">{{ `${$t('chat.searchQuery')}: ${searchQuery}` }}</span>
+        <span class="text-blue-800 dark:text-blue-100 truncate">{{ `${t('chat.searchQuery')}: ${searchQuery}` }}</span>
         <template v-if="searchUsageTime">
           <span class="mr-1.5 ml-5 text-blue-400 dark:text-blue-500">|</span>
-          <span class="text-blue-600 dark:text-blue-300 truncate">{{ `${$t('chat.searchUsageTime')}: ${searchUsageTime.toFixed(2)}s` }}</span>
+          <span class="text-blue-600 dark:text-blue-300 truncate">{{ `${t('chat.searchUsageTime')}: ${searchUsageTime.toFixed(2)}s` }}</span>
         </template>
       </div>
       <button

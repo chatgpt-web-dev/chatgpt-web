@@ -6,6 +6,8 @@ import { useAppStore, useChatStore } from '@/store'
 import { useAuthStoreWithout } from '@/store/modules/auth'
 import { debounce } from '@/utils/functions/debounce'
 
+const { t } = useI18n()
+
 const { isMobile } = useBasicLayout()
 
 const appStore = useAppStore()
@@ -64,7 +66,7 @@ function isActive(uuid: number) {
         <template v-if="!dataSources.length">
           <div class="flex flex-col items-center mt-4 text-center text-neutral-300">
             <SvgIcon icon="ri:inbox-line" class="mb-2 text-3xl" />
-            <span>{{ $t('common.noData') }}</span>
+            <span>{{ t('common.noData') }}</span>
           </div>
         </template>
         <template v-else>
@@ -101,7 +103,7 @@ function isActive(uuid: number) {
                         <SvgIcon icon="ri:delete-bin-line" />
                       </button>
                     </template>
-                    {{ $t('chat.deleteHistoryConfirm') }}
+                    {{ t('chat.deleteHistoryConfirm') }}
                   </NPopconfirm>
                 </template>
               </div>

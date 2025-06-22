@@ -6,6 +6,7 @@ import { isString } from '@/utils/is'
 import Permission from '@/views/chat/layout/Permission.vue'
 import { UserRole } from '../Setting/model'
 
+const { t } = useI18n()
 const route = useRoute()
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -56,7 +57,7 @@ onMounted(async () => {
         @click="showPermission = true"
       >
         <span v-if="!!authStore.session?.auth && !authStore.token" class="text-xl text-[#ff69b4] dark:text-white">
-          {{ $t('common.notLoggedIn') }}
+          {{ t('common.notLoggedIn') }}
         </span>
         <span v-else class="text-xl text-[#ff69b4] dark:text-white">
           {{ authStore .session?.title }}

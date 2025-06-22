@@ -39,35 +39,35 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.oldPassword') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.oldPassword') }}</span>
           <div class="w-[200px]">
             <NInput
               type="password"
               :value="config && config.oldPassword"
-              :placeholder="$t('setting.oldPassword')"
+              :placeholder="t('setting.oldPassword')"
               @input="(val) => { if (config) config.oldPassword = val }"
             />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.newPassword') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.newPassword') }}</span>
           <div class="w-[200px]">
             <NInput
               type="password"
               :value="config && config.newPassword"
-              :placeholder="$t('setting.newPassword')"
+              :placeholder="t('setting.newPassword')"
               @input="(val) => { if (config) config.newPassword = val }"
             />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ $t('setting.confirmNewPassword') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.confirmNewPassword') }}</span>
           <div class="w-[200px]">
             <NInput
               type="password"
               :value="config && config.confirmPassword"
               :disabled="!config || !config.newPassword"
-              :placeholder="$t('setting.confirmNewPassword')"
+              :placeholder="t('setting.confirmNewPassword')"
               @input="(val) => { if (config) config.confirmPassword = val }"
             />
           </div>
@@ -79,7 +79,7 @@ onMounted(() => {
               :loading="saving" type="primary" :disabled="!config || !config.newPassword || !config.confirmPassword || !config.oldPassword || config.confirmPassword !== config.newPassword || config.newPassword.length < 6"
               @click="updatePassword()"
             >
-              {{ $t('common.save') }}
+              {{ t('common.save') }}
             </NButton>
           </div>
         </div>
