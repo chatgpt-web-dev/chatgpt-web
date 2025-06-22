@@ -2,7 +2,8 @@
 import type { TwoFAConfig } from './model'
 import QrcodeVue from 'qrcode.vue'
 import { fetchDisableUser2FA, fetchGetUser2FA, fetchVerifyUser2FA } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

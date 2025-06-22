@@ -9,13 +9,14 @@ import {
 import { HoverButton, PromptTypeTag, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
-import { t } from '@/locales'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
 import { debounce } from '@/utils/functions/debounce'
 import { Message } from './components'
 import HeaderComponent from './components/Header/index.vue'
 import { useChat } from './hooks/useChat'
 import { useScroll } from './hooks/useScroll'
+
+const { t } = useI18n()
 
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 

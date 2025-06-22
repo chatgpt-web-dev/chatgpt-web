@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import { fetchChatConfig, fetchUpdateBaseSetting } from '@/api'
-import { t } from '@/locales'
 import { ConfigState } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

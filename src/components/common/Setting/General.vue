@@ -5,9 +5,10 @@ import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel, fetchUp
 import { SvgIcon } from '@/components/common'
 import { UserConfig } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { useAppStore, useAuthStore, useUserStore } from '@/store'
 import { getCurrentDate } from '@/utils/functions'
+
+const { t } = useI18n()
 
 const appStore = useAppStore()
 const userStore = useUserStore()

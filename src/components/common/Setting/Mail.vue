@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import type { ConfigState, MailConfig } from './model'
 import { fetchChatConfig, fetchTestMail, fetchUpdateMail } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

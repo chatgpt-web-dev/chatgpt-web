@@ -1,8 +1,9 @@
 <script setup lang='ts'>
 import type { ConfigState, SearchServiceProvider } from './model'
 import { fetchChatConfig, fetchTestSearch, fetchUpdateSearch } from '@/api'
-import { t } from '@/locales'
 import { SearchConfig } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

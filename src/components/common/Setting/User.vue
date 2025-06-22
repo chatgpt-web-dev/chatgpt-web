@@ -3,8 +3,9 @@ import type { DataTableColumns } from 'naive-ui'
 import { NButton, NTag } from 'naive-ui'
 import { fetchDisableUser2FAByAdmin, fetchGetUsers, fetchUpdateUser, fetchUpdateUserStatus } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { Status, UserInfo, UserRole, userRoleOptions } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 const dialog = useDialog()

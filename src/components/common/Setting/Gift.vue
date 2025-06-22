@@ -3,7 +3,8 @@ import type { UploadFileInfo } from 'naive-ui'
 import type { GiftCard } from './model'
 import { fetchUpdateGiftCards } from '@/api'
 import { SvgIcon } from '@/components/common'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 const loading = ref(false)

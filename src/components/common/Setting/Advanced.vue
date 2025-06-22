@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { t } from '@/locales'
 import { useUserStore } from '@/store'
+
+const { t } = useI18n()
 
 const userStore = useUserStore()
 

@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
           'vue',
           'vue-router',
           'pinia',
+          'vue-i18n',
           {
             'naive-ui': [
               'useDialog',

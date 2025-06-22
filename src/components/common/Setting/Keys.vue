@@ -3,9 +3,10 @@ import type { DataTableColumns } from 'naive-ui'
 import { NButton, NTag } from 'naive-ui'
 import { fetchGetKeys, fetchUpdateApiKeyStatus, fetchUpsertApiKey } from '@/api'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { useAuthStore } from '@/store'
 import { apiModelOptions, KeyConfig, Status, UserRole, userRoleOptions } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 const dialog = useDialog()

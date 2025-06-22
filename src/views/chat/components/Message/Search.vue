@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
+
+const props = defineProps<Props>()
+
+const { t } = useI18n()
 
 interface Props {
   searchQuery?: string
@@ -9,8 +12,6 @@ interface Props {
   searchEnd?: boolean
   loading?: boolean
 }
-
-const props = defineProps<Props>()
 
 const { isMobile } = useBasicLayout()
 const instance = getCurrentInstance()

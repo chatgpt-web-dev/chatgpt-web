@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import type { AuditConfig, ConfigState, TextAuditServiceProvider } from './model'
 import { fetchChatConfig, fetchTestAudit, fetchUpdateAudit } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

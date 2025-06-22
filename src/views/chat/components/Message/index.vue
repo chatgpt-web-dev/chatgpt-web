@@ -2,7 +2,6 @@
 import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useIconRender } from '@/hooks/useIconRender'
-import { t } from '@/locales'
 import { useAppStore } from '@/store'
 import { copyToClip } from '@/utils/copy'
 import AvatarComponent from './Avatar.vue'
@@ -13,6 +12,8 @@ import TextComponent from './Text.vue'
 const props = defineProps<Props>()
 
 const emit = defineEmits<Emit>()
+
+const { t } = useI18n()
 
 const appStore = useAppStore()
 

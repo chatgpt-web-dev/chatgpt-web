@@ -6,8 +6,9 @@ import dayjs from 'dayjs'
 import { Bar } from 'vue-chartjs'
 import { fetchGetUsers, fetchUserStatistics } from '@/api'
 import { SvgIcon } from '@/components/common'
-import { t } from '@/locales'
 import { useUserStore } from '@/store'
+
+const { t } = useI18n()
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 

@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import type { AnnounceConfig, ConfigState } from './model'
 import { fetchChatConfig, fetchUpdateAnnounce } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 

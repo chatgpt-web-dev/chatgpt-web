@@ -12,6 +12,7 @@ const appStore = useAppStoreWithOut()
 const defaultLocale = appStore.language || 'zh-CN'
 
 const i18n = createI18n({
+  legacy: false,
   locale: defaultLocale,
   fallbackLocale: 'en-US',
   allowComposition: true,
@@ -23,14 +24,11 @@ const i18n = createI18n({
   },
 })
 
-export const t = i18n.global.t
-
 export function setLocale(locale: Language) {
-  i18n.global.locale = locale
+  i18n.global.locale.value = locale
+  appStore.setLanguage(locale)
 }
 
 export function setupI18n(app: App) {
   app.use(i18n)
 }
-
-export default i18n

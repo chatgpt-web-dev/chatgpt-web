@@ -4,10 +4,15 @@ import { NButton } from 'naive-ui'
 import { fetchClearUserPrompt, fetchDeleteUserPrompt, fetchImportUserPrompt, fetchUpsertUserPrompt, fetchUserPromptList } from '@/api'
 import { UserPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { useAuthStoreWithout, usePromptStore } from '@/store'
 import { SvgIcon } from '..'
 import PromptRecommend from '../../../assets/recommend.json'
+
+const props = defineProps<Props>()
+
+const emit = defineEmits<Emit>()
+
+const { t } = useI18n()
 
 interface DataProps {
   _id?: string
@@ -23,10 +28,6 @@ interface Props {
 interface Emit {
   (e: 'update:visible', visible: boolean): void
 }
-
-const props = defineProps<Props>()
-
-const emit = defineEmits<Emit>()
 
 const message = useMessage()
 
