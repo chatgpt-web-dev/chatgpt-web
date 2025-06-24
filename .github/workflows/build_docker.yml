@@ -28,6 +28,7 @@ jobs:
           enable-url-completion: true
 
   build:
+    name: Build multi-platform images
     strategy:
       fail-fast: false
       matrix:
@@ -62,8 +63,12 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
+          context: .
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT_HASH=${{ github.sha }}
+            RELEASE_VERSION=${{ github.ref_name }}
           outputs: type=image,name=${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
@@ -81,6 +86,7 @@ jobs:
           retention-days: 1
 
   merge:
+    name: Merge multi-platform images
     runs-on: ubuntu-latest
     needs:
       - build
