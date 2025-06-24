@@ -106,9 +106,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{raw}}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
