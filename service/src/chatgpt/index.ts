@@ -119,6 +119,12 @@ async function chatReplyProcess(options: RequestOptions) {
             enable_thinking: false,
           }
         }
+        else if (key.keyModel === 'FastDeploy') {
+          getSearchQueryChatCompletionCreateBody.metadata = {
+            // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
+            enable_thinking: false,
+          }
+        }
         const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
         let searchQuery: string = completion.choices[0].message.content
         const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
@@ -198,6 +204,12 @@ search result: <search_result>${searchResultContent}</search_result>`,
     if (key.keyModel === 'VLLM') {
       // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
       chatCompletionCreateBody.chat_template_kwargs = {
+        enable_thinking: options.room.thinkEnabled,
+      }
+    }
+    else if (key.keyModel === 'FastDeploy') {
+      chatCompletionCreateBody.metadata = {
+        // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
         enable_thinking: options.room.thinkEnabled,
       }
     }
