@@ -184,6 +184,7 @@
     "searchProvider": "검색 공급자",
     "searchApiKey": "검색 API 키",
     "searchMaxResults": "최대 검색 결과 수",
+    "searchIncludeRawContent": "원시 콘텐츠 포함",
     "systemMessageWithSearchResult": "검색 결과가 포함된 대화 시스템 프롬프트",
     "systemMessageGetSearchQuery": "검색 쿼리어를 가져오는 시스템 프롬프트",
     "systemMessageWithSearchResultPlaceholder": "검색 결과가 포함된 시스템 메시지 템플릿, {'{current_time}'}를 현재 시간의 플레이스홀더로 사용",

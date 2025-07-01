@@ -95,7 +95,7 @@ export async function getOriginConfig() {
   if (!config.searchConfig) {
     config.searchConfig = new SearchConfig()
     config.searchConfig.enabled = false
-    config.searchConfig.options = { apiKey: '', maxResults: 10 }
+    config.searchConfig.options = { apiKey: '', maxResults: 10, includeRawContent: false }
   }
 
   if (!isNotEmptyString(config.siteConfig.chatModels))

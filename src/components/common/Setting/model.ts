@@ -186,6 +186,7 @@ export type SearchServiceProvider = 'tavily' | ''
 export interface SearchServiceOptions {
   apiKey: string
   maxResults?: number
+  includeRawContent?: boolean
 }
 
 export class SearchConfig {
