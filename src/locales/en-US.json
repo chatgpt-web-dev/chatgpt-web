@@ -184,6 +184,7 @@
     "searchProvider": "Search Provider",
     "searchApiKey": "Search API Key",
     "searchMaxResults": "Max Search Results",
+    "searchIncludeRawContent": "Include Raw Content",
     "systemMessageWithSearchResult": "System message for conversations with search results",
     "systemMessageGetSearchQuery": "System message for getting search query",
     "systemMessageWithSearchResultPlaceholder": "System message template when with search results. Use {'{current_time}'} as placeholder for current time.",

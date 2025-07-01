@@ -28,6 +28,8 @@ async function fetchConfig() {
       data.searchConfig.options = { apiKey: '' }
     if (!data.searchConfig.options.maxResults)
       data.searchConfig.options.maxResults = 10
+    if (data.searchConfig.options.includeRawContent === undefined)
+      data.searchConfig.options.includeRawContent = false
     config.value = data.searchConfig
   }
   finally {
@@ -108,6 +110,15 @@ onMounted(() => {
               :max="20"
               placeholder="1-20"
               style="width: 140px"
+            />
+          </div>
+        </div>
+        <div v-if="config && config.enabled" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.searchIncludeRawContent') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false" :value="config && config.options.includeRawContent"
+              @update:value="(val) => { if (config && config.options) config.options.includeRawContent = val }"
             />
           </div>
         </div>

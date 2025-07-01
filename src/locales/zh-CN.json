@@ -184,6 +184,7 @@
     "searchProvider": "搜索提供商",
     "searchApiKey": "搜索 API 密钥",
     "searchMaxResults": "最大搜索结果数",
+    "searchIncludeRawContent": "包含原始内容",
     "systemMessageWithSearchResult": "包含搜索结果时的对话系统提示词",
     "systemMessageGetSearchQuery": "用于获取搜索查询词的系统提示词",
     "systemMessageWithSearchResultPlaceholder": "携带搜索结果时的系统消息模板, 使用 {'{current_time}'} 作为当前时间的占位符",

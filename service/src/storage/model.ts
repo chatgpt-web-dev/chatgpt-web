@@ -200,6 +200,7 @@ export enum SearchServiceProvider {
 export class SearchServiceOptions {
   public apiKey: string
   public maxResults?: number
+  public includeRawContent?: boolean
 }
 
 export class Config {
