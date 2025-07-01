@@ -326,4 +326,4 @@ export class UserPrompt {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI' | 'VLLM'
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy'
