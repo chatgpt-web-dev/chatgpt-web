@@ -48,7 +48,7 @@ const contentWrapperComputedClass = computed(() => {
   return [
     'overflow-hidden',
     'transition-all duration-300 ease-in-out',
-    (isCollapsed.value || !hasReasoningText.value) ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100',
+    (isCollapsed.value || !hasReasoningText.value) ? 'max-h-0 opacity-0' : 'opacity-100',
   ]
 })
 
