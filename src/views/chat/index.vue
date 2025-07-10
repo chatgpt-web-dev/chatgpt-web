@@ -3,6 +3,7 @@ import type { MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import {
   fetchChatAPIProcess,
+  fetchChatAPIProcessSSE,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
 } from '@/api'
@@ -132,77 +133,150 @@ async function onConversation() {
 
   try {
     let lastText = ''
+    let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
       let searchQuery: string
       let searchResults: Chat.SearchResult[]
       let searchUsageTime: number
 
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
+      await fetchChatAPIProcessSSE({
         roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid,
         prompt: message,
         uploadFileKeys,
         options,
         signal: controller.signal,
-        onDownloadProgress: async ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            if (data.searchQuery)
-              searchQuery = data.searchQuery
-            if (data.searchResults)
-              searchResults = data.searchResults
-            if (data.searchUsageTime)
-              searchUsageTime = data.searchUsageTime
-
-            const usage = (data.detail && data.detail.usage)
-              ? {
-                  completion_tokens: data.detail.usage.completion_tokens || null,
-                  prompt_tokens: data.detail.usage.prompt_tokens || null,
-                  total_tokens: data.detail.usage.total_tokens || null,
-                  estimated: data.detail.usage.estimated || null,
-                }
-              : undefined
-            await chatStore.updateChatMessage(
-              currentChatRoom.value!.roomId,
-              dataSources.value.length - 1,
-              {
-                dateTime: new Date().toLocaleString(),
-                searchQuery,
-                searchResults,
-                searchUsageTime,
-                reasoning: data?.reasoning,
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-                usage,
-              },
-            )
-
-            if (openLongReply && data.detail && data.detail.choices.length > 0 && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-
-            await scrollToBottomIfAtBottom()
+      }, {
+        onSearchQuery: (data) => {
+          searchQuery = data.searchQuery
+        },
+        onSearchResults: (data) => {
+          searchResults = data.searchResults
+          searchUsageTime = data.searchUsageTime
+        },
+        onDelta: async (delta) => {
+          // 处理增量数据
+          if (delta.text) {
+            lastText += delta.text
           }
-          catch {
-            //
+          if (delta.reasoning) {
+            accumulatedReasoning += delta.reasoning
           }
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: accumulatedReasoning,
+              text: lastText,
+              inversion: false,
+              error: false,
+              loading: true,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+
+          await scrollToBottomIfAtBottom()
+        },
+        onMessage: async (data) => {
+          // 处理完整消息数据（兼容模式）
+          if (data.searchQuery)
+            searchQuery = data.searchQuery
+          if (data.searchResults)
+            searchResults = data.searchResults
+          if (data.searchUsageTime)
+            searchUsageTime = data.searchUsageTime
+
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: data?.reasoning,
+              text: data.text ?? '',
+              inversion: false,
+              error: false,
+              loading: true,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+
+          if (openLongReply && data.detail && data.detail.choices?.length > 0 && data.detail.choices[0].finish_reason === 'length') {
+            options.parentMessageId = data.id
+            lastText = data.text
+            message = ''
+            return fetchChatAPIOnce()
+          }
+
+          await scrollToBottomIfAtBottom()
+        },
+        onComplete: async (data) => {
+          // 处理完成事件
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: data?.reasoning || accumulatedReasoning,
+              text: data?.text || lastText,
+              inversion: false,
+              error: false,
+              loading: false,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+        },
+        onError: async (error) => {
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              text: error,
+              inversion: false,
+              error: true,
+              loading: false,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+        },
+        onEnd: () => {
+          updateChatSome(currentChatRoom.value!.roomId, dataSources.value.length - 1, { loading: false })
         },
       })
-      updateChatSome(currentChatRoom.value!.roomId, dataSources.value.length - 1, { loading: false })
     }
 
     await fetchChatAPIOnce()
@@ -294,63 +368,129 @@ async function onRegenerate(index: number) {
 
   try {
     let lastText = ''
+    let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
+      await fetchChatAPIProcessSSE({
         roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid || Date.now(),
         regenerate: true,
         prompt: message,
         options,
         signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            const usage = (data.detail && data.detail.usage)
-              ? {
-                  completion_tokens: data.detail.usage.completion_tokens || null,
-                  prompt_tokens: data.detail.usage.prompt_tokens || null,
-                  total_tokens: data.detail.usage.total_tokens || null,
-                  estimated: data.detail.usage.estimated || null,
-                }
-              : undefined
-            updateChat(
-              currentChatRoom.value!.roomId,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                reasoning: data?.reasoning,
-                finish_reason: data?.finish_reason,
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                responseCount,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-                usage,
-              },
-            )
+      }, {
+        onDelta: async (delta) => {
+          // 处理增量数据
+          if (delta.text) {
+            lastText += delta.text
+          }
+          if (delta.reasoning) {
+            accumulatedReasoning += delta.reasoning
+          }
 
-            if (openLongReply && data.detail && data.detail.choices.length > 0 && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
+
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              reasoning: accumulatedReasoning,
+              text: lastText,
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: true,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+
+          scrollToBottomIfAtBottom()
+        },
+        onMessage: async (data) => {
+          // 处理完整消息数据（兼容模式）
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              reasoning: data?.reasoning,
+              finish_reason: data?.finish_reason,
+              text: data.text ?? '',
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: true,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+
+          if (openLongReply && data.detail && data.detail.choices?.length > 0 && data.detail.choices[0].finish_reason === 'length') {
+            options.parentMessageId = data.id
+            lastText = data.text
+            message = ''
+            return fetchChatAPIOnce()
           }
-          catch {
-            //
-          }
+
+          scrollToBottomIfAtBottom()
+        },
+        onComplete: async (data) => {
+          // 处理完成事件
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              reasoning: data?.reasoning || accumulatedReasoning,
+              finish_reason: data?.finish_reason,
+              text: data?.text || lastText,
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: false,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+        },
+        onError: async (error) => {
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              text: error,
+              inversion: false,
+              responseCount,
+              error: true,
+              loading: false,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+        },
+        onEnd: () => {
+          updateChatSome(currentChatRoom.value!.roomId, index, { loading: false })
         },
       })
-      updateChatSome(currentChatRoom.value!.roomId, index, { loading: false })
     }
     await fetchChatAPIOnce()
   }

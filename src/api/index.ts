@@ -1,7 +1,7 @@
 import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
-import { useUserStore } from '@/store'
+import { useAuthStore, useUserStore } from '@/store'
 import { get, post } from '@/utils/request'
 
 export function fetchAnnouncement<T = any>() {
@@ -16,6 +16,137 @@ export function fetchChatConfig<T = any>() {
   })
 }
 
+// SSE 事件处理器接口
+interface SSEEventHandlers {
+  onMessage?: (data: any) => void
+  onDelta?: (delta: { reasoning?: string, text?: string }) => void
+  onSearchQuery?: (data: { searchQuery: string }) => void
+  onSearchResults?: (data: { searchResults: any[], searchUsageTime: number }) => void
+  onComplete?: (data: any) => void
+  onError?: (error: string) => void
+  onEnd?: () => void
+}
+
+// 新的 SSE 聊天处理函数
+export function fetchChatAPIProcessSSE(
+  params: {
+    roomId: number
+    uuid: number
+    regenerate?: boolean
+    prompt: string
+    uploadFileKeys?: string[]
+    options?: { conversationId?: string, parentMessageId?: string }
+    signal?: AbortSignal
+  },
+  handlers: SSEEventHandlers,
+): Promise<void> {
+  const userStore = useUserStore()
+  const authStore = useAuthStore()
+
+  const data: Record<string, any> = {
+    roomId: params.roomId,
+    uuid: params.uuid,
+    regenerate: params.regenerate || false,
+    prompt: params.prompt,
+    uploadFileKeys: params.uploadFileKeys,
+    options: params.options,
+    systemMessage: userStore.userInfo.advanced.systemMessage,
+    temperature: userStore.userInfo.advanced.temperature,
+    top_p: userStore.userInfo.advanced.top_p,
+  }
+
+  return new Promise((resolve, reject) => {
+    const baseURL = import.meta.env.VITE_GLOB_API_URL || ''
+    const url = `${baseURL}/api/chat-process`
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authStore.token ? `Bearer ${authStore.token}` : '',
+      },
+      body: JSON.stringify(data),
+      signal: params.signal,
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No reader available')
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      function readStream(): void {
+        reader!.read().then(({ done, value }) => {
+          if (done) {
+            handlers.onEnd?.()
+            resolve()
+            return
+          }
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // Keep the incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim() === '')
+              continue
+
+            if (line.startsWith('event: ')) {
+              const _eventType = line.substring(7).trim()
+              continue
+            }
+
+            if (line.startsWith('data: ')) {
+              const data = line.substring(6).trim()
+
+              if (data === '[DONE]') {
+                handlers.onEnd?.()
+                resolve()
+                return
+              }
+
+              try {
+                const jsonData = JSON.parse(data)
+        
+
+                // 根据前面的 event 类型分发到不同的处理器
+                if (jsonData.message) {
+                  handlers.onError?.(jsonData.message)
+                }
+                else if (jsonData.searchQuery) {
+                  handlers.onSearchQuery?.(jsonData)
+                }
+                else if (jsonData.searchResults) {
+                  handlers.onSearchResults?.(jsonData)
+                }
+                else if (jsonData.m) {
+                  handlers.onDelta?.(jsonData.m)
+                }
+                else {
+                  handlers.onMessage?.(jsonData)
+                }
+              }
+              catch (e) {
+                console.error('Failed to parse SSE data:', data, e)
+              }
+            }
+          }
+
+          readStream()
+        }).catch(reject)
+      }
+
+      readStream()
+    }).catch(reject)
+  })
+}
+
+// 保持向后兼容的函数（如果需要的话）
 export function fetchChatAPIProcess<T = any>(
   params: {
     roomId: number

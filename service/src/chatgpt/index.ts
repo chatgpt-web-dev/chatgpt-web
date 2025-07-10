@@ -237,13 +237,18 @@ search result: <search_result>${searchResultContent}</search_result>`,
 
       const finish_reason = chunk.choices[0]?.finish_reason
 
-      // Build response object similar to the original implementation
+      // 构建增量响应对象
       const responseChunk = {
         id: chunk.id,
-        reasoning: responseReasoning,
-        text: responseText,
+        reasoning: responseReasoning, // 累积的推理内容
+        text: responseText,          // 累积的文本内容 
         role: 'assistant',
         finish_reason,
+        // 增量数据，只包含本次新增的内容
+        delta: {
+          reasoning: reasoningContent, // 本次新增的推理内容
+          text: content,              // 本次新增的文本内容
+        }
       }
 
       // Call the process callback if provided

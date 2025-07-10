@@ -20,6 +20,11 @@ export interface ResponseChunk {
   reasoning?: string
   role?: string
   finish_reason?: string
+  // 支持增量响应
+  delta?: {
+    reasoning?: string
+    text?: string
+  }
 }
 
 export interface RequestOptions {
