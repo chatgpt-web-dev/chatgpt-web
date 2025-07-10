@@ -288,37 +288,38 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         return
       }
     }
-    
+
     message = regenerate ? await getChat(roomId, uuid) : await insertChat(uuid, prompt, uploadFileKeys, roomId, model, options as ChatOptions)
-    
+
     result = await chatReplyProcess({
       message: prompt,
       uploadFileKeys,
       parentMessageId: options?.parentMessageId,
       process: (chunk: ResponseChunk) => {
         lastResponse = chunk
-        
+
         // 根据数据类型发送不同的 SSE 事件
         if (chunk.searchQuery) {
           sendSSEData('search_query', { searchQuery: chunk.searchQuery })
         }
         if (chunk.searchResults) {
-          sendSSEData('search_results', { 
+          sendSSEData('search_results', {
             searchResults: chunk.searchResults,
-            searchUsageTime: chunk.searchUsageTime 
+            searchUsageTime: chunk.searchUsageTime,
           })
         }
         if (chunk.delta) {
           // 发送增量数据
-          sendSSEData('delta', {m: chunk.delta})
-        } else {
+          sendSSEData('delta', { m: chunk.delta })
+        }
+        else {
           // 兼容现有格式，发送完整数据但标记为增量类型
           sendSSEData('message', {
             id: chunk.id,
             reasoning: chunk.reasoning,
             text: chunk.text,
             role: chunk.role,
-            finish_reason: chunk.finish_reason
+            finish_reason: chunk.finish_reason,
           })
         }
       },
@@ -330,12 +331,12 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       room,
       chatUuid: uuid,
     })
-    
+
     // 发送最终完成数据
     if (result && result.status === 'Success') {
       sendSSEData('complete', result.data)
     }
-    
+
     sendSSEEnd()
   }
   catch (error) {

@@ -97,7 +97,7 @@ export function fetchChatAPIProcessSSE(
               continue
 
             if (line.startsWith('event: ')) {
-              const _eventType = line.substring(7).trim()
+              // const _eventType = line.substring(7).trim()
               continue
             }
 

@@ -241,14 +241,14 @@ search result: <search_result>${searchResultContent}</search_result>`,
       const responseChunk = {
         id: chunk.id,
         reasoning: responseReasoning, // 累积的推理内容
-        text: responseText,          // 累积的文本内容 
+        text: responseText, // 累积的文本内容
         role: 'assistant',
         finish_reason,
         // 增量数据，只包含本次新增的内容
         delta: {
           reasoning: reasoningContent, // 本次新增的推理内容
-          text: content,              // 本次新增的文本内容
-        }
+          text: content, // 本次新增的文本内容
+        },
       }
 
       // Call the process callback if provided
