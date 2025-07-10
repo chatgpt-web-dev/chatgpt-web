@@ -2,7 +2,6 @@
 import type { MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import {
-  fetchChatAPIProcess,
   fetchChatAPIProcessSSE,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
@@ -386,7 +385,6 @@ async function onRegenerate(index: number) {
           if (delta.reasoning) {
             accumulatedReasoning += delta.reasoning
           }
-
 
           updateChat(
             currentChatRoom.value!.roomId,

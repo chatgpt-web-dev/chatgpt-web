@@ -112,7 +112,6 @@ export function fetchChatAPIProcessSSE(
 
               try {
                 const jsonData = JSON.parse(data)
-        
 
                 // 根据前面的 event 类型分发到不同的处理器
                 if (jsonData.message) {
@@ -225,7 +224,7 @@ export function fetchLogin<T = any>(username: string, password: string, token?: 
 export function fetchLogout<T = any>() {
   return post<T>({
     url: '/user-logout',
-    data: { },
+    data: {},
   })
 }
 
@@ -440,7 +439,7 @@ export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number, al
 export function fetchClearAllChat<T = any>() {
   return post<T>({
     url: '/chat-clear-all',
-    data: { },
+    data: {},
   })
 }
 
