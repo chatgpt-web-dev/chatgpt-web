@@ -1,7 +1,8 @@
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
-import { useAuthStore, useUserStore } from '@/store'
+import { useUserStore } from '@/store'
 import { get, post } from '@/utils/request'
+import fetchService from '@/utils/request/fetchService'
 
 export function fetchAnnouncement<T = any>() {
   return post<T>({
@@ -26,7 +27,7 @@ interface SSEEventHandlers {
   onEnd?: () => void
 }
 
-// SSE chat processing function
+// SSE chat processing function using custom fetch service
 export function fetchChatAPIProcessSSE(
   params: {
     roomId: number
@@ -40,7 +41,6 @@ export function fetchChatAPIProcessSSE(
   handlers: SSEEventHandlers,
 ): Promise<void> {
   const userStore = useUserStore()
-  const authStore = useAuthStore()
 
   const data: Record<string, any> = {
     roomId: params.roomId,
@@ -55,92 +55,66 @@ export function fetchChatAPIProcessSSE(
   }
 
   return new Promise((resolve, reject) => {
-    const baseURL = import.meta.env.VITE_GLOB_API_URL || ''
-    const url = `${baseURL}/api/chat-process`
-
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authStore.token ? `Bearer ${authStore.token}` : '',
+    fetchService.postStream(
+      {
+        url: '/chat-process',
+        body: data,
+        signal: params.signal,
       },
-      body: JSON.stringify(data),
-      signal: params.signal,
-    }).then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
+      {
+        onChunk: (line: string) => {
+          if (line.trim() === '')
+            return
 
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('No reader available')
-      }
-
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      function readStream(): void {
-        reader!.read().then(({ done, value }) => {
-          if (done) {
-            handlers.onEnd?.()
-            resolve()
+          if (line.startsWith('event: ')) {
+            // const _eventType = line.substring(7).trim()
             return
           }
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || '' // Keep the incomplete line in buffer
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6).trim()
 
-          for (const line of lines) {
-            if (line.trim() === '')
-              continue
-
-            if (line.startsWith('event: ')) {
-              // const _eventType = line.substring(7).trim()
-              continue
+            if (data === '[DONE]') {
+              handlers.onEnd?.()
+              resolve()
+              return
             }
 
-            if (line.startsWith('data: ')) {
-              const data = line.substring(6).trim()
+            try {
+              const jsonData = JSON.parse(data)
 
-              if (data === '[DONE]') {
-                handlers.onEnd?.()
-                resolve()
-                return
+              // Dispatch to different handlers based on data type
+              if (jsonData.message) {
+                handlers.onError?.(jsonData.message)
               }
-
-              try {
-                const jsonData = JSON.parse(data)
-
-                // 根据前面的 event 类型分发到不同的处理器
-                if (jsonData.message) {
-                  handlers.onError?.(jsonData.message)
-                }
-                else if (jsonData.searchQuery) {
-                  handlers.onSearchQuery?.(jsonData)
-                }
-                else if (jsonData.searchResults) {
-                  handlers.onSearchResults?.(jsonData)
-                }
-                else if (jsonData.m) {
-                  handlers.onDelta?.(jsonData.m)
-                }
-                else {
-                  handlers.onMessage?.(jsonData)
-                }
+              else if (jsonData.searchQuery) {
+                handlers.onSearchQuery?.(jsonData)
               }
-              catch (e) {
-                console.error('Failed to parse SSE data:', data, e)
+              else if (jsonData.searchResults) {
+                handlers.onSearchResults?.(jsonData)
               }
+              else if (jsonData.m) {
+                handlers.onDelta?.(jsonData.m)
+              }
+              else {
+                handlers.onMessage?.(jsonData)
+              }
+            }
+            catch (e) {
+              console.error('Failed to parse SSE data:', data, e)
             }
           }
-
-          readStream()
-        }).catch(reject)
-      }
-
-      readStream()
-    }).catch(reject)
+        },
+        onError: (error: Error) => {
+          handlers.onError?.(error.message)
+          reject(error)
+        },
+        onComplete: () => {
+          handlers.onEnd?.()
+          resolve()
+        },
+      },
+    )
   })
 }
 
