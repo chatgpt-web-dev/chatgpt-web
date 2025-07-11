@@ -369,6 +369,10 @@ async function onRegenerate(index: number) {
     let lastText = ''
     let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
+      let searchQuery: string
+      let searchResults: Chat.SearchResult[]
+      let searchUsageTime: number
+
       await fetchChatAPIProcessSSE({
         roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid || Date.now(),
@@ -377,6 +381,13 @@ async function onRegenerate(index: number) {
         options,
         signal: controller.signal,
       }, {
+        onSearchQuery: (data) => {
+          searchQuery = data.searchQuery
+        },
+        onSearchResults: (data) => {
+          searchResults = data.searchResults
+          searchUsageTime = data.searchUsageTime
+        },
         onDelta: async (delta) => {
           // 处理增量数据
           if (delta.text) {
@@ -391,6 +402,9 @@ async function onRegenerate(index: number) {
             index,
             {
               dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
               reasoning: accumulatedReasoning,
               text: lastText,
               inversion: false,
@@ -406,6 +420,13 @@ async function onRegenerate(index: number) {
         },
         onMessage: async (data) => {
           // Handle complete message data (compatibility mode)
+          if (data.searchQuery)
+            searchQuery = data.searchQuery
+          if (data.searchResults)
+            searchResults = data.searchResults
+          if (data.searchUsageTime)
+            searchUsageTime = data.searchUsageTime
+          // Handle complete message data (compatibility mode)
           const usage = (data.detail && data.detail.usage)
             ? {
                 completion_tokens: data.detail.usage.completion_tokens || null,
@@ -419,6 +440,9 @@ async function onRegenerate(index: number) {
             index,
             {
               dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
               reasoning: data?.reasoning,
               finish_reason: data?.finish_reason,
               text: data.text ?? '',
