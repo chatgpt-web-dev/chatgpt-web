@@ -154,7 +154,7 @@ async function onConversation() {
           searchUsageTime = data.searchUsageTime
         },
         onDelta: async (delta) => {
-          // 处理增量数据
+          // Handle incremental data
           if (delta.text) {
             lastText += delta.text
           }
@@ -182,7 +182,7 @@ async function onConversation() {
           await scrollToBottomIfAtBottom()
         },
         onMessage: async (data) => {
-          // 处理完整消息数据（兼容模式）
+          // Handle complete message data (compatibility mode)
           if (data.searchQuery)
             searchQuery = data.searchQuery
           if (data.searchResults)
@@ -228,7 +228,7 @@ async function onConversation() {
           await scrollToBottomIfAtBottom()
         },
         onComplete: async (data) => {
-          // 处理完成事件
+          // Handle complete event
           const usage = (data.detail && data.detail.usage)
             ? {
                 completion_tokens: data.detail.usage.completion_tokens || null,
@@ -405,7 +405,7 @@ async function onRegenerate(index: number) {
           scrollToBottomIfAtBottom()
         },
         onMessage: async (data) => {
-          // 处理完整消息数据（兼容模式）
+          // Handle complete message data (compatibility mode)
           const usage = (data.detail && data.detail.usage)
             ? {
                 completion_tokens: data.detail.usage.completion_tokens || null,

@@ -225,7 +225,7 @@ router.post('/chat-clear', auth, async (req, res) => {
 })
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
-  // 设置 SSE 响应头
+  // set headers for SSE
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
@@ -247,7 +247,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let message: ChatInfo
   let user = await getUserById(userId)
 
-  // SSE 辅助函数
+  // SSE helper functions
   const sendSSEData = (eventType: string, data: any) => {
     res.write(`event: ${eventType}\n`)
     res.write(`data: ${JSON.stringify(data)}\n\n`)
@@ -298,7 +298,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       process: (chunk: ResponseChunk) => {
         lastResponse = chunk
 
-        // 根据数据类型发送不同的 SSE 事件
+        // set sse event by different data type
         if (chunk.searchQuery) {
           sendSSEData('search_query', { searchQuery: chunk.searchQuery })
         }
@@ -309,11 +309,11 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
           })
         }
         if (chunk.delta) {
-          // 发送增量数据
+          // send SSE event with delta type
           sendSSEData('delta', { m: chunk.delta })
         }
         else {
-          // 兼容现有格式，发送完整数据但标记为增量类型
+          // send all data
           sendSSEData('message', {
             id: chunk.id,
             reasoning: chunk.reasoning,

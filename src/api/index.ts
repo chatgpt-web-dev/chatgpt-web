@@ -1,4 +1,3 @@
-import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
 import { useAuthStore, useUserStore } from '@/store'
@@ -16,7 +15,7 @@ export function fetchChatConfig<T = any>() {
   })
 }
 
-// SSE 事件处理器接口
+// SSE event handler interface
 interface SSEEventHandlers {
   onMessage?: (data: any) => void
   onDelta?: (delta: { reasoning?: string, text?: string }) => void
@@ -27,7 +26,7 @@ interface SSEEventHandlers {
   onEnd?: () => void
 }
 
-// 新的 SSE 聊天处理函数
+// SSE chat processing function
 export function fetchChatAPIProcessSSE(
   params: {
     roomId: number
@@ -142,41 +141,6 @@ export function fetchChatAPIProcessSSE(
 
       readStream()
     }).catch(reject)
-  })
-}
-
-// 保持向后兼容的函数（如果需要的话）
-export function fetchChatAPIProcess<T = any>(
-  params: {
-    roomId: number
-    uuid: number
-    regenerate?: boolean
-    prompt: string
-    uploadFileKeys?: string[]
-    options?: { conversationId?: string, parentMessageId?: string }
-    signal?: GenericAbortSignal
-    onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
-  },
-) {
-  const userStore = useUserStore()
-
-  const data: Record<string, any> = {
-    roomId: params.roomId,
-    uuid: params.uuid,
-    regenerate: params.regenerate || false,
-    prompt: params.prompt,
-    uploadFileKeys: params.uploadFileKeys,
-    options: params.options,
-    systemMessage: userStore.userInfo.advanced.systemMessage,
-    temperature: userStore.userInfo.advanced.temperature,
-    top_p: userStore.userInfo.advanced.top_p,
-  }
-
-  return post<T>({
-    url: '/chat-process',
-    data,
-    signal: params.signal,
-    onDownloadProgress: params.onDownloadProgress,
   })
 }
 

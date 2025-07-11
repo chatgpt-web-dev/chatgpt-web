@@ -237,17 +237,17 @@ search result: <search_result>${searchResultContent}</search_result>`,
 
       const finish_reason = chunk.choices[0]?.finish_reason
 
-      // 构建增量响应对象
+      // Build incremental response object
       const responseChunk = {
         id: chunk.id,
-        reasoning: responseReasoning, // 累积的推理内容
-        text: responseText, // 累积的文本内容
+        reasoning: responseReasoning, // Accumulated reasoning content
+        text: responseText, // Accumulated text content
         role: 'assistant',
         finish_reason,
-        // 增量数据，只包含本次新增的内容
+        // Incremental data
         delta: {
-          reasoning: reasoningContent, // 本次新增的推理内容
-          text: content, // 本次新增的文本内容
+          reasoning: reasoningContent, // reasoning content in this chunk
+          text: content, // text content in this chunk
         },
       }
 
