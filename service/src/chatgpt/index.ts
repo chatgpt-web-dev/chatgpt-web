@@ -237,13 +237,18 @@ search result: <search_result>${searchResultContent}</search_result>`,
 
       const finish_reason = chunk.choices[0]?.finish_reason
 
-      // Build response object similar to the original implementation
+      // Build incremental response object
       const responseChunk = {
         id: chunk.id,
-        reasoning: responseReasoning,
-        text: responseText,
+        reasoning: responseReasoning, // Accumulated reasoning content
+        text: responseText, // Accumulated text content
         role: 'assistant',
         finish_reason,
+        // Incremental data
+        delta: {
+          reasoning: reasoningContent, // reasoning content in this chunk
+          text: content, // text content in this chunk
+        },
       }
 
       // Call the process callback if provided

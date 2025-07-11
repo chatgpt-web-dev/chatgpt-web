@@ -225,7 +225,12 @@ router.post('/chat-clear', auth, async (req, res) => {
 })
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
-  res.setHeader('Content-type', 'application/octet-stream')
+  // set headers for SSE
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control')
 
   let { roomId, uuid, regenerate, prompt, uploadFileKeys, options = {}, systemMessage, temperature, top_p } = req.body as RequestProps
   const userId = req.headers.userId.toString()
@@ -241,6 +246,22 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let result
   let message: ChatInfo
   let user = await getUserById(userId)
+
+  // SSE helper functions
+  const sendSSEData = (eventType: string, data: any) => {
+    res.write(`event: ${eventType}\n`)
+    res.write(`data: ${JSON.stringify(data)}\n\n`)
+  }
+
+  const sendSSEError = (error: string) => {
+    sendSSEData('error', JSON.stringify({ message: error }))
+  }
+
+  const sendSSEEnd = () => {
+    res.write('event: end\n')
+    res.write('data: [DONE]\n\n')
+  }
+
   try {
     // If use the fixed fakeuserid(some probability of duplicated with real ones), redefine user which is send to chatReplyProcess
     if (userId === '6406d8c50aedd633885fa16f') {
@@ -251,7 +272,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       if (config.siteConfig?.usageCountLimit) {
         const useAmount = user ? (user.useAmount ?? 0) : 0
         if (Number(useAmount) <= 0 && user.limit_switch) {
-          res.send({ status: 'Fail', message: '提问次数用完啦 | Question limit reached', data: null })
+          sendSSEError('提问次数用完啦 | Question limit reached')
+          sendSSEEnd()
+          res.end()
           return
         }
       }
@@ -259,12 +282,15 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 
     if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
       if (!user.roles.includes(UserRole.Admin) && await containsSensitiveWords(config.auditConfig, prompt)) {
-        res.send({ status: 'Fail', message: '含有敏感词 | Contains sensitive words', data: null })
+        sendSSEError('含有敏感词 | Contains sensitive words')
+        sendSSEEnd()
+        res.end()
         return
       }
     }
+
     message = regenerate ? await getChat(roomId, uuid) : await insertChat(uuid, prompt, uploadFileKeys, roomId, model, options as ChatOptions)
-    let firstChunk = true
+
     result = await chatReplyProcess({
       message: prompt,
       uploadFileKeys,
@@ -272,8 +298,30 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       process: (chunk: ResponseChunk) => {
         lastResponse = chunk
 
-        res.write(firstChunk ? JSON.stringify(chunk) : `\n${JSON.stringify(chunk)}`)
-        firstChunk = false
+        // set sse event by different data type
+        if (chunk.searchQuery) {
+          sendSSEData('search_query', { searchQuery: chunk.searchQuery })
+        }
+        if (chunk.searchResults) {
+          sendSSEData('search_results', {
+            searchResults: chunk.searchResults,
+            searchUsageTime: chunk.searchUsageTime,
+          })
+        }
+        if (chunk.delta) {
+          // send SSE event with delta type
+          sendSSEData('delta', { m: chunk.delta })
+        }
+        else {
+          // send all data
+          sendSSEData('message', {
+            id: chunk.id,
+            reasoning: chunk.reasoning,
+            text: chunk.text,
+            role: chunk.role,
+            finish_reason: chunk.finish_reason,
+          })
+        }
       },
       systemMessage,
       temperature,
@@ -283,11 +331,17 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       room,
       chatUuid: uuid,
     })
-    // return the whole response including usage
-    res.write(`\n${JSON.stringify(result.data)}`)
+
+    // 发送最终完成数据
+    if (result && result.status === 'Success') {
+      sendSSEData('complete', result.data)
+    }
+
+    sendSSEEnd()
   }
   catch (error) {
-    res.write(JSON.stringify({ message: error?.message }))
+    sendSSEError(error?.message || 'Unknown error')
+    sendSSEEnd()
   }
   finally {
     res.end()
@@ -299,7 +353,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       }
 
       if (result.data === undefined)
-      // eslint-disable-next-line no-unsafe-finally
+        // eslint-disable-next-line no-unsafe-finally
         return
 
       if (regenerate && message.options.messageId) {
