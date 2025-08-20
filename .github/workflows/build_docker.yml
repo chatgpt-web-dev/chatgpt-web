@@ -149,4 +149,4 @@ jobs:
       - name: Inspect image
         run: |
           # 检查镜像详情，验证多平台支持
-          docker buildx imagetools inspect jsntwdj/zjai-web:2.0 # 指定镜像的标签
+          docker buildx imagetools inspect jsntwdj/zjai-web:${{ steps.meta.outputs.version }}
