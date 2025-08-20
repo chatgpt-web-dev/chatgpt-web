@@ -36,4 +36,4 @@ jobs:  # 定义作业
           # file: mlc-llm-rk3588/Dockerfile-base  # 指定 Dockerfile 的路径
           push: true  # 构建完成后推送镜像
           platforms: linux/amd64,linux/arm64 # 支持的平台架构
-          tags: jsntwdj/zjai-web:latest  # 指定镜像的标签
+          tags: jsntwdj/zjai-web:2.0 # latest  # 指定镜像的标签
