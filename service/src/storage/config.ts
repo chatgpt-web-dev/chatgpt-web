@@ -1,8 +1,9 @@
-import { ObjectId } from 'mongodb'
-import * as dotenv from 'dotenv'
 import type { TextAuditServiceProvider } from 'src/utils/textAudit'
+import * as process from 'node:process'
+import * as dotenv from 'dotenv'
+import { ObjectId } from 'mongodb'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
-import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SiteConfig, TextAudioType, UserRole } from './model'
+import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SearchConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
 
 dotenv.config()
@@ -26,38 +27,20 @@ export async function getCacheConfig(): Promise<Config> {
 export async function getOriginConfig() {
   let config = await getConfig()
   if (config == null) {
-    config = new Config(new ObjectId(),
-      !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000,
-      process.env.OPENAI_API_KEY,
-      process.env.OPENAI_API_DISABLE_DEBUG === 'true',
-      process.env.OPENAI_ACCESS_TOKEN,
-      process.env.OPENAI_API_BASE_URL,
-      process.env.OPENAI_API_MODEL === 'ChatGPTUnofficialProxyAPI' ? 'ChatGPTUnofficialProxyAPI' : 'ChatGPTAPI',
-      process.env.API_REVERSE_PROXY,
-      (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
-        ? (`${process.env.SOCKS_PROXY_HOST}:${process.env.SOCKS_PROXY_PORT}`)
-        : '',
-      (process.env.SOCKS_PROXY_USERNAME && process.env.SOCKS_PROXY_PASSWORD)
-        ? (`${process.env.SOCKS_PROXY_USERNAME}:${process.env.SOCKS_PROXY_PASSWORD}`)
-        : '',
-      process.env.HTTPS_PROXY,
-      new SiteConfig(
-        process.env.SITE_TITLE || 'ChatGPT Web',
-        isNotEmptyString(process.env.AUTH_SECRET_KEY),
-        process.env.AUTH_PROXY_ENABLED === 'true',
-        process.env.AUTH_SECRET_KEY,
-        process.env.REGISTER_ENABLED === 'true',
-        process.env.REGISTER_REVIEW === 'true',
-        process.env.REGISTER_MAILS,
-        process.env.SITE_DOMAIN),
-      new MailConfig(process.env.SMTP_HOST,
-        !Number.isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465,
-        process.env.SMTP_TSL === 'true',
-        process.env.SMTP_USERNAME,
-        process.env.SMTP_PASSWORD,
-        process.env.SMTP_FROM || process.env.SMTP_USERNAME,
-      ),
-    )
+    config = new Config(new ObjectId(), !Number.isNaN(+process.env.TIMEOUT_MS) ? +process.env.TIMEOUT_MS : 600 * 1000, process.env.OPENAI_API_KEY, process.env.OPENAI_API_DISABLE_DEBUG === 'true', process.env.OPENAI_ACCESS_TOKEN, process.env.OPENAI_API_BASE_URL, process.env.API_REVERSE_PROXY, (process.env.SOCKS_PROXY_HOST && process.env.SOCKS_PROXY_PORT)
+      ? (`${process.env.SOCKS_PROXY_HOST}:${process.env.SOCKS_PROXY_PORT}`)
+      : '', (process.env.SOCKS_PROXY_USERNAME && process.env.SOCKS_PROXY_PASSWORD)
+      ? (`${process.env.SOCKS_PROXY_USERNAME}:${process.env.SOCKS_PROXY_PASSWORD}`)
+      : '', process.env.HTTPS_PROXY, new SiteConfig(
+      process.env.SITE_TITLE || 'ChatGPT Web',
+      isNotEmptyString(process.env.AUTH_SECRET_KEY),
+      process.env.AUTH_PROXY_ENABLED === 'true',
+      process.env.AUTH_SECRET_KEY,
+      process.env.REGISTER_ENABLED === 'true',
+      process.env.REGISTER_REVIEW === 'true',
+      process.env.REGISTER_MAILS,
+      process.env.SITE_DOMAIN,
+    ), new MailConfig(process.env.SMTP_HOST, !Number.isNaN(+process.env.SMTP_PORT) ? +process.env.SMTP_PORT : 465, process.env.SMTP_TSL === 'true', process.env.SMTP_USERNAME, process.env.SMTP_PASSWORD, process.env.SMTP_FROM || process.env.SMTP_USERNAME))
   }
   else {
     if (config.siteConfig.loginEnabled === undefined)
@@ -75,12 +58,6 @@ export async function getOriginConfig() {
     }
     if (config.siteConfig.registerReview === undefined)
       config.siteConfig.registerReview = process.env.REGISTER_REVIEW === 'true'
-  }
-  if (config.apiModel !== 'ChatGPTAPI' && config.apiModel !== 'ChatGPTUnofficialProxyAPI') {
-    if (isNotEmptyString(config.accessToken))
-      config.apiModel = 'ChatGPTUnofficialProxyAPI'
-    else
-      config.apiModel = 'ChatGPTAPI'
   }
 
   if (config.auditConfig === undefined) {
@@ -102,10 +79,11 @@ export async function getOriginConfig() {
 
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
+
       '你是江苏省的一名造价工程师，一个造价专业的AI大模型。请仔细遵循用户的指示。使用 Markdown 进行回复（LaTeX 以 $ 开始）。',
+
       0.8,
       1,
-      20,
     )
   }
 
@@ -116,9 +94,13 @@ export async function getOriginConfig() {
     )
   }
 
+
   if (!isNotEmptyString(config.siteConfig.chatModels))
     config.siteConfig.chatModels = 'zjai'
 
+
+  if (!isNotEmptyString(config.siteConfig.chatModels))
+    config.siteConfig.chatModels = 'gpt-4.1,gpt-4.1-mini,gpt-4.1-nano'
   return config
 }
 
@@ -168,12 +150,7 @@ export async function getApiKeys() {
   const result = await getKeys()
   const config = await getCacheConfig()
   if (result.keys.length <= 0) {
-    if (config.apiModel === 'ChatGPTAPI')
-      result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
-
-    if (config.apiModel === 'ChatGPTUnofficialProxyAPI')
-      result.keys.push(await upsertKey(new KeyConfig(config.accessToken, 'ChatGPTUnofficialProxyAPI', [], [], '')))
-
+    result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
     result.total++
   }
   result.keys.forEach((key) => {

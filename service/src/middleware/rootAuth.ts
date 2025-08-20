@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken'
+import type { AuthJwtPayload } from '../types'
 import * as dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
+import { authProxyHeaderName, getCacheConfig } from '../storage/config'
 import { Status, UserRole } from '../storage/model'
 import { getUser, getUserById } from '../storage/mongo'
-import { authProxyHeaderName, getCacheConfig } from '../storage/config'
-import type { AuthJwtPayload } from '../types'
 
 dotenv.config()
 
@@ -51,4 +51,4 @@ async function isAdmin(userId: string) {
   return user != null && user.status === Status.Normal && user.roles.includes(UserRole.Admin)
 }
 
-export { rootAuth, isAdmin }
+export { isAdmin, rootAuth }

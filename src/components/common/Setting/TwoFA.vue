@@ -1,10 +1,9 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NSpin, NStep, NSteps, useMessage } from 'naive-ui'
-import QrcodeVue from 'qrcode.vue'
 import type { TwoFAConfig } from './model'
+import QrcodeVue from 'qrcode.vue'
 import { fetchDisableUser2FA, fetchGetUser2FA, fetchVerifyUser2FA } from '@/api'
-import { t } from '@/locales'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 
@@ -65,10 +64,10 @@ onMounted(() => {
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
           <div class="flex-1">
-            {{ $t('setting.info2FA') }}
-            <br> {{ $t('setting.status2FA') }} ：
-            <span v-if="!config || !config.enaled" style="color: red;">{{ $t('setting.status2FAClosed') }}</span>
-            <span v-if="config && config.enaled" style="color: rgb(22, 183, 65);">{{ $t('setting.status2FAOpened') }}</span>
+            {{ t('setting.info2FA') }}
+            <br> {{ t('setting.status2FA') }} ：
+            <span v-if="!config || !config.enaled" style="color: red;">{{ t('setting.status2FAClosed') }}</span>
+            <span v-if="config && config.enaled" style="color: rgb(22, 183, 65);">{{ t('setting.status2FAOpened') }}</span>
           </div>
         </div>
         <div v-if="config && config.enaled" class="flex items-center space-x-4">
@@ -85,7 +84,7 @@ onMounted(() => {
             <NButton
               :loading="saving" type="warning" @click="disable2FA()"
             >
-              {{ $t('setting.disable2FA') }}
+              {{ t('setting.disable2FA') }}
             </NButton>
           </div>
         </div>
@@ -94,21 +93,21 @@ onMounted(() => {
           <div class="flex-1">
             <NSteps vertical>
               <NStep
-                :title="$t('setting.info2FAStep1')"
-                :description="$t('setting.info2FAStep1Desc')"
+                :title="t('setting.info2FAStep1')"
+                :description="t('setting.info2FAStep1Desc')"
               />
               <NStep
-                :title="$t('setting.info2FAStep2')"
+                :title="t('setting.info2FAStep2')"
               >
-                {{ $t('setting.info2FAStep2Desc') }}
+                {{ t('setting.info2FAStep2Desc') }}
                 <br><br>
                 <QrcodeVue :value="config?.otpauthUrl" :size="150" level="H" />
-                <br>{{ $t('setting.info2FAStep2Tip') }}：<br> {{ $t('setting.info2FAStep2TipAccount') }} ：{{ config?.userName }}<br> {{ $t('setting.info2FAStep2TipSecret') }} ：{{ config?.secretKey }}
+                <br>{{ t('setting.info2FAStep2Tip') }}：<br> {{ t('setting.info2FAStep2TipAccount') }} ：{{ config?.userName }}<br> {{ t('setting.info2FAStep2TipSecret') }} ：{{ config?.secretKey }}
               </NStep>
               <NStep
-                :title="$t('setting.info2FAStep3')"
+                :title="t('setting.info2FAStep3')"
               >
-                {{ $t('setting.info2FAStep3Desc') }}
+                {{ t('setting.info2FAStep3Desc') }}
                 <br>
                 <div class="flex items-center space-x-4">
                   <div class="w-[200px]">
@@ -121,13 +120,13 @@ onMounted(() => {
                       :loading="saving" type="primary" :disabled="!config || !config.testCode || config.testCode.length !== 6"
                       @click="update2FAInfo()"
                     >
-                      {{ $t('setting.enable2FA') }}
+                      {{ t('setting.enable2FA') }}
                     </NButton>
                   </div>
                 </div>
-                <br>{{ $t('setting.info2FAStep3Tip1') }}
-                <br>{{ $t('setting.info2FAStep3Tip2') }}
-                <br>{{ $t('setting.info2FAStep3Tip3') }}
+                <br>{{ t('setting.info2FAStep3Tip1') }}
+                <br>{{ t('setting.info2FAStep3Tip2') }}
+                <br>{{ t('setting.info2FAStep3Tip3') }}
               </NStep>
             </NSteps>
           </div>

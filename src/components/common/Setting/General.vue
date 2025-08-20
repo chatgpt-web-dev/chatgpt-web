@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue'
-import { NButton, NDivider, NInput, NPopconfirm, NSelect, NSwitch, useMessage } from 'naive-ui'
-import { UserConfig } from '@/components/common/Setting/model'
 import type { Language, Theme } from '@/store/modules/app/helper'
-import { SvgIcon } from '@/components/common'
-import { useAppStore, useAuthStore, useUserStore } from '@/store'
 import type { UserInfo } from '@/store/modules/user/helper'
-import { getCurrentDate } from '@/utils/functions'
+import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel, fetchUpdateUserMaxContextCount } from '@/api'
+import { SvgIcon } from '@/components/common'
+import { UserConfig } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
-import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel } from '@/api'
+import { useAppStore, useAuthStore, useUserStore } from '@/store'
+import { getCurrentDate } from '@/utils/functions'
+
+const { t } = useI18n()
 
 const appStore = useAppStore()
 const userStore = useUserStore()
@@ -47,7 +46,7 @@ const language = computed({
   },
 })
 
-const themeOptions: { label: string; key: Theme; icon: string }[] = [
+const themeOptions: { label: string, key: Theme, icon: string }[] = [
   {
     label: 'Auto',
     key: 'auto',
@@ -65,7 +64,7 @@ const themeOptions: { label: string; key: Theme; icon: string }[] = [
   },
 ]
 
-const languageOptions: { label: string; key: Language; value: Language }[] = [
+const languageOptions: { label: string, key: Language, value: Language }[] = [
   { label: '简体中文', key: 'zh-CN', value: 'zh-CN' },
   { label: '繁體中文', key: 'zh-TW', value: 'zh-TW' },
   { label: 'English', key: 'en-US', value: 'en-US' },
@@ -77,7 +76,7 @@ async function updateUserInfo(options: Partial<UserInfo>) {
   ms.success(`更新个人信息 ${t('common.success')}`)
 }
 // 更新并兑换，这里图页面设计方便暂时先放一起了，下方页面新增了两个输入框
-async function redeemandupdateUserInfo(options: { avatar: string; name: string; description: string; useAmount: number; redeemCardNo: string }) {
+async function redeemandupdateUserInfo(options: { avatar: string, name: string, description: string, useAmount: number, redeemCardNo: string }) {
   const { avatar, name, description, useAmount, redeemCardNo } = options
   let add_amt = 0
   let message = ''
@@ -104,6 +103,19 @@ async function updateUserChatModel(chatModel: string) {
   userStore.userInfo.config.chatModel = chatModel
   userStore.recordState()
   await fetchUpdateUserChatModel(chatModel)
+}
+
+async function updateUserMaxContextCount(maxContextCount: number) {
+  if (!userStore.userInfo.config)
+    userStore.userInfo.config = new UserConfig()
+  userStore.userInfo.config.maxContextCount = maxContextCount
+  userStore.recordState()
+}
+
+async function syncUserMaxContextCount() {
+  if (userStore.userInfo.config.maxContextCount) {
+    await fetchUpdateUserMaxContextCount(userStore.userInfo.config.maxContextCount)
+  }
 }
 
 function exportData(): void {
@@ -137,7 +149,7 @@ function importData(event: Event): void {
       ms.success(t('common.success'))
       location.reload()
     }
-    catch (error) {
+    catch {
       ms.error(t('common.invalidFileFormat'))
     }
   }
@@ -161,51 +173,64 @@ function handleImportButtonClick(): void {
   <div class="p-4 space-y-5 min-h-[200px]">
     <div class="space-y-6">
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.name') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.name') }}</span>
         <div class="w-[200px]">
           <NInput v-model:value="name" placeholder="" />
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.description') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.description') }}</span>
         <div class="flex-1">
           <NInput v-model:value="description" placeholder="" />
         </div>
       </div>
       <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.useAmount') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.useAmount') }}</span>
         <div class="flex-1">
           <div v-text="useAmount" />
         </div>
       </div>
       <div v-if="authStore.session?.usageCountLimit && userStore.userInfo.limit" class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.redeemCardNo') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.redeemCardNo') }}</span>
         <div class="flex-1">
           <NInput v-model:value="redeemCardNo" placeholder="" />
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.avatarLink') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.avatarLink') }}</span>
         <div class="flex-1">
           <NInput v-model:value="avatar" placeholder="" />
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.saveUserInfo') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.saveUserInfo') }}</span>
         <NButton type="primary" @click="redeemandupdateUserInfo({ avatar, name, description, useAmount, redeemCardNo })">
-          {{ $t('common.save') }}
+          {{ t('common.save') }}
         </NButton>
       </div>
       <NDivider />
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.defaultChatModel') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.defaultChatModel') }}</span>
         <div class="w-[200px]">
           <NSelect
             style="width: 200px"
             :value="userInfo.config.chatModel"
             :options="authStore.session?.chatModels"
-            :disabled="!!authStore.session?.auth && !authStore.token"
             @update-value="(val) => updateUserChatModel(val)"
+          />
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="shrink-0 w-[100px]">{{ t('setting.maxContextCount') }}</span>
+        <div class="w-[300px]">
+          <NSlider
+            :value="userInfo.config.maxContextCount"
+            :max="40"
+            :min="0"
+            :step="1"
+            style="width: 300px"
+            :on-dragend="syncUserMaxContextCount"
+            @update:value="(val) => updateUserMaxContextCount(val)"
           />
         </div>
       </div>
@@ -213,14 +238,14 @@ function handleImportButtonClick(): void {
         class="flex items-center space-x-4"
         :class="isMobile && 'items-start'"
       >
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.chatHistory') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.chatHistory') }}</span>
 
         <div class="flex flex-wrap items-center gap-4">
           <NButton size="small" @click="exportData">
             <template #icon>
               <SvgIcon icon="ri:download-2-fill" />
             </template>
-            {{ $t('common.export') }}
+            {{ t('common.export') }}
           </NButton>
 
           <input id="fileInput" type="file" style="display:none" @change="importData">
@@ -228,7 +253,7 @@ function handleImportButtonClick(): void {
             <template #icon>
               <SvgIcon icon="ri:upload-2-fill" />
             </template>
-            {{ $t('common.import') }}
+            {{ t('common.import') }}
           </NButton>
 
           <NPopconfirm placement="bottom" @positive-click="clearData">
@@ -237,15 +262,15 @@ function handleImportButtonClick(): void {
                 <template #icon>
                   <SvgIcon icon="ri:close-circle-line" />
                 </template>
-                {{ $t('common.clear') }}
+                {{ t('common.clear') }}
               </NButton>
             </template>
-            {{ $t('chat.clearHistoryConfirm') }}
+            {{ t('chat.clearHistoryConfirm') }}
           </NPopconfirm>
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.theme') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.theme') }}</span>
         <div class="flex flex-wrap items-center gap-4">
           <template v-for="item of themeOptions" :key="item.key">
             <NButton
@@ -261,7 +286,7 @@ function handleImportButtonClick(): void {
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.language') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.language') }}</span>
         <div class="flex flex-wrap items-center gap-4">
           <NSelect
             style="width: 140px"
@@ -272,7 +297,7 @@ function handleImportButtonClick(): void {
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="flex-shrink-0 w-[100px]">{{ $t('setting.fastDelMsg') }}</span>
+        <span class="shrink-0 w-[100px]">{{ t('setting.fastDelMsg') }}</span>
         <div class="flex-1">
           <NSwitch
             :round="false"

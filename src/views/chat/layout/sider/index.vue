@@ -1,14 +1,14 @@
 <script setup lang='ts'>
 import type { CSSProperties } from 'vue'
-import { computed, onMounted, ref, watch } from 'vue'
-import { NButton, NLayoutSider, NModal } from 'naive-ui'
-import List from './List.vue'
-import Footer from './Footer.vue'
-import { useAppStore, useAuthStore, useChatStore } from '@/store'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { GithubSite, PromptStore, Watermark } from '@/components/common'
-import { fetchAnnouncement } from '@/api'
 import type { AnnounceConfig } from '@/components/common/Setting/model'
+import { fetchAnnouncement } from '@/api'
+import { GithubSite, PromptStore, Watermark } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useAppStore, useAuthStore, useChatStore } from '@/store'
+import Footer from './Footer.vue'
+import List from './List.vue'
+
+const { t } = useI18n()
 
 const config = ref<AnnounceConfig>()
 
@@ -22,7 +22,7 @@ const show = ref(false)
 const collapsed = computed(() => appStore.siderCollapsed)
 
 async function handleAdd() {
-  await chatStore.addNewHistory()
+  await chatStore.addNewChatRoom()
   if (isMobile.value)
     appStore.setSiderCollapsed(true)
 }
@@ -120,7 +120,7 @@ onMounted(async () => {
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
           <NButton dashed block :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled" @click="handleAdd">
-            {{ $t('chat.newChatButton') }}
+            {{ t('chat.newChatButton') }}
           </NButton>
         </div>
         <div class="flex-1 min-h-0 pb-4 overflow-hidden">
@@ -128,7 +128,7 @@ onMounted(async () => {
         </div>
         <div class="p-4">
           <NButton block @click="show = true">
-            {{ $t('store.siderButton') }}
+            {{ t('store.siderButton') }}
           </NButton>
         </div>
       </main>

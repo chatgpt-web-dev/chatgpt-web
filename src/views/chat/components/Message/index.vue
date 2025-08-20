@@ -1,18 +1,19 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { NButton, NButtonGroup, NDropdown, NPopover, NSpace, useMessage } from 'naive-ui'
-import AvatarComponent from './Avatar.vue'
-import TextComponent from './Text.vue'
 import { SvgIcon } from '@/components/common'
-import { useIconRender } from '@/hooks/useIconRender'
-import { t } from '@/locales'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { copyToClip } from '@/utils/copy'
+import { useIconRender } from '@/hooks/useIconRender'
 import { useAppStore } from '@/store'
+import { copyToClip } from '@/utils/copy'
+import AvatarComponent from './Avatar.vue'
+import Reasoning from './Reasoning.vue'
+import Search from './Search.vue'
+import TextComponent from './Text.vue'
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<Emit>()
+
+const { t } = useI18n()
 
 const appStore = useAppStore()
 
@@ -20,8 +21,15 @@ interface Props {
   index: number
   currentNavIndex: number
   dateTime?: string
+  model?: string
+  searchQuery?: string
+  searchResults?: Chat.SearchResult[]
+  searchUsageTime?: number
+  reasoning?: string
+  finishReason?: string
   text?: string
   images?: string[]
+  isRecord?: boolean
   inversion?: boolean
   error?: boolean
   loading?: boolean
@@ -77,6 +85,11 @@ const options = computed(() => {
       key: 'toggleRenderType',
       icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
     })
+  }
+
+  if (props.isRecord) {
+    const index = common.findIndex(item => item.key === 'delete')
+    common.splice(index, 1)
   }
 
   return common
@@ -154,24 +167,24 @@ function isEventTargetValid(event: any) {
   >
     <div class="flex flex-col">
       <div
-        class="flex items-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
+        class="flex items-center justify-center shrink-0 h-8 overflow-hidden rounded-full basis-8"
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
-        <AvatarComponent :image="inversion" />
+        <AvatarComponent :image="inversion" :only-default="isRecord" />
       </div>
       <div
         v-show="props.currentNavIndex === props.index && appStore.fastDelMsg"
-        class="flex-grow flex items-center justify-center overflow-hidden rounded-full"
+        class="grow flex items-center justify-center overflow-hidden rounded-full"
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
-        <button class="focus:outline-none" style="opacity: 0.5;" @click="fastDelMsg">
+        <button class="focus:outline-hidden" style="opacity: 0.5;" @click="fastDelMsg">
           <SvgIcon class="text-lg" icon="ri:delete-bin-line" />
         </button>
       </div>
     </div>
     <div class="overflow-hidden text-sm " :class="[inversion ? 'items-end' : 'items-start']">
       <p v-if="inversion" class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
-        {{ new Date(dateTime as string).toLocaleString() }}
+        {{ `${model || ''} ${new Date(dateTime as string).toLocaleString()}` }}
       </p>
       <p v-else class="text-xs text-[#b4bbc4]" :class="[inversion ? 'text-right' : 'text-left']">
         <NSpace>
@@ -216,6 +229,20 @@ function isEventTargetValid(event: any) {
           </template>
         </NSpace>
       </p>
+      <Search
+        v-if="searchQuery"
+        :search-query="searchQuery"
+        :search-results="searchResults"
+        :search-usage-time="searchUsageTime"
+        :search-end="!!searchResults || !!reasoning || !!text"
+        :loading="loading"
+      />
+      <Reasoning
+        v-if="reasoning"
+        :reasoning="reasoning"
+        :reason-end="!!text"
+        :loading="loading"
+      />
       <div
         class="flex items-end gap-1 mt-2"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"
@@ -231,7 +258,7 @@ function isEventTargetValid(event: any) {
         />
         <div class="flex flex-col excludeFastDel">
           <button
-            v-if="!inversion"
+            v-if="!inversion && !isRecord"
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
             @click="handleRegenerate"
           >

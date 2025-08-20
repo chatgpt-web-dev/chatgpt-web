@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { NButton, NInput, NModal, NSpace, useMessage } from 'naive-ui'
-import { t } from '@/locales'
 import { fetchUpdateChatRoomPrompt } from '@/api'
 import { useChatStore } from '@/store'
 
 const props = defineProps<Props>()
+
 const emit = defineEmits<Emit>()
 
+const { t } = useI18n()
+
 const chatStore = useChatStore()
-const currentChatHistory = computed(() => chatStore.getChatHistoryByCurrentActive)
+const currentChatHistory = computed(() => chatStore.getChatRoomByCurrentActive)
 const ms = useMessage()
 const testing = ref(false)
 const title = `Prompt For [${currentChatHistory.value?.title}]`
@@ -38,7 +38,7 @@ async function handleSaveChatRoomPrompt() {
 
   testing.value = true
   try {
-    const { message } = await fetchUpdateChatRoomPrompt(currentChatHistory.value.prompt ?? '', +props.roomId) as { status: string; message: string }
+    const { message } = await fetchUpdateChatRoomPrompt(currentChatHistory.value.prompt ?? '', +props.roomId) as { status: string, message: string }
     ms.success(message)
     show.value = false
   }

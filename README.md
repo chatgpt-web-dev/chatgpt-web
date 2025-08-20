@@ -32,6 +32,12 @@
 
 [✓] 通过 auth proxy 功能实现sso登录 (配合第三方身份验证反向代理 可实现支持 LDAP/OIDC/SAML 等协议登录)
 
+[✓] Web Search 网络搜索功能 (基于 Tavily API 实现实时网络搜索)
+
+[✓] VLLM API 模型支持 & 可选关闭深度思考模式
+
+[✓] 上下文窗口控制
+
 
 > [!CAUTION]
 > 声明：此项目只发布于 Github，基于 MIT 协议，免费且作为开源学习使用。并且不会有任何形式的卖号、付费服务、讨论群、讨论组等行为。谨防受骗。
@@ -74,35 +80,30 @@
 		- [手动打包](#手动打包)
 			- [后端服务](#后端服务-1)
 			- [前端网页](#前端网页-1)
+	- [Auth Proxy Mode](#auth-proxy-mode)
+	- [Web Search 网络搜索功能](#web-search-网络搜索功能)
+		- [功能特性](#功能特性)
+		- [配置方式](#配置方式)
+		- [使用方式](#使用方式)
+		- [技术实现](#技术实现)
+		- [注意事项](#注意事项)
 	- [常见问题](#常见问题)
 	- [参与贡献](#参与贡献)
 	- [赞助](#赞助)
 	- [License](#license)
 ## 介绍
 
-支持双模型，提供了两种非官方 `ChatGPT API` 方法
+使用官方 `OpenAI API` 访问 `ChatGPT`：
 
-| 方式                                          | 免费？ | 可靠性     | 质量 |
-| --------------------------------------------- | ------ | ---------- | ---- |
-| `ChatGPTAPI(gpt-3.5-turbo-0301)`                           | 否     | 可靠       | 相对较笨 |
-| `ChatGPTUnofficialProxyAPI(网页 accessToken)` | 是     | 相对不可靠 | 聪明 |
-
-对比：
-1. `ChatGPTAPI` 使用 `gpt-3.5-turbo` 通过 `OpenAI` 官方 `API` 调用 `ChatGPT`
-2. `ChatGPTUnofficialProxyAPI` 使用非官方代理服务器访问 `ChatGPT` 的后端`API`，绕过`Cloudflare`（依赖于第三方服务器，并且有速率限制）
+`ChatGPTAPI` 使用 `gpt-4.1` 通过 `OpenAI` 官方 `API` 调用 `ChatGPT`（需要 API 密钥）。
 
 警告：
-1. 你应该首先使用 `API` 方式
-2. 使用 `API` 时，如果网络不通，那是国内被墙了，你需要自建代理，绝对不要使用别人的公开代理，那是危险的。
-3. 使用 `accessToken` 方式时反向代理将向第三方暴露您的访问令牌，这样做应该不会产生任何不良影响，但在使用这种方法之前请考虑风险。
-4. 使用 `accessToken` 时，不管你是国内还是国外的机器，都会使用代理。默认代理为 [pengzhile](https://github.com/pengzhile) 大佬的 `https://ai.fakeopen.com/api/conversation`，这不是后门也不是监听，除非你有能力自己翻过 `CF` 验证，用前请知悉。[社区代理](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)（注意：只有这两个是推荐，其他第三方来源，请自行甄别）
-5. 把项目发布到公共网络时，你应该设置 `AUTH_SECRET_KEY` 变量添加你的密码访问权限，你也应该修改 `index.html` 中的 `title`，防止被关键词搜索到。
+1. 使用 `API` 时，如果网络不通，那是国内被墙了，你需要自建代理，绝对不要使用别人的公开代理，那是危险的。
+2. 把项目发布到公共网络时，你应该设置 `AUTH_SECRET_KEY` 变量添加你的密码访问权限，你也应该修改 `index.html` 中的 `title`，防止被关键词搜索到。
 
-切换方式：
+设置方式：
 1. 进入 `service/.env.example` 文件，复制内容到 `service/.env` 文件
-2. 使用 `OpenAI API Key` 请填写 `OPENAI_API_KEY` 字段 [(获取 apiKey)](https://platform.openai.com/overview)
-3. 使用 `Web API` 请填写 `OPENAI_ACCESS_TOKEN` 字段 [(获取 accessToken)](https://chat.openai.com/api/auth/session)
-4. 同时存在时以 `OpenAI API Key` 优先
+2. 填写 `OPENAI_API_KEY` 字段 [(获取 apiKey)](https://platform.openai.com/overview)
 
 环境变量：
 
@@ -131,6 +132,10 @@
 
 [✓] 界面主题
 
+[✓] VLLM API 模型支持
+
+[✓] 深度思考模式开关
+
 [✗] More...
 
 ## 前置要求
@@ -149,17 +154,14 @@ node -v
 npm install pnpm -g
 ```
 
-### 填写密钥
-获取 `Openai Api Key` 或 `accessToken` 并填写本地环境变量 [跳转](#介绍)
+### 填写API密钥
+获取 `OpenAI API Key` 并填写本地环境变量 [跳转](#介绍)
 
 ```
 # service/.env 文件
 
 # OpenAI API Key - https://platform.openai.com/overview
 OPENAI_API_KEY=
-
-# change this to an `accessToken` extracted from the ChatGPT site's `https://chat.openai.com/api/auth/session` response
-OPENAI_ACCESS_TOKEN=
 ```
 
 ## 安装依赖
@@ -199,14 +201,9 @@ pnpm dev
 
 `API` 可用：
 
-- `OPENAI_API_KEY` 和 `OPENAI_ACCESS_TOKEN` 二选一
+- `OPENAI_API_KEY` 必填
 - `OPENAI_API_BASE_URL` 设置接口地址，可选，默认：`https://api.openai.com`
 - `OPENAI_API_DISABLE_DEBUG` 设置接口关闭 debug 日志，可选，默认：empty 不关闭
-
-`ACCESS_TOKEN` 可用：
-
-- `OPENAI_ACCESS_TOKEN`  和 `OPENAI_API_KEY` 二选一，同时存在时，`OPENAI_API_KEY` 优先
-- `API_REVERSE_PROXY` 设置反向代理，可选，默认：`https://ai.fakeopen.com/api/conversation`，[社区](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)（注意：只有这两个是推荐，其他第三方来源，请自行甄别）
 
 通用：
 
@@ -222,6 +219,17 @@ pnpm dev
 ### 使用 Docker
 
 #### Docker 参数示例
+
+- `OPENAI_API_KEY` 必填
+- `OPENAI_API_BASE_URL` 可选，设置接口地址，默认：`https://api.openai.com`
+- `OPENAI_API_MODEL` 可选，指定使用的模型
+- `AUTH_SECRET_KEY` 访问密码，可选
+- `TIMEOUT_MS` 超时，单位毫秒，可选
+- `SOCKS_PROXY_HOST` 可选，与 SOCKS_PROXY_PORT 一起使用
+- `SOCKS_PROXY_PORT` 可选，与 SOCKS_PROXY_HOST 一起使用
+- `SOCKS_PROXY_USERNAME` 可选，与 SOCKS_PROXY_HOST 和 SOCKS_PROXY_PORT 一起使用
+- `SOCKS_PROXY_PASSWORD` 可选，与 SOCKS_PROXY_HOST 和 SOCKS_PROXY_PORT 一起使用
+- `HTTPS_PROXY` 可选，支持 http，https, socks5
 
 ![docker](./docs/docker.png)
 
@@ -367,6 +375,225 @@ pnpm build
 
 当前 Idp 使用 OIDC 协议的 可以选择使用 [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
 
+## Web Search 网络搜索功能
+
+> [!TIP]
+> Web Search 功能基于 [Tavily API](https://tavily.com/) 实现，可以让 ChatGPT 获取最新的网络信息来回答问题。
+
+### 功能特性
+
+- **实时网络搜索**: 基于 Tavily API 获取最新的网络信息
+- **智能查询提取**: 自动从用户问题中提取最相关的搜索关键词
+- **搜索结果整合**: 将搜索结果无缝整合到 AI 对话中
+- **按会话控制**: 每个对话可以独立开启或关闭搜索功能
+- **搜索历史记录**: 保存搜索查询和结果到数据库
+- **可配置系统消息**: 支持自定义搜索相关的系统提示消息
+
+### 配置方式
+
+#### 1. 获取 Tavily API Key
+
+1. 访问 [Tavily 官网](https://tavily.com/) 注册账号
+2. 获取 API Key
+
+#### 2. 管理员配置
+
+1. 以管理员身份登录系统
+2. 进入系统设置页面
+3. 找到 "Web Search 配置" 选项
+4. 填写以下配置：
+   - **启用状态**: 开启/关闭全局搜索功能
+   - **API Key**: 填入 Tavily API Key
+   - **最大搜索结果数**: 设置每次搜索返回的最大结果数量（1-20，默认10）
+   - **搜索查询系统消息**: 用于提取搜索关键词的提示模板
+   - **搜索结果系统消息**: 用于处理搜索结果的提示模板
+
+#### 3. 系统消息模板
+
+**搜索查询提取模板** (用于从用户问题中提取搜索关键词):
+```
+You are a search query extraction assistant. Extract the most relevant search query from user's question and wrap it with <search_query></search_query> tags.
+Current time: {current_time}
+```
+
+**搜索结果处理模板** (用于处理包含搜索结果的对话):
+```
+You are a helpful assistant with access to real-time web search results. Use the provided search information to give accurate and up-to-date responses.
+Current time: {current_time}
+```
+
+### 使用方式
+
+#### 用户端操作
+
+1. **开启搜索功能**:
+   - 在对话界面中，找到搜索开关按钮
+   - 点击开启当前会话的网络搜索功能
+
+2. **提问获取实时信息**:
+   - 开启搜索后，直接向 ChatGPT 提问需要实时信息的问题
+   - 系统会自动搜索相关信息并整合到回答中
+
+3. **查看搜索历史**:
+   - 搜索查询和结果会保存在数据库中
+   - 可以通过数据库查看具体的搜索记录
+
+#### 工作流程
+
+1. **用户提问**: 用户在开启搜索的会话中提问
+2. **查询提取**: 系统使用 AI 从问题中提取搜索关键词
+3. **网络搜索**: 调用 Tavily API 进行实时搜索
+4. **结果整合**: 将搜索结果作为上下文提供给 AI
+5. **生成回答**: AI 基于搜索结果生成更准确的回答
+
+### 技术实现
+
+- **搜索引擎**: Tavily API
+- **查询提取**: 使用 OpenAI API 智能提取关键词
+- **结果格式**: JSON 格式存储完整搜索结果
+- **数据存储**: MongoDB 存储搜索查询和结果
+- **超时设置**: 搜索请求超时时间为 300 秒
+- **结果数量控制**: 支持配置每次搜索返回的最大结果数量（1-20）
+
+### 注意事项
+
+- Web Search 功能需要额外的 Tavily API 费用
+- 搜索功能会增加响应时间
+- 建议根据实际需求选择性开启
+- 管理员可以控制全局搜索功能的开启状态
+- 每个会话可以独立控制是否使用搜索功能
+- 最大搜索结果数设置会影响搜索的详细程度和 API 费用
+
+
+## 上下文窗口控制
+
+> [!TIP]
+> 上下文窗口控制功能可以让用户灵活管理 AI 对话中的上下文信息，优化模型性能和对话效果。
+
+### 功能特性
+
+- **上下文管理**: 控制模型可以参考的聊天记录数量
+- **按对话控制**: 每个对话可以独立开启或关闭上下文窗口
+- **实时切换**: 在对话过程中可以随时切换上下文模式
+- **记忆管理**: 灵活控制 AI 的记忆范围和连续性
+- **可配置数量**: 管理员可设置上下文消息的最大数量
+
+### 工作原理
+
+上下文窗口决定了在生成过程中，模型可以参考的当前会话下聊天记录的量：
+
+- **合理的上下文窗口大小**有助于模型生成连贯且相关的文本
+- **避免因为参考过多的上下文**而导致混乱或不相关的输出
+- **关闭上下文窗口**会导致会话失去记忆，每次提问之间将完全独立
+
+### 使用方式
+
+#### 1. 启用/关闭上下文窗口
+
+1. **进入对话界面**: 在任何对话会话中都可以使用此功能
+2. **找到控制开关**: 在对话界面中找到"上下文窗口"开关按钮
+3. **切换模式**:
+   - **开启**: 模型会参考之前的聊天记录，保持对话连贯性
+   - **关闭**: 模型不会参考历史记录，每个问题独立处理
+
+#### 2. 使用场景
+
+**建议开启上下文窗口的情况：**
+- 需要连续对话和上下文关联
+- 复杂主题的深入讨论
+- 多轮问答和逐步解决问题
+- 需要 AI 记住之前提到的信息
+
+**建议关闭上下文窗口的情况：**
+- 独立的简单问题
+- 避免历史信息干扰新问题
+- 处理不相关的多个主题
+- 需要"重新开始"的场景
+
+#### 3. 管理员配置
+
+管理员可以在系统设置中配置：
+- **最大上下文数量**: 设置会话中包含的上下文消息数量
+- **默认状态**: 设置新对话的默认上下文窗口状态
+
+### 技术实现
+
+- **上下文截取**: 自动截取指定数量的历史消息
+- **状态持久化**: 每个对话独立保存上下文窗口开关状态
+- **实时生效**: 切换后立即对下一条消息生效
+- **内存优化**: 合理控制上下文长度，避免超出模型限制
+
+### 注意事项
+
+- **对话连贯性**: 关闭上下文窗口会影响对话的连续性
+- **Token 消耗**: 更多的上下文会增加 Token 使用量
+- **响应质量**: 适当的上下文有助于提高回答质量
+- **模型限制**: 需要考虑不同模型的上下文长度限制
+
+## VLLM API 深度思考模式控制
+
+> [!TIP]
+> 深度思考模式控制功能仅在后端配置为 VLLM API 时可用，可以让用户选择是否启用模型的深度思考功能。
+
+### 功能特性
+
+- **VLLM API 专属功能**: 仅在后端使用 VLLM API 时可用
+- **按对话控制**: 每个对话可以独立开启或关闭深度思考模式
+- **实时切换**: 在对话过程中可以随时切换深度思考模式
+- **性能优化**: 关闭深度思考可以提高响应速度，降低计算成本
+
+### 工作原理
+
+开启深度思考后，模型会用更多的计算资源以及消耗更长时间，模拟更复杂的思维链路进行逻辑推理：
+
+- **适合复杂任务或高要求场景**，比如数学题推导、项目规划
+- **日常简单查询无需开启**深度思考模式
+- **关闭深度思考**可以获得更快的响应速度
+
+### 使用前提
+
+**必须满足以下条件才能使用此功能：**
+
+1. **后端配置**: 后端必须配置为使用 VLLM API 接口
+2. **模型支持**: 使用的模型必须支持深度思考功能
+3. **API 兼容**: VLLM API 版本需要支持思考模式控制参数
+
+### 使用方式
+
+#### 1. 启用/关闭深度思考模式
+
+1. **进入对话界面**: 在支持 VLLM API 的对话会话中
+2. **找到控制开关**: 在对话界面中找到"深度思考"开关按钮
+3. **切换模式**: 
+   - 开启：模型将进行深度思考，提供更详细和深入的回答
+   - 关闭：模型将直接回答，响应更快但可能较为简洁
+
+#### 2. 使用场景
+
+**建议开启深度思考的情况：**
+- 复杂问题需要深入分析
+- 需要逻辑推理和多步骤思考
+- 对回答质量要求较高的场景
+- 时间不敏感的情况
+
+**建议关闭深度思考的情况：**
+- 简单问题快速回答
+- 需要快速响应的场景
+- 降低计算成本的需求
+- 批量处理简单任务
+
+#### 3. 技术实现
+
+- **API 参数**: 通过 VLLM API 的 `disable_thinking` 参数控制
+- **状态保存**: 每个对话会话独立保存深度思考开关状态
+- **实时生效**: 切换后立即对下一条消息生效
+
+### 注意事项
+
+- **仅限 VLLM API**: 此功能仅在后端使用 VLLM API 时可用，其他 API（如 OpenAI API）不支持此功能
+- **模型依赖**: 不是所有模型都支持深度思考模式，请确认您使用的模型支持此功能
+- **响应差异**: 关闭深度思考可能会影响回答的详细程度和质量
+- **成本考虑**: 开启深度思考通常会增加计算成本和响应时间
 
 ## 常见问题
 Q: 为什么 `Git` 提交总是报错？

@@ -1,13 +1,13 @@
 # build front-end
-FROM node:20-alpine AS frontend
+FROM node:22-alpine AS frontend
 
 ARG GIT_COMMIT_HASH=0
 ARG RELEASE_VERSION=v1.0.0
 
-ENV VITE_GIT_COMMIT_HASH $GIT_COMMIT_HASH
-ENV VITE_RELEASE_VERSION $RELEASE_VERSION
+ENV VITE_GIT_COMMIT_HASH=$GIT_COMMIT_HASH
+ENV VITE_RELEASE_VERSION=$RELEASE_VERSION
 
-RUN npm install pnpm -g
+RUN npm install pnpm@8 -g
 
 WORKDIR /app
 
@@ -22,9 +22,9 @@ COPY . /app
 RUN pnpm run build
 
 # build backend
-FROM node:20-alpine as backend
+FROM node:22-alpine AS backend
 
-RUN npm install pnpm -g
+RUN npm install pnpm@8 -g
 
 WORKDIR /app
 
@@ -39,9 +39,11 @@ COPY /service /app
 RUN pnpm build
 
 # service
-FROM node:20-alpine
+FROM node:22-alpine
 
-RUN npm install pnpm -g
+RUN apk add --no-cache tini
+
+RUN npm install pnpm@8 -g
 
 WORKDIR /app
 
@@ -59,4 +61,6 @@ COPY --from=backend /app/build /app/build
 
 EXPOSE 3002
 
-CMD ["sh", "-c", "node --import tsx/esm ./build/index.js"]
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["node", "--import", "tsx/esm", "./build/index.js"]

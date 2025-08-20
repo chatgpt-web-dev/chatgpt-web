@@ -1,12 +1,14 @@
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, onUpdated, ref } from 'vue'
+import mdKatex from '@vscode/markdown-it-katex'
+import hljs from 'highlight.js/lib/common'
 import MarkdownIt from 'markdown-it'
-import mdKatex from '@traptitech/markdown-it-katex'
 import mila from 'markdown-it-link-attributes'
-import hljs from 'highlight.js'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { t } from '@/locales'
 import { copyToClip } from '@/utils/copy'
+
+const props = defineProps<Props>()
+
+const { t } = useI18n()
 
 interface Props {
   inversion?: boolean
@@ -16,8 +18,6 @@ interface Props {
   loading?: boolean
   asRawText?: boolean
 }
-
-const props = defineProps<Props>()
 
 const { isMobile } = useBasicLayout()
 

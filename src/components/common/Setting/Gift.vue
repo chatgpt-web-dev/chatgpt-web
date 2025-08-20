@@ -1,11 +1,10 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
 import type { UploadFileInfo } from 'naive-ui'
-import { NButton, NDataTable, NDivider, NIcon, NP, NSpace, NSwitch, NText, NUpload, NUploadDragger, useMessage } from 'naive-ui'
 import type { GiftCard } from './model'
-import { SvgIcon } from '@/components/common'
 import { fetchUpdateGiftCards } from '@/api'
-import { t } from '@/locales'
+import { SvgIcon } from '@/components/common'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 const loading = ref(false)
@@ -86,7 +85,7 @@ function parseCSV(content: string) {
   return giftCards
 }
 
-function handleUploadChange(data: { file: UploadFileInfo; fileList: Array<UploadFileInfo>; event?: Event }) {
+function handleUploadChange(data: { file: UploadFileInfo, fileList: Array<UploadFileInfo>, event?: Event }) {
   fileListRef.value = data.fileList
   csvData.value = []
   if (data.event) {
@@ -136,7 +135,7 @@ async function uploadGiftCards() {
       </NUpload>
 
       <NSpace vertical :size="12">
-        <span class="flex-shrink-0 w-[100px]">Data Preview(Top 30) & Due to body-parser limits csv files >2k rows not supported </span>
+        <span class="shrink-0 w-[100px]">Data Preview(Top 30) & Due to body-parser limits csv files >2k rows not supported </span>
         <NDataTable
           remote
           :loading="loading"
@@ -149,13 +148,13 @@ async function uploadGiftCards() {
     </div>
     <NDivider />
     <div class="flex items-center space-x-4">
-      <span class="flex-shrink-0 w-[100px]">{{ $t('setting.overRide') }}</span>
+      <span class="shrink-0 w-[100px]">{{ t('setting.overRide') }}</span>
       <div class="flex-1">
         <NSwitch v-model:value="overRideSwitch" />
       </div>
       <div class="flex-1">
         <NButton type="primary" :loading="handleSaving" size="large" @click="uploadGiftCards()">
-          {{ $t('setting.uploadgifts') }}
+          {{ t('setting.uploadgifts') }}
         </NButton>
       </div>
     </div>

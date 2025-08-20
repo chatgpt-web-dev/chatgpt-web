@@ -1,31 +1,26 @@
 <script setup lang='ts'>
-import type { Ref } from 'vue'
-import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
 import type { MessageReactive, UploadFileInfo } from 'naive-ui'
-import { NAutoComplete, NButton, NInput, NSelect, NSlider, NSpace, NSpin, NUpload, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
-import { Message } from './components'
-import { useScroll } from './hooks/useScroll'
-import { useChat } from './hooks/useChat'
-import HeaderComponent from './components/Header/index.vue'
-import { HoverButton, SvgIcon } from '@/components/common'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
 import {
-  fetchChatAPIProcess,
+  fetchChatAPIProcessSSE,
   fetchChatResponseoHistory,
   fetchChatStopResponding,
 } from '@/api'
-import { t } from '@/locales'
-import { debounce } from '@/utils/functions/debounce'
+import { HoverButton, PromptTypeTag, SvgIcon } from '@/components/common'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
+import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
+import { debounce } from '@/utils/functions/debounce'
+import { Message } from './components'
+import HeaderComponent from './components/Header/index.vue'
+import { useChat } from './hooks/useChat'
+import { useScroll } from './hooks/useScroll'
+
+const { t } = useI18n()
 
 const Prompt = defineAsyncComponent(() => import('@/components/common/Setting/Prompt.vue'))
 
 let controller = new AbortController()
-let lastChatInfo: any = {}
 
 const openLongReply = import.meta.env.VITE_GLOB_OPEN_LONG_REPLY === 'true'
 
@@ -37,13 +32,12 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 
 const { isMobile } = useBasicLayout()
-const { addChat, updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
+const { updateChat, updateChatSome, getChatByUuidAndIndex } = useChat()
 const { scrollRef, scrollToBottom, scrollToBottomIfAtBottom, scrollTo } = useScroll()
 
 const { uuid } = route.params as { uuid: string }
 
-const currentChatHistory = computed(() => chatStore.getChatHistoryByCurrentActive)
-const usingContext = computed(() => currentChatHistory?.value?.usingContext ?? true)
+const currentChatRoom = computed(() => chatStore.getChatRoomByCurrentActive)
 const dataSources = computed(() => chatStore.getChatByUuid(+uuid))
 const conversationList = computed(() => dataSources.value.filter(item => (!item.inversion && !!item.conversationOptions)))
 
@@ -52,12 +46,10 @@ const firstLoading = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const inputRef = ref<Ref | null>(null)
 const showPrompt = ref(false)
-const nowSelectChatModel = ref<string | null>(null)
-const currentChatModel = computed(() => nowSelectChatModel.value ?? currentChatHistory.value?.chatModel ?? userStore.userInfo.config.chatModel)
+
+const loadingChatUuid = ref<number>(-1)
 
 const currentNavIndexRef = ref<number>(-1)
-
-const isVisionModel = computed(() => currentChatModel.value && (currentChatModel.value?.includes('vision') || ['gpt-4-turbo', 'gpt-4-turbo-2024-04-09'].includes(currentChatModel.value) || currentChatModel.value?.includes('gpt-4o')))
 
 let loadingms: MessageReactive
 let allmsg: MessageReactive
@@ -67,6 +59,7 @@ let prevScrollTop: number
 const promptStore = usePromptStore()
 
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
+// @ts-expect-error TS2339: Property 'promptList' does not exist on type 'StoreToRefs<any>'.
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
 // 未知原因刷新页面，loading 状态不会重置，手动重置
@@ -90,17 +83,16 @@ async function onConversation() {
   if (!message || message.trim() === '')
     return
 
-  if (nowSelectChatModel.value && currentChatHistory.value)
-    currentChatHistory.value.chatModel = nowSelectChatModel.value
-
-  const uploadFileKeys = isVisionModel.value ? uploadFileKeysRef.value : []
+  const uploadFileKeys = uploadFileKeysRef.value
   uploadFileKeysRef.value = []
 
   controller = new AbortController()
 
   const chatUuid = Date.now()
-  addChat(
-    +uuid,
+  loadingChatUuid.value = chatUuid
+
+  await chatStore.addChatMessage(
+    currentChatRoom.value!.roomId,
     {
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
@@ -112,7 +104,7 @@ async function onConversation() {
       requestOptions: { prompt: message, options: null },
     },
   )
-  scrollToBottom()
+  await scrollToBottom()
 
   loading.value = true
   prompt.value = ''
@@ -120,11 +112,11 @@ async function onConversation() {
   let options: Chat.ConversationRequest = {}
   const lastContext = conversationList.value[conversationList.value.length - 1]?.conversationOptions
 
-  if (lastContext && usingContext.value)
+  if (lastContext && currentChatRoom.value?.usingContext)
     options = { ...lastContext }
 
-  addChat(
-    +uuid,
+  await chatStore.addChatMessage(
+    currentChatRoom.value!.roomId,
     {
       uuid: chatUuid,
       dateTime: new Date().toLocaleString(),
@@ -136,67 +128,154 @@ async function onConversation() {
       requestOptions: { prompt: message, options: { ...options } },
     },
   )
-  scrollToBottom()
+  await scrollToBottom()
 
   try {
     let lastText = ''
+    let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        roomId: +uuid,
+      let searchQuery: string
+      let searchResults: Chat.SearchResult[]
+      let searchUsageTime: number
+
+      await fetchChatAPIProcessSSE({
+        roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid,
         prompt: message,
         uploadFileKeys,
         options,
         signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            lastChatInfo = data
-            const usage = (data.detail && data.detail.usage)
-              ? {
-                  completion_tokens: data.detail.usage.completion_tokens || null,
-                  prompt_tokens: data.detail.usage.prompt_tokens || null,
-                  total_tokens: data.detail.usage.total_tokens || null,
-                  estimated: data.detail.usage.estimated || null,
-                }
-              : undefined
-            updateChat(
-              +uuid,
-              dataSources.value.length - 1,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-                usage,
-              },
-            )
-
-            if (openLongReply && data.detail && data.detail.choices.length > 0 && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
-
-            scrollToBottomIfAtBottom()
+      }, {
+        onSearchQuery: (data) => {
+          searchQuery = data.searchQuery
+        },
+        onSearchResults: (data) => {
+          searchResults = data.searchResults
+          searchUsageTime = data.searchUsageTime
+        },
+        onDelta: async (delta) => {
+          // Handle incremental data
+          if (delta.text) {
+            lastText += delta.text
           }
-          catch (error) {
-            //
+          if (delta.reasoning) {
+            accumulatedReasoning += delta.reasoning
           }
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: accumulatedReasoning,
+              text: lastText,
+              inversion: false,
+              error: false,
+              loading: true,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+
+          await scrollToBottomIfAtBottom()
+        },
+        onMessage: async (data) => {
+          // Handle complete message data (compatibility mode)
+          if (data.searchQuery)
+            searchQuery = data.searchQuery
+          if (data.searchResults)
+            searchResults = data.searchResults
+          if (data.searchUsageTime)
+            searchUsageTime = data.searchUsageTime
+
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: data?.reasoning,
+              text: data.text ?? '',
+              inversion: false,
+              error: false,
+              loading: true,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+
+          if (openLongReply && data.detail && data.detail.choices?.length > 0 && data.detail.choices[0].finish_reason === 'length') {
+            options.parentMessageId = data.id
+            lastText = data.text
+            message = ''
+            return fetchChatAPIOnce()
+          }
+
+          await scrollToBottomIfAtBottom()
+        },
+        onComplete: async (data) => {
+          // Handle complete event
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: data?.reasoning || accumulatedReasoning,
+              text: data?.text || lastText,
+              inversion: false,
+              error: false,
+              loading: false,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+        },
+        onError: async (error) => {
+          await chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              dateTime: new Date().toLocaleString(),
+              text: error,
+              inversion: false,
+              error: true,
+              loading: false,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+        },
+        onEnd: () => {
+          updateChatSome(currentChatRoom.value!.roomId, dataSources.value.length - 1, { loading: false })
         },
       })
-      updateChatSome(+uuid, dataSources.value.length - 1, { loading: false })
     }
 
     await fetchChatAPIOnce()
@@ -206,21 +285,21 @@ async function onConversation() {
 
     if (error.message === 'canceled') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         dataSources.value.length - 1,
         {
           loading: false,
         },
       )
-      scrollToBottomIfAtBottom()
+      await scrollToBottomIfAtBottom()
       return
     }
 
-    const currentChat = getChatByUuidAndIndex(+uuid, dataSources.value.length - 1)
+    const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, dataSources.value.length - 1)
 
     if (currentChat?.text && currentChat.text !== '') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         dataSources.value.length - 1,
         {
           text: `${currentChat.text}\n[${errorMessage}]`,
@@ -232,7 +311,7 @@ async function onConversation() {
     }
 
     updateChat(
-      +uuid,
+      currentChatRoom.value!.roomId,
       dataSources.value.length - 1,
       {
         dateTime: new Date().toLocaleString(),
@@ -270,8 +349,9 @@ async function onRegenerate(index: number) {
 
   loading.value = true
   const chatUuid = dataSources.value[index].uuid
+  loadingChatUuid.value = chatUuid!
   updateChat(
-    +uuid,
+    currentChatRoom.value!.roomId,
     index,
     {
       dateTime: new Date().toLocaleString(),
@@ -287,69 +367,159 @@ async function onRegenerate(index: number) {
 
   try {
     let lastText = ''
+    let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
-      await fetchChatAPIProcess<Chat.ConversationResponse>({
-        roomId: +uuid,
+      let searchQuery: string
+      let searchResults: Chat.SearchResult[]
+      let searchUsageTime: number
+
+      await fetchChatAPIProcessSSE({
+        roomId: currentChatRoom.value!.roomId,
         uuid: chatUuid || Date.now(),
         regenerate: true,
         prompt: message,
         options,
         signal: controller.signal,
-        onDownloadProgress: ({ event }) => {
-          const xhr = event.target
-          const { responseText } = xhr
-          // Always process the final line
-          const lastIndex = responseText.lastIndexOf('\n', responseText.length - 2)
-          let chunk = responseText
-          if (lastIndex !== -1)
-            chunk = responseText.substring(lastIndex)
-          try {
-            const data = JSON.parse(chunk)
-            lastChatInfo = data
-            const usage = (data.detail && data.detail.usage)
-              ? {
-                  completion_tokens: data.detail.usage.completion_tokens || null,
-                  prompt_tokens: data.detail.usage.prompt_tokens || null,
-                  total_tokens: data.detail.usage.total_tokens || null,
-                  estimated: data.detail.usage.estimated || null,
-                }
-              : undefined
-            updateChat(
-              +uuid,
-              index,
-              {
-                dateTime: new Date().toLocaleString(),
-                text: lastText + (data.text ?? ''),
-                inversion: false,
-                responseCount,
-                error: false,
-                loading: true,
-                conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
-                requestOptions: { prompt: message, options: { ...options } },
-                usage,
-              },
-            )
+      }, {
+        onSearchQuery: (data) => {
+          searchQuery = data.searchQuery
+        },
+        onSearchResults: (data) => {
+          searchResults = data.searchResults
+          searchUsageTime = data.searchUsageTime
+        },
+        onDelta: async (delta) => {
+          // 处理增量数据
+          if (delta.text) {
+            lastText += delta.text
+          }
+          if (delta.reasoning) {
+            accumulatedReasoning += delta.reasoning
+          }
 
-            if (openLongReply && data.detail && data.detail.choices.length > 0 && data.detail.choices[0].finish_reason === 'length') {
-              options.parentMessageId = data.id
-              lastText = data.text
-              message = ''
-              return fetchChatAPIOnce()
-            }
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: accumulatedReasoning,
+              text: lastText,
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: true,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+
+          scrollToBottomIfAtBottom()
+        },
+        onMessage: async (data) => {
+          // Handle complete message data (compatibility mode)
+          if (data.searchQuery)
+            searchQuery = data.searchQuery
+          if (data.searchResults)
+            searchResults = data.searchResults
+          if (data.searchUsageTime)
+            searchUsageTime = data.searchUsageTime
+          // Handle complete message data (compatibility mode)
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              searchQuery,
+              searchResults,
+              searchUsageTime,
+              reasoning: data?.reasoning,
+              finish_reason: data?.finish_reason,
+              text: data.text ?? '',
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: true,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+
+          if (openLongReply && data.detail && data.detail.choices?.length > 0 && data.detail.choices[0].finish_reason === 'length') {
+            options.parentMessageId = data.id
+            lastText = data.text
+            message = ''
+            return fetchChatAPIOnce()
           }
-          catch (error) {
-            //
-          }
+
+          scrollToBottomIfAtBottom()
+        },
+        onComplete: async (data) => {
+          // 处理完成事件
+          const usage = (data.detail && data.detail.usage)
+            ? {
+                completion_tokens: data.detail.usage.completion_tokens || null,
+                prompt_tokens: data.detail.usage.prompt_tokens || null,
+                total_tokens: data.detail.usage.total_tokens || null,
+                estimated: data.detail.usage.estimated || null,
+              }
+            : undefined
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              reasoning: data?.reasoning || accumulatedReasoning,
+              finish_reason: data?.finish_reason,
+              text: data?.text || lastText,
+              inversion: false,
+              responseCount,
+              error: false,
+              loading: false,
+              conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
+              requestOptions: { prompt: message, options: { ...options } },
+              usage,
+            },
+          )
+        },
+        onError: async (error) => {
+          updateChat(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              dateTime: new Date().toLocaleString(),
+              text: error,
+              inversion: false,
+              responseCount,
+              error: true,
+              loading: false,
+              conversationOptions: null,
+              requestOptions: { prompt: message, options: { ...options } },
+            },
+          )
+        },
+        onEnd: () => {
+          updateChatSome(currentChatRoom.value!.roomId, index, { loading: false })
         },
       })
-      updateChatSome(+uuid, index, { loading: false })
     }
     await fetchChatAPIOnce()
   }
   catch (error: any) {
     if (error.message === 'canceled') {
       updateChatSome(
-        +uuid,
+        currentChatRoom.value!.roomId,
         index,
         {
           loading: false,
@@ -361,7 +531,7 @@ async function onRegenerate(index: number) {
     const errorMessage = error?.message ?? t('common.wrong')
 
     updateChat(
-      +uuid,
+      currentChatRoom.value!.roomId,
       index,
       {
         dateTime: new Date().toLocaleString(),
@@ -381,12 +551,13 @@ async function onRegenerate(index: number) {
 }
 
 async function onResponseHistory(index: number, historyIndex: number) {
-  const chat = (await fetchChatResponseoHistory(+uuid, dataSources.value[index].uuid || Date.now(), historyIndex)).data
+  const chat = (await fetchChatResponseoHistory(currentChatRoom.value!.roomId, dataSources.value[index].uuid || Date.now(), historyIndex)).data
   updateChat(
-    +uuid,
+    currentChatRoom.value!.roomId,
     index,
     {
       dateTime: chat.dateTime,
+      reasoning: chat?.reasoning,
       text: chat.text,
       inversion: false,
       responseCount: chat.responseCount,
@@ -431,7 +602,7 @@ function handleExport() {
         ms.success(t('chat.exportSuccess'))
         Promise.resolve()
       }
-      catch (error: any) {
+      catch {
         ms.error(t('chat.exportFailed'))
       }
       finally {
@@ -446,7 +617,7 @@ function handleDelete(index: number, fast: boolean) {
     return
 
   if (fast === true) {
-    chatStore.deleteChatByUuid(+uuid, index)
+    chatStore.deleteChatByUuid(currentChatRoom.value!.roomId, index)
   }
   else {
     dialog.warning({
@@ -455,7 +626,7 @@ function handleDelete(index: number, fast: boolean) {
       positiveText: t('common.yes'),
       negativeText: t('common.no'),
       onPositiveClick: () => {
-        chatStore.deleteChatByUuid(+uuid, index)
+        chatStore.deleteChatByUuid(currentChatRoom.value!.roomId, index)
       },
     })
   }
@@ -475,7 +646,7 @@ function handleClear() {
     positiveText: t('common.yes'),
     negativeText: t('common.no'),
     onPositiveClick: () => {
-      chatStore.clearChatByUuid(+uuid)
+      chatStore.clearChatByUuid(currentChatRoom.value!.roomId)
     },
   })
 }
@@ -499,24 +670,25 @@ async function handleStop() {
   if (loading.value) {
     controller.abort()
     loading.value = false
-    await fetchChatStopResponding(lastChatInfo.text, lastChatInfo.id, lastChatInfo.conversationId)
+    await fetchChatStopResponding(loadingChatUuid.value)
   }
 }
 
 async function loadMoreMessage(event: any) {
-  const chatIndex = chatStore.chat.findIndex(d => d.uuid === +uuid)
+  const chatIndex = chatStore.chat.findIndex(d => d.roomId === currentChatRoom.value!.roomId)
   if (chatIndex <= -1 || chatStore.chat[chatIndex].data.length <= 0)
     return
 
   const scrollPosition = event.target.scrollHeight - event.target.scrollTop
 
   const lastId = chatStore.chat[chatIndex].data[0].uuid
-  await chatStore.syncChat({ uuid: +uuid } as Chat.History, lastId, () => {
+  await chatStore.syncChat({ roomId: currentChatRoom.value!.roomId } as Chat.ChatRoom, lastId, () => {
     loadingms && loadingms.destroy()
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
     loadingms = ms.loading(
-      '加载中...', {
+      '加载中...',
+      {
         duration: 0,
       },
     )
@@ -532,7 +704,7 @@ const handleLoadMoreMessage = debounce(loadMoreMessage, 300)
 const handleSyncChat
   = debounce(() => {
     // 直接刷 极小概率不请求
-    chatStore.syncChat({ uuid: Number(uuid) } as Chat.History, undefined, () => {
+    chatStore.syncChat({ roomId: Number(uuid) } as Chat.ChatRoom, undefined, () => {
       firstLoading.value = false
       const scrollRef = document.querySelector('#scrollRef')
       if (scrollRef)
@@ -549,13 +721,34 @@ async function handleScroll(event: any) {
   prevScrollTop = scrollTop
 }
 
-async function handleToggleUsingContext() {
-  if (!currentChatHistory.value)
+async function handleToggleSearchEnabled() {
+  if (!currentChatRoom.value)
     return
 
-  currentChatHistory.value.usingContext = !currentChatHistory.value.usingContext
-  chatStore.setUsingContext(currentChatHistory.value.usingContext, +uuid)
-  if (currentChatHistory.value.usingContext)
+  await chatStore.setChatSearchEnabled(!currentChatRoom.value.searchEnabled)
+  if (currentChatRoom.value.searchEnabled)
+    ms.success(t('chat.turnOnSearch'))
+  else
+    ms.warning(t('chat.turnOffSearch'))
+}
+
+async function handleToggleThinkEnabled() {
+  if (!currentChatRoom.value)
+    return
+
+  await chatStore.setChatThinkEnabled(!currentChatRoom.value.thinkEnabled)
+  if (currentChatRoom.value.thinkEnabled)
+    ms.success(t('chat.turnOnThink'))
+  else
+    ms.warning(t('chat.turnOffThink'))
+}
+
+async function handleToggleUsingContext() {
+  if (!currentChatRoom.value)
+    return
+
+  await chatStore.setUsingContext(!currentChatRoom.value.usingContext)
+  if (currentChatRoom.value.usingContext)
     ms.success(t('chat.turnOnContext'))
   else
     ms.warning(t('chat.turnOffContext'))
@@ -566,7 +759,7 @@ async function handleToggleUsingContext() {
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
 const searchOptions = computed(() => {
   if (prompt.value.startsWith('/')) {
-    return promptTemplate.value.filter((item: { key: string }) => item.key.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
+    return promptTemplate.value.filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
       return {
         label: obj.value,
         value: obj.value,
@@ -581,8 +774,13 @@ const searchOptions = computed(() => {
 // value反渲染key
 function renderOption(option: { label: string }) {
   for (const i of promptTemplate.value) {
-    if (i.value === option.label)
-      return [i.key]
+    if (i.value === option.label) {
+      return [
+        h(PromptTypeTag, { type: i.type }),
+        h('span', { style: { marginLeft: '8px' } }),
+        i.title,
+      ]
+    }
   }
   return []
 }
@@ -605,16 +803,24 @@ const footerClass = computed(() => {
 })
 
 async function handleSyncChatModel(chatModel: string) {
-  nowSelectChatModel.value = chatModel
-  await chatStore.setChatModel(chatModel, +uuid)
+  await chatStore.setChatModel(chatModel)
 }
 
-function formatTooltip(value: number) {
-  return `${t('setting.maxContextCount')}: ${value}`
+function handleUpdateMaxContextCount(maxContextCount: number) {
+  if (currentChatRoom.value) {
+    currentChatRoom.value.maxContextCount = maxContextCount
+  }
+}
+
+async function handleSyncMaxContextCount() {
+  if (!currentChatRoom.value)
+    return
+
+  await chatStore.setMaxContextCount(currentChatRoom.value.maxContextCount)
 }
 
 // https://github.com/tusen-ai/naive-ui/issues/4887
-function handleFinish(options: { file: UploadFileInfo; event?: ProgressEvent }) {
+function handleFinish(options: { file: UploadFileInfo, event?: ProgressEvent }) {
   if (options.file.status === 'finished') {
     const response = (options.event?.target as XMLHttpRequest).response
     uploadFileKeysRef.value.push(`${response.data.fileKey}`)
@@ -657,16 +863,21 @@ onUnmounted(() => {
   <div class="flex flex-col w-full h-full">
     <HeaderComponent
       v-if="isMobile"
-      :using-context="usingContext"
+      :using-context="currentChatRoom?.usingContext"
       :show-prompt="showPrompt"
-      @export="handleExport" @toggle-using-context="handleToggleUsingContext"
+      :search-enabled="currentChatRoom?.searchEnabled"
+      :think-enabled="currentChatRoom?.thinkEnabled"
+      @export="handleExport"
+      @toggle-using-context="handleToggleUsingContext"
+      @toggle-search-enabled="handleToggleSearchEnabled"
+      @toggle-think-enabled="handleToggleThinkEnabled"
       @toggle-show-prompt="showPrompt = true"
     />
     <main class="flex-1 overflow-hidden">
       <div id="scrollRef" ref="scrollRef" class="h-full overflow-hidden overflow-y-auto" @scroll="handleScroll">
         <div
           id="image-wrapper"
-          class="w-full max-w-screen-xl m-auto dark:bg-[#101014]"
+          class="w-full max-w-(--breakpoint-xl) m-auto dark:bg-[#101014]"
           :class="[isMobile ? 'p-2' : 'p-4']"
         >
           <NSpin :show="firstLoading">
@@ -680,10 +891,15 @@ onUnmounted(() => {
               <div>
                 <Message
                   v-for="(item, index) of dataSources"
-                  :key="index"
+                  :key="String(item.uuid) + String(item.inversion)"
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
+                  :search-query="item?.searchQuery"
+                  :search-results="item?.searchResults"
+                  :search-usage-time="item?.searchUsageTime"
+                  :reasoning="item?.reasoning"
+                  :finish-reason="item?.finish_reason"
                   :text="item.text"
                   :images="item.images"
                   :inversion="item.inversion"
@@ -711,9 +927,9 @@ onUnmounted(() => {
       </div>
     </main>
     <footer :class="footerClass">
-      <div class="w-full max-w-screen-xl m-auto">
+      <div class="w-full max-w-(--breakpoint-xl) m-auto">
         <NSpace vertical>
-          <div v-if="isVisionModel && uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
+          <div v-if="uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
             <NSpace>
               <img v-for="(v, i) of uploadFileKeysRef" :key="i" :src="`/uploads/${v}`" class="max-h-10">
               <HoverButton @click="handleDeleteUploadFile">
@@ -727,13 +943,13 @@ onUnmounted(() => {
           <div class="flex items-center space-x-2">
             <div>
               <NUpload
-                :disabled="!isVisionModel"
                 action="/api/upload-image"
                 list-type="image"
                 class="flex items-center justify-center h-10 transition hover:bg-neutral-100 dark:hover:bg-[#414755]"
                 style="flex-flow:row nowrap;min-width:2.5em;padding:.5em;border-radius:.5em;"
                 :headers="uploadHeaders"
                 :show-file-list="false"
+                :multiple="true"
                 response-type="json"
                 accept="image/png, image/jpeg, image/webp, image/gif"
                 @finish="handleFinish"
@@ -758,20 +974,60 @@ onUnmounted(() => {
                 <IconPrompt class="w-[20px] m-auto" />
               </span>
             </HoverButton>
-            <HoverButton v-if="!isMobile" :tooltip="usingContext ? $t('chat.clickTurnOffContext') : $t('chat.clickTurnOnContext')" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="handleToggleUsingContext">
-              <span class="text-xl">
-                <SvgIcon icon="ri:chat-history-line" />
-              </span>
-              <!-- <span style="margin-left:.25em">{{ usingContext ? '包含上下文' : '不含上下文' }}</span> -->
-            </HoverButton>
             <NSelect
               style="width: 250px"
-              :value="currentChatModel"
+              :value="currentChatRoom?.chatModel"
               :options="authStore.session?.chatModels"
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
-              @update-value="(val) => handleSyncChatModel(val)"
+              @update:value="handleSyncChatModel"
             />
-            <NSlider v-model:value="userStore.userInfo.advanced.maxContextCount" :max="100" :min="0" :step="1" style="width: 88px" :format-tooltip="formatTooltip" @update:value="() => { userStore.updateSetting(false) }" />
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatRoom?.searchEnabled ? t('chat.clickTurnOffSearch') : t('chat.clickTurnOnSearch')"
+              :tooltip-help="t('chat.searchHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.searchEnabled, 'text-[#a8071a]': !currentChatRoom?.searchEnabled }"
+              @click="handleToggleSearchEnabled"
+            >
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="mdi:web" />
+                <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatRoom?.thinkEnabled ? t('chat.clickTurnOffThink') : t('chat.clickTurnOnThink')"
+              :tooltip-help="t('chat.thinkHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.thinkEnabled, 'text-[#a8071a]': !currentChatRoom?.thinkEnabled }"
+              @click="handleToggleThinkEnabled"
+            >
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="mdi:lightbulb-outline" />
+                <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatRoom?.usingContext ? t('chat.clickTurnOffContext') : t('chat.clickTurnOnContext')"
+              :tooltip-help="t('chat.contextHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.usingContext, 'text-[#a8071a]': !currentChatRoom?.usingContext }"
+              @click="handleToggleUsingContext"
+            >
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="ri:chat-history-line" />
+                <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
+              </span>
+            </HoverButton>
+            <NSlider
+              :value="currentChatRoom?.maxContextCount"
+              :disabled="!currentChatRoom?.usingContext"
+              :max="40"
+              :min="0"
+              :step="1"
+              style="width: 180px"
+              :format-tooltip="(value: number) => `${t('chat.maxContextCount')}: ${value}`"
+              :on-dragend="handleSyncMaxContextCount"
+              @update:value="handleUpdateMaxContextCount"
+            />
           </div>
           <div class="flex items-center justify-between space-x-2">
             <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
@@ -782,7 +1038,7 @@ onUnmounted(() => {
                   :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
                   type="textarea"
                   :placeholder="placeholder"
-                  :autosize="{ minRows: isMobile ? 1 : 4, maxRows: isMobile ? 4 : 8 }"
+                  :autosize="{ minRows: isMobile ? 1 : 2, maxRows: isMobile ? 4 : 12 }"
                   @input="handleInput"
                   @focus="handleFocus"
                   @blur="handleBlur"
@@ -801,6 +1057,6 @@ onUnmounted(() => {
         </NSpace>
       </div>
     </footer>
-    <Prompt v-if="showPrompt" v-model:roomId="uuid" v-model:visible="showPrompt" />
+    <Prompt v-if="showPrompt" v-model:room-id="uuid" v-model:visible="showPrompt" />
   </div>
 </template>

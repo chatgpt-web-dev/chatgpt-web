@@ -1,10 +1,7 @@
 export class ConfigState {
   timeoutMs?: number
   apiKey?: string
-  accessToken?: string
-  accessTokenExpiredTime?: string
   apiBaseUrl?: string
-  apiModel?: APIMODEL
   reverseProxy?: string
   socksProxy?: string
   socksAuth?: string
@@ -13,11 +10,13 @@ export class ConfigState {
   siteConfig?: SiteConfig
   mailConfig?: MailConfig
   auditConfig?: AuditConfig
+  searchConfig?: SearchConfig
   announceConfig?: AnnounceConfig
 }
 
 export class UserConfig {
   chatModel?: string
+  maxContextCount?: number
 }
 
 // https://platform.openai.com/docs/models/overview
@@ -52,9 +51,9 @@ export interface TextAuditServiceOptions {
 }
 export enum TextAudioType {
   None = 0,
-  Request = 1 << 0, // 二进制 01
-  Response = 1 << 1, // 二进制 10
-  All = Request | Response, // 二进制 11
+  Request = 1, // 二进制 01
+  Response = 2, // 二进制 10
+  All = 3, // 二进制 11
 }
 
 export class AuditConfig {
@@ -112,9 +111,20 @@ export class KeyConfig {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI' | undefined
+export class UserPrompt {
+  _id?: string
+  title: string
+  value: string
+  type?: 'built-in' | 'user-defined'
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
 
-export const apiModelOptions = ['ChatGPTAPI', 'ChatGPTUnofficialProxyAPI'].map((model: string) => {
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy'
+
+export const apiModelOptions = ['ChatGPTAPI', 'VLLM', 'FastDeploy'].map((model: string) => {
   return {
     label: model,
     key: model,
@@ -169,4 +179,30 @@ export interface GiftCard {
   cardno: string
   amount: number
   redeemed: number
+}
+
+export type SearchServiceProvider = 'tavily' | ''
+
+export interface SearchServiceOptions {
+  apiKey: string
+  maxResults?: number
+  includeRawContent?: boolean
+}
+
+export class SearchConfig {
+  enabled: boolean
+  provider: SearchServiceProvider
+  options: SearchServiceOptions
+  systemMessageWithSearchResult: string
+  systemMessageGetSearchQuery: string
+  constructor(enabled: boolean, provider: SearchServiceProvider, options: SearchServiceOptions, systemMessageWithSearchResult: string, systemMessageGetSearchQuery: string) {
+    this.enabled = enabled
+    this.provider = provider
+    this.options = options
+    this.systemMessageWithSearchResult = systemMessageWithSearchResult
+    this.systemMessageGetSearchQuery = systemMessageGetSearchQuery
+    if (!this.options.maxResults) {
+      this.options.maxResults = 10
+    }
+  }
 }

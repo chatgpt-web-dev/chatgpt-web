@@ -1,32 +1,31 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { NModal, NTabPane, NTabs } from 'naive-ui'
-import General from './General.vue'
-import Advanced from './Advanced.vue'
-import Statistics from './Statistics.vue'
-import About from './About.vue'
-import Site from './Site.vue'
-import Mail from './Mail.vue'
-import Audit from './Audit.vue'
-import Gift from './Gift.vue'
-import User from './User.vue'
-import Key from './Keys.vue'
-import Password from './Password.vue'
-import TwoFA from './TwoFA.vue'
-import Announcement from './Anonuncement.vue'
 import { SvgIcon } from '@/components/common'
-import { useAuthStore, useUserStore } from '@/store'
+import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useUserStore } from '@/store'
+import About from './About.vue'
+import Advanced from './Advanced.vue'
+import Announcement from './Anonuncement.vue'
+import Audit from './Audit.vue'
+import General from './General.vue'
+import Gift from './Gift.vue'
+import Key from './Keys.vue'
+import Mail from './Mail.vue'
+import Password from './Password.vue'
+import Search from './Search.vue'
+import Site from './Site.vue'
+import Statistics from './Statistics.vue'
+import TwoFA from './TwoFA.vue'
+import User from './User.vue'
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<Emit>()
 
-const userStore = useUserStore()
-const authStore = useAuthStore()
-const { isMobile } = useBasicLayout()
+const { t } = useI18n()
 
-const isChatGPTAPI = computed<boolean>(() => !!authStore.isChatGPTAPI)
+const userStore = useUserStore()
+const { isMobile } = useBasicLayout()
 
 interface Props {
   visible: boolean
@@ -55,7 +54,7 @@ const show = computed({
         <NTabPane name="General" tab="General">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:file-user-line" />
-            <span class="ml-2">{{ $t('setting.general') }}</span>
+            <span class="ml-2">{{ t('setting.general') }}</span>
           </template>
           <div class="min-h-[100px]">
             <General />
@@ -64,21 +63,21 @@ const show = computed({
         <NTabPane name="PasswordConfig" tab="PasswordConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.passwordConfig') }}</span>
+            <span class="ml-2">{{ t('setting.passwordConfig') }}</span>
           </template>
           <Password />
         </NTabPane>
         <NTabPane name="TwoFAConfig" tab="TwoFAConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.twoFAConfig') }}</span>
+            <span class="ml-2">{{ t('setting.twoFAConfig') }}</span>
           </template>
           <TwoFA />
         </NTabPane>
-        <NTabPane v-if="isChatGPTAPI" name="Advanced" tab="Advanced">
+        <NTabPane name="Advanced" tab="Advanced">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:equalizer-line" />
-            <span class="ml-2">{{ $t('setting.advanced') }}</span>
+            <span class="ml-2">{{ t('setting.advanced') }}</span>
           </template>
           <div class="min-h-[100px]">
             <Advanced />
@@ -87,7 +86,7 @@ const show = computed({
         <NTabPane name="Statistics" tab="Statistics">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:bar-chart-box-line" />
-            <span class="ml-2">{{ $t('setting.statistics') }}</span>
+            <span class="ml-2">{{ t('setting.statistics') }}</span>
           </template>
           <div class="min-h-[100px]">
             <Statistics />
@@ -96,56 +95,70 @@ const show = computed({
         <NTabPane v-if="userStore.userInfo.root" name="Config" tab="Config">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:list-settings-line" />
-            <span class="ml-2">{{ $t('setting.config') }}</span>
+            <span class="ml-2">{{ t('setting.config') }}</span>
           </template>
           <About />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="ChatRecord" tab="ChatRecord">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ic:outline-chat" />
+            <span class="ml-2">{{ t('setting.chatRecord') }}</span>
+          </template>
+          <ChatRecord />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <span class="ml-2">{{ t('setting.keysConfig') }}</span>
+          </template>
+          <Key />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SiteConfig" tab="SiteConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:settings-line" />
-            <span class="ml-2">{{ $t('setting.siteConfig') }}</span>
+            <span class="ml-2">{{ t('setting.siteConfig') }}</span>
           </template>
           <Site />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="AnnounceConfig" tab="AnnounceConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:settings-line" />
-            <span class="ml-2">{{ $t('setting.announceConfig') }}</span>
+            <span class="ml-2">{{ t('setting.announceConfig') }}</span>
           </template>
           <Announcement />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="MailConfig" tab="MailConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:mail-line" />
-            <span class="ml-2">{{ $t('setting.mailConfig') }}</span>
+            <span class="ml-2">{{ t('setting.mailConfig') }}</span>
           </template>
           <Mail />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="AuditConfig" tab="AuditConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri:settings-line" />
-            <span class="ml-2">{{ $t('setting.auditConfig') }}</span>
+            <span class="ml-2">{{ t('setting.auditConfig') }}</span>
           </template>
           <Audit />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="SearchConfig" tab="SearchConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="mdi:web" />
+            <span class="ml-2">{{ t('setting.searchConfig') }}</span>
+          </template>
+          <Search />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri-user-5-line" />
-            <span class="ml-2">{{ $t('setting.userConfig') }}</span>
+            <span class="ml-2">{{ t('setting.userConfig') }}</span>
           </template>
           <User />
-        </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
-          <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ $t('setting.keysConfig') }}</span>
-          </template>
-          <Key />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="GiftCardConfig" tab="GiftCardConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="mdi-gift" />
-            <span class="ml-2">{{ $t('setting.uploadgifts') }}</span>
+            <span class="ml-2">{{ t('setting.uploadgifts') }}</span>
           </template>
           <Gift />
         </NTabPane>

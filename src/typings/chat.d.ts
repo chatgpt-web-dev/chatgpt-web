@@ -1,7 +1,18 @@
 declare namespace Chat {
+  interface SearchResult {
+    title: string
+    url: string
+    content: string
+  }
+
   interface Chat {
     uuid?: number
     dateTime: string
+    searchQuery?: string
+    searchResults?: SearchResult[]
+    searchUsageTime?: number
+    reasoning?: string
+    finish_reason?: string
     text: string
     images?: string[]
     inversion?: boolean
@@ -9,7 +20,7 @@ declare namespace Chat {
     error?: boolean
     loading?: boolean
     conversationOptions?: ConversationRequest | null
-    requestOptions: { prompt: string; options?: ConversationRequest | null }
+    requestOptions: { prompt: string, options?: ConversationRequest | null }
     usage?: {
       completion_tokens: number
       prompt_tokens: number
@@ -18,22 +29,18 @@ declare namespace Chat {
     }
   }
 
-  interface History {
+  interface ChatRoom {
     title: string
     isEdit: boolean
-    uuid: number
+    roomId: number
     loading?: boolean
     all?: boolean
     prompt?: string
     usingContext: boolean
-    chatModel?: string
-  }
-
-  interface ChatState {
-    active: number | null
-    usingContext: boolean
-    history: History[]
-    chat: { uuid: number; data: Chat[] }[]
+    maxContextCount: number
+    chatModel: string
+    searchEnabled: boolean
+    thinkEnabled: boolean
   }
 
   interface ConversationRequest {
@@ -44,12 +51,12 @@ declare namespace Chat {
   interface ConversationResponse {
     conversationId: string
     detail: {
-      choices: { finish_reason: string; index: number; logprobs: any; text: string }[]
+      choices: { finish_reason: string, index: number, logprobs: any, text: string }[]
       created: number
       id: string
       model: string
       object: string
-      usage: { completion_tokens: number; prompt_tokens: number; total_tokens: number }
+      usage: { completion_tokens: number, prompt_tokens: number, total_tokens: number }
     }
     id: string
     parentMessageId: string

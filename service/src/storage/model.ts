@@ -71,6 +71,7 @@ export class UserInfo {
 
 export class UserConfig {
   chatModel: string
+  maxContextCount: number
 }
 
 export class ChatRoom {
@@ -80,33 +81,34 @@ export class ChatRoom {
   title: string
   prompt: string
   usingContext: boolean
+  maxContextCount: number
   status: Status = Status.Normal
-  // only access token used
-  accountId?: string
   chatModel: string
-  constructor(userId: string, title: string, roomId: number, chatModel: string) {
+  searchEnabled: boolean
+  thinkEnabled: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
     this.roomId = roomId
-    this.usingContext = true
-    this.accountId = null
+    this.usingContext = usingContext
+    this.maxContextCount = maxContextCount
     this.chatModel = chatModel
+    this.searchEnabled = searchEnabled
+    this.thinkEnabled = thinkEnabled
   }
 }
 
 export class ChatOptions {
   parentMessageId?: string
   messageId?: string
-  conversationId?: string
   prompt_tokens?: number
   completion_tokens?: number
   total_tokens?: number
   estimated?: boolean
-  constructor(parentMessageId?: string, messageId?: string, conversationId?: string) {
+  constructor(parentMessageId?: string, messageId?: string) {
     this.parentMessageId = parentMessageId
     this.messageId = messageId
-    this.conversationId = conversationId
   }
 }
 
@@ -115,19 +117,31 @@ export class previousResponse {
   options: ChatOptions
 }
 
+export class SearchResult {
+  title: string
+  url: string
+  content: string
+}
+
 export class ChatInfo {
   _id: ObjectId
   roomId: number
+  model: string
   uuid: number
   dateTime: number
   prompt: string
   images?: string[]
+  searchQuery?: string
+  searchResults?: SearchResult[]
+  searchUsageTime?: number
+  reasoning?: string
   response?: string
   status: Status = Status.Normal
   options: ChatOptions
   previousResponse?: previousResponse[]
-  constructor(roomId: number, uuid: number, prompt: string, images: string[], options: ChatOptions) {
+  constructor(roomId: number, uuid: number, prompt: string, images: string[], model: string, options: ChatOptions) {
     this.roomId = roomId
+    this.model = model
     this.uuid = uuid
     this.prompt = prompt
     this.images = images
@@ -171,6 +185,24 @@ export class ChatUsage {
   }
 }
 
+export class SearchConfig {
+  public enabled: boolean
+  public provider?: SearchServiceProvider
+  public options?: SearchServiceOptions
+  public systemMessageWithSearchResult?: string
+  public systemMessageGetSearchQuery?: string
+}
+
+export enum SearchServiceProvider {
+  Tavily = 'tavily',
+}
+
+export class SearchServiceOptions {
+  public apiKey: string
+  public maxResults?: number
+  public includeRawContent?: boolean
+}
+
 export class Config {
   constructor(
     public _id: ObjectId,
@@ -179,7 +211,6 @@ export class Config {
     public apiDisableDebug?: boolean,
     public accessToken?: string,
     public apiBaseUrl?: string,
-    public apiModel?: APIMODEL,
     public reverseProxy?: string,
     public socksProxy?: string,
     public socksAuth?: string,
@@ -187,6 +218,7 @@ export class Config {
     public siteConfig?: SiteConfig,
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
+    public searchConfig?: SearchConfig,
     public advancedConfig?: AdvancedConfig,
     public announceConfig?: AnnounceConfig,
   ) { }
@@ -243,15 +275,14 @@ export class AdvancedConfig {
     public systemMessage: string,
     public temperature: number,
     public top_p: number,
-    public maxContextCount: number,
   ) { }
 }
 
 export enum TextAudioType {
   None = 0,
-  Request = 1 << 0, // 二进制 01
-  Response = 1 << 1, // 二进制 10
-  All = Request | Response, // 二进制 11
+  Request = 1, // 二进制 01
+  Response = 2, // 二进制 10
+  All = 3, // 二进制 11
 }
 
 export class KeyConfig {
@@ -273,4 +304,26 @@ export class KeyConfig {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI' | 'ChatGPTUnofficialProxyAPI'
+export class BuiltInPrompt {
+  _id: ObjectId
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
+export class UserPrompt {
+  _id: ObjectId
+  userId: string
+  title: string
+  value: string
+  constructor(userId: string, title: string, value: string) {
+    this.userId = userId
+    this.title = title
+    this.value = value
+  }
+}
+
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy'

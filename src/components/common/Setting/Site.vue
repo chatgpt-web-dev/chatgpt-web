@@ -1,10 +1,9 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
-import { NButton, NInput, NInputNumber, NSpin, NSwitch, useMessage } from 'naive-ui'
 import type { ConfigState } from './model'
-import { SiteConfig } from './model'
 import { fetchChatConfig, fetchUpdateSite } from '@/api'
-import { t } from '@/locales'
+import { SiteConfig } from './model'
+
+const { t } = useI18n()
 
 const ms = useMessage()
 
@@ -50,7 +49,7 @@ onMounted(() => {
     <div class="p-4 space-y-5 min-h-[200px]">
       <div class="space-y-6">
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.siteTitle') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.siteTitle') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.siteTitle" placeholder=""
@@ -59,7 +58,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.siteDomain') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.siteDomain') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.siteDomain" placeholder=""
@@ -68,7 +67,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.loginEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.loginEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -79,16 +78,16 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.loginSalt') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.loginSalt') }}</span>
           <div class="flex-1">
             <NInput
-              :value="config && config.loginSalt" :placeholder="$t('setting.loginSaltTip')"
+              :value="config && config.loginSalt" :placeholder="t('setting.loginSaltTip')"
               @input="(val) => { if (config) config.loginSalt = val }"
             />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.registerEnabled') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.registerEnabled') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -98,7 +97,7 @@ onMounted(() => {
           </div>
         </div>
         <div v-show="config && config.registerEnabled" class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.registerReview') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.registerReview') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -108,16 +107,16 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.registerMails') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.registerMails') }}</span>
           <div class="flex-1">
             <NInput
-              :value="config && config.registerMails" :placeholder="$t('setting.registerReviewTip')"
+              :value="config && config.registerMails" :placeholder="t('setting.registerReviewTip')"
               @input="(val) => { if (config) config.registerMails = val }"
             />
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.chatModels') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.chatModels') }}</span>
           <div class="flex-1">
             <NInput
               :value="config && config.chatModels"
@@ -130,7 +129,7 @@ onMounted(() => {
         </div>
         <!-- 增加新注册用户的全局数量设置 -->
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.globalAmount') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.globalAmount') }}</span>
           <div class="flex-1">
             <NInputNumber
               v-model:value="config.globalAmount" placeholder=""
@@ -138,7 +137,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.usageCountLimit') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.usageCountLimit') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -148,7 +147,7 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]">{{ $t('setting.showWatermark') }}</span>
+          <span class="shrink-0 w-[100px]">{{ t('setting.showWatermark') }}</span>
           <div class="flex-1">
             <NSwitch
               :round="false"
@@ -158,9 +157,9 @@ onMounted(() => {
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <span class="flex-shrink-0 w-[100px]" />
+          <span class="shrink-0 w-[100px]" />
           <NButton :loading="saving" type="primary" @click="updateSiteInfo(config)">
-            {{ $t('common.save') }}
+            {{ t('common.save') }}
           </NButton>
         </div>
       </div>

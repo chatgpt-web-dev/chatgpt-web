@@ -1,8 +1,8 @@
-import type { AxiosProgressEvent, GenericAbortSignal } from 'axios'
-import { get, post } from '@/utils/request'
-import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SiteConfig, Status, UserInfo, UserPassword } from '@/components/common/Setting/model'
-import { useAuthStore, useUserStore } from '@/store'
+import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
+import { useUserStore } from '@/store'
+import { get, post } from '@/utils/request'
+import fetchService from '@/utils/request/fetchService'
 
 export function fetchAnnouncement<T = any>() {
   return post<T>({
@@ -16,50 +16,112 @@ export function fetchChatConfig<T = any>() {
   })
 }
 
-export function fetchChatAPIProcess<T = any>(
+// SSE event handler interface
+interface SSEEventHandlers {
+  onMessage?: (data: any) => void
+  onDelta?: (delta: { reasoning?: string, text?: string }) => void
+  onSearchQuery?: (data: { searchQuery: string }) => void
+  onSearchResults?: (data: { searchResults: any[], searchUsageTime: number }) => void
+  onComplete?: (data: any) => void
+  onError?: (error: string) => void
+  onEnd?: () => void
+}
+
+// SSE chat processing function using custom fetch service
+export function fetchChatAPIProcessSSE(
   params: {
     roomId: number
     uuid: number
     regenerate?: boolean
     prompt: string
     uploadFileKeys?: string[]
-    options?: { conversationId?: string; parentMessageId?: string }
-    signal?: GenericAbortSignal
-    onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void },
-) {
+    options?: { conversationId?: string, parentMessageId?: string }
+    signal?: AbortSignal
+  },
+  handlers: SSEEventHandlers,
+): Promise<void> {
   const userStore = useUserStore()
-  const authStore = useAuthStore()
 
-  let data: Record<string, any> = {
+  const data: Record<string, any> = {
     roomId: params.roomId,
     uuid: params.uuid,
     regenerate: params.regenerate || false,
     prompt: params.prompt,
     uploadFileKeys: params.uploadFileKeys,
     options: params.options,
+    systemMessage: userStore.userInfo.advanced.systemMessage,
+    temperature: userStore.userInfo.advanced.temperature,
+    top_p: userStore.userInfo.advanced.top_p,
   }
 
-  if (authStore.isChatGPTAPI) {
-    data = {
-      ...data,
-      systemMessage: userStore.userInfo.advanced.systemMessage,
-      temperature: userStore.userInfo.advanced.temperature,
-      top_p: userStore.userInfo.advanced.top_p,
-    }
-  }
+  return new Promise((resolve, reject) => {
+    fetchService.postStream(
+      {
+        url: '/chat-process',
+        body: data,
+        signal: params.signal,
+      },
+      {
+        onChunk: (line: string) => {
+          if (line.trim() === '')
+            return
 
-  return post<T>({
-    url: '/chat-process',
-    data,
-    signal: params.signal,
-    onDownloadProgress: params.onDownloadProgress,
+          if (line.startsWith('event: ')) {
+            // const _eventType = line.substring(7).trim()
+            return
+          }
+
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6).trim()
+
+            if (data === '[DONE]') {
+              handlers.onEnd?.()
+              resolve()
+              return
+            }
+
+            try {
+              const jsonData = JSON.parse(data)
+
+              // Dispatch to different handlers based on data type
+              if (jsonData.message) {
+                handlers.onError?.(jsonData.message)
+              }
+              else if (jsonData.searchQuery) {
+                handlers.onSearchQuery?.(jsonData)
+              }
+              else if (jsonData.searchResults) {
+                handlers.onSearchResults?.(jsonData)
+              }
+              else if (jsonData.m) {
+                handlers.onDelta?.(jsonData.m)
+              }
+              else {
+                handlers.onMessage?.(jsonData)
+              }
+            }
+            catch (e) {
+              console.error('Failed to parse SSE data:', data, e)
+            }
+          }
+        },
+        onError: (error: Error) => {
+          handlers.onError?.(error.message)
+          reject(error)
+        },
+        onComplete: () => {
+          handlers.onEnd?.()
+          resolve()
+        },
+      },
+    )
   })
 }
 
-export function fetchChatStopResponding<T = any>(text: string, messageId: string, conversationId: string) {
+export function fetchChatStopResponding<T = any>(chatUuid: number) {
   return post<T>({
     url: '/chat-abort',
-    data: { text, messageId, conversationId },
+    data: { chatUuid },
   })
 }
 
@@ -100,7 +162,7 @@ export function fetchLogin<T = any>(username: string, password: string, token?: 
 export function fetchLogout<T = any>() {
   return post<T>({
     url: '/user-logout',
-    data: { },
+    data: {},
   })
 }
 
@@ -167,6 +229,13 @@ export function fetchUpdateUserChatModel<T = any>(chatModel: string) {
   })
 }
 
+export function fetchUpdateUserMaxContextCount<T = any>(maxContextCount: number) {
+  return post<T>({
+    url: '/user-max-context-count',
+    data: { maxContextCount },
+  })
+}
+
 export function fetchGetUsers<T = any>(page: number, size: number) {
   return get<T>({
     url: '/users',
@@ -229,6 +298,13 @@ export function fetchGetChatRooms<T = any>() {
   })
 }
 
+export function fetchGetChatRoomsCount<T = any>(page: number, size: number, userId: string) {
+  return get<T>({
+    url: '/chatrooms-count',
+    data: { page, size, userId },
+  })
+}
+
 export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string) {
   return post<T>({
     url: '/room-create',
@@ -257,10 +333,31 @@ export function fetchUpdateChatRoomChatModel<T = any>(chatModel: string, roomId:
   })
 }
 
+export function fetchUpdateChatRoomMaxContextCount<T = any>(maxContextCount: number, roomId: number) {
+  return post<T>({
+    url: '/room-max-context-count',
+    data: { maxContextCount, roomId },
+  })
+}
+
 export function fetchUpdateChatRoomUsingContext<T = any>(using: boolean, roomId: number) {
   return post<T>({
     url: '/room-context',
     data: { using, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomSearchEnabled<T = any>(searchEnabled: boolean, roomId: number) {
+  return post<T>({
+    url: '/room-search-enabled',
+    data: { searchEnabled, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomThinkEnabled<T = any>(thinkEnabled: boolean, roomId: number) {
+  return post<T>({
+    url: '/room-think-enabled',
+    data: { thinkEnabled, roomId },
   })
 }
 
@@ -271,16 +368,16 @@ export function fetchDeleteChatRoom<T = any>(roomId: number) {
   })
 }
 
-export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number) {
+export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number, all?: string) {
   return get<T>({
-    url: `/chat-history?roomId=${roomId}&lastId=${lastId}`,
+    url: `/chat-history?roomId=${roomId}&lastId=${lastId}&all=${all}`,
   })
 }
 
 export function fetchClearAllChat<T = any>() {
   return post<T>({
     url: '/chat-clear-all',
-    data: { },
+    data: {},
   })
 }
 
@@ -323,6 +420,20 @@ export function fetchTestAudit<T = any>(text: string, audit: AuditConfig) {
   return post<T>({
     url: '/audit-test',
     data: { audit, text },
+  })
+}
+
+export function fetchUpdateSearch<T = any>(search: SearchConfig) {
+  return post<T>({
+    url: '/setting-search',
+    data: search,
+  })
+}
+
+export function fetchTestSearch<T = any>(text: string, search: SearchConfig) {
+  return post<T>({
+    url: '/search-test',
+    data: { search, text },
   })
 }
 
@@ -385,5 +496,38 @@ export function fetchUpsertApiKey<T = any>(keyConfig: KeyConfig) {
   return post<T>({
     url: '/setting-key-upsert',
     data: keyConfig,
+  })
+}
+
+export function fetchUserPromptList<T = any>() {
+  return get<T>({
+    url: '/prompt-list',
+  })
+}
+
+export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
+  return post<T>({
+    url: '/prompt-upsert',
+    data: userPrompt,
+  })
+}
+
+export function fetchDeleteUserPrompt<T = any>(id: string) {
+  return post<T>({
+    url: '/prompt-delete',
+    data: { id },
+  })
+}
+
+export function fetchClearUserPrompt<T = any>() {
+  return post<T>({
+    url: '/prompt-clear',
+  })
+}
+
+export function fetchImportUserPrompt<T = any>(dataProps: never[]) {
+  return post<T>({
+    url: '/prompt-import',
+    data: dataProps,
   })
 }

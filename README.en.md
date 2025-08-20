@@ -32,6 +32,12 @@ Some unique features have been added:
 
 [✓] Implement SSO login through the auth proxy feature (need to integrate a third-party authentication reverse proxy, it can support login protocols such as LDAP/OIDC/SAML)
 
+[✓] Web Search functionality (Real-time web search based on Tavily API)
+
+[✓] VLLM API model support & Optional disable deep thinking mode
+
+[✓] Context Window Control
+
 > [!CAUTION]
 > This project is only published on GitHub, based on the MIT license, free and for open source learning usage. And there will be no any form of account selling, paid service, discussion group, discussion group and other behaviors. Beware of being deceived.
 
@@ -72,6 +78,13 @@ Some unique features have been added:
 		- [Manual packaging](#manual-packaging)
 			- [Backend service](#backend-service-1)
 			- [Frontend webpage](#frontend-webpage-1)
+	- [Auth Proxy Mode](#auth-proxy-mode)
+	- [Web Search Functionality](#web-search-functionality)
+		- [Features](#features)
+		- [Configuration](#configuration)
+		- [Usage](#usage)
+		- [Technical Implementation](#technical-implementation)
+		- [Notes](#notes)
 	- [Frequently Asked Questions](#frequently-asked-questions)
 	- [Contributing](#contributing)
 	- [Sponsorship](#sponsorship)
@@ -79,33 +92,15 @@ Some unique features have been added:
 
 ## Introduction
 
-Supports dual models, provides two unofficial `ChatGPT API` methods:
+Uses the official `OpenAI API` to access `ChatGPT`:
 
-| Method                                        | Free?  | Reliability | Quality |
-| --------------------------------------------- | ------ | ----------- | ------- |
-| `ChatGPTAPI(gpt-3.5-turbo-0301)`                           | No     | Reliable    | Relatively clumsy |
-| `ChatGPTUnofficialProxyAPI(Web accessToken)` | Yes    | Relatively unreliable | Smart |
-
-Comparison:
-1. `ChatGPTAPI` uses `gpt-3.5-turbo-0301` to simulate `ChatGPT` through the official `OpenAI` completion `API` (the most reliable method, but it is not free and does not use models specifically tuned for chat).
-2. `ChatGPTUnofficialProxyAPI` accesses `ChatGPT`'s backend `API` via an unofficial proxy server to bypass `Cloudflare` (uses the real `ChatGPT`, is very lightweight, but depends on third-party servers and has rate limits).
+`ChatGPTAPI` uses `gpt-4.1` through the official `OpenAI` completion `API` (requires an API key).
 
 [Details](https://github.com/Chanzhaoyu/chatgpt-web/issues/138)
 
-Switching Methods:
+Setup:
 1. Go to the `service/.env.example` file and copy the contents to the `service/.env` file.
-2. For `OpenAI API Key`, fill in the `OPENAI_API_KEY` field [(Get apiKey)](https://platform.openai.com/overview).
-3. For `Web API`, fill in the `OPENAI_ACCESS_TOKEN` field [(Get accessToken)](https://chat.openai.com/api/auth/session).
-4. When both are present, `OpenAI API Key` takes precedence.
-
-Reverse Proxy:
-
-Available when using `ChatGPTUnofficialProxyAPI`.[Details](https://github.com/transitive-bullshit/chatgpt-api#reverse-proxy)
-
-```shell
-# service/.env
-API_REVERSE_PROXY=
-```
+2. Fill in the `OPENAI_API_KEY` field with your OpenAI API Key [(Get apiKey)](https://platform.openai.com/overview).
 
 Environment Variables:
 
@@ -134,6 +129,10 @@ For all parameter variables, check [here](#docker-parameter-example) or see:
 
 [✓] Interface themes
 
+[✓] VLLM API model support
+
+[✓] Deep thinking mode switch
+
 [✗] More...
 
 ## Prerequisites
@@ -152,18 +151,15 @@ If you have not installed `pnpm` before:
 npm install pnpm -g
 ```
 
-### Fill in the Keys
+### Fill in the API Key
 
-Get `Openai Api Key` or `accessToken` and fill in the local environment variables [jump](#introduction)
+Get your `OpenAI API Key` and fill in the local environment variables [jump](#introduction)
 
 ```
 # service/.env file
 
 # OpenAI API Key - https://platform.openai.com/overview
 OPENAI_API_KEY=
-
-# change this to an `accessToken` extracted from the ChatGPT site's `https://chat.openai.com/api/auth/session` response
-OPENAI_ACCESS_TOKEN=
 ```
 
 ## Install Dependencies
@@ -205,11 +201,9 @@ pnpm dev
 
 #### Docker Parameter Example
 
-- `OPENAI_API_KEY` one of two
-- `OPENAI_ACCESS_TOKEN` one of two, `OPENAI_API_KEY` takes precedence when both are present
+- `OPENAI_API_KEY` required
 - `OPENAI_API_BASE_URL` optional, available when `OPENAI_API_KEY` is set
-- `OPENAI_API_MODEL`  `ChatGPTAPI` OR `ChatGPTUnofficialProxyAPI`
-- `API_REVERSE_PROXY` optional, available when `OPENAI_ACCESS_TOKEN` is set [Reference](#introduction)
+- `OPENAI_API_MODEL` optional, specify the model to use
 - `AUTH_SECRET_KEY` Access Password，optional
 - `TIMEOUT_MS` timeout, in milliseconds, optional
 - `SOCKS_PROXY_HOST` optional, effective with SOCKS_PROXY_PORT
@@ -332,6 +326,136 @@ PS: You can also run `pnpm start` directly on the server without packaging.
 pnpm build
 ```
 
+## Context Window Control
+
+> [!TIP]
+> Context Window Control allows users to flexibly manage context information in AI conversations, optimizing model performance and conversation effectiveness.
+
+### Features
+
+- **Context Management**: Control the amount of chat history the model can reference
+- **Per-conversation Control**: Each conversation can independently enable or disable context window
+- **Real-time Switching**: Context mode can be switched at any time during conversation
+- **Memory Management**: Flexibly control AI's memory scope and continuity
+- **Configurable Quantity**: Administrators can set the maximum number of context messages
+
+### How It Works
+
+The context window determines the amount of chat history from the current session that the model can reference during generation:
+
+- **Reasonable context window size** helps the model generate coherent and relevant text
+- **Avoid confusion or irrelevant output** caused by referencing too much context
+- **Turning off the context window** will cause the session to lose memory, making each question completely independent
+
+### Usage
+
+#### 1. Enable/Disable Context Window
+
+1. **Enter Conversation Interface**: This feature can be used in any conversation session
+2. **Find Control Switch**: Locate the "Context Window" toggle button in the conversation interface
+3. **Switch Mode**:
+   - **Enable**: Model will reference previous chat history, maintaining conversation coherence
+   - **Disable**: Model will not reference history, treating each question independently
+
+#### 2. Usage Scenarios
+
+**Recommended to enable context window when:**
+- Need continuous dialogue and context correlation
+- In-depth discussion of complex topics
+- Multi-turn Q&A and step-by-step problem solving
+- Need AI to remember previously mentioned information
+
+**Recommended to disable context window when:**
+- Independent simple questions
+- Avoid historical information interfering with new questions
+- Handling multiple unrelated topics
+- Need a "fresh start" scenario
+
+#### 3. Administrator Configuration
+
+Administrators can configure in system settings:
+- **Maximum Context Count**: Set the number of context messages included in the conversation
+- **Default State**: Set the default context window state for new conversations
+
+### Technical Implementation
+
+- **Context Truncation**: Automatically truncate specified number of historical messages
+- **State Persistence**: Each conversation independently saves context window switch state
+- **Real-time Effect**: Takes effect immediately for the next message after switching
+- **Memory Optimization**: Reasonably control context length, avoiding model limits
+
+### Notes
+
+- **Conversation Coherence**: Disabling context window will affect conversation continuity
+- **Token Consumption**: More context will increase token usage
+- **Response Quality**: Appropriate context helps improve answer quality
+- **Model Limitations**: Need to consider context length limits of different models
+
+## VLLM API Deep Thinking Mode Control
+
+> [!TIP]
+> Deep thinking mode control is only available when the backend is configured to use VLLM API, allowing users to choose whether to enable the model's deep thinking functionality.
+
+### Features
+
+- **VLLM API Exclusive Feature**: Only available when the backend uses VLLM API
+- **Per-conversation Control**: Each conversation can independently enable or disable deep thinking mode
+- **Real-time Switching**: Deep thinking mode can be switched at any time during conversation
+- **Performance Optimization**: Disabling deep thinking can improve response speed and reduce computational costs
+
+### How It Works
+
+After enabling deep thinking, the model will use more computational resources and take longer time to simulate more complex thinking chains for logical reasoning:
+
+- **Suitable for complex tasks or high-requirement scenarios**, such as mathematical derivations and project planning
+- **Daily simple queries do not need to be enabled** deep thinking mode
+- **Disabling deep thinking** can achieve faster response speed
+
+### Prerequisites
+
+**The following conditions must be met to use this feature:**
+
+1. **Backend Configuration**: Backend must be configured to use VLLM API interface
+2. **Model Support**: The model used must support deep thinking functionality
+3. **API Compatibility**: VLLM API version needs to support thinking mode control parameters
+
+### Usage
+
+#### 1. Enable/Disable Deep Thinking Mode
+
+1. **Enter Conversation Interface**: In a conversation session that supports VLLM API
+2. **Find Control Switch**: Locate the "Deep Thinking" toggle button in the conversation interface
+3. **Switch Mode**: 
+   - Enable: Model will perform deep thinking, providing more detailed and in-depth responses
+   - Disable: Model will respond directly, faster but potentially more concise
+
+#### 2. Usage Scenarios
+
+**Recommended to enable deep thinking when:**
+- Complex problems require in-depth analysis
+- Logical reasoning and multi-step thinking are needed
+- High-quality responses are required
+- Time is not sensitive
+
+**Recommended to disable deep thinking when:**
+- Simple questions need quick answers
+- Fast response is required
+- Need to reduce computational costs
+- Batch processing simple tasks
+
+#### 3. Technical Implementation
+
+- **API Parameter**: Controlled through VLLM API's `disable_thinking` parameter
+- **State Persistence**: Each conversation session independently saves the deep thinking switch state
+- **Real-time Effect**: Takes effect immediately for the next message after switching
+
+### Notes
+
+- **VLLM API Only**: This feature is only available when the backend uses VLLM API, other APIs (such as OpenAI API) do not support this feature
+- **Model Dependency**: Not all models support deep thinking mode, please confirm that your model supports this feature
+- **Response Differences**: Disabling deep thinking may affect the detail and quality of responses
+- **Cost Considerations**: Enabling deep thinking typically increases computational costs and response time
+
 ## Frequently Asked Questions
 
 Q: Why does Git always report an error when committing?
@@ -369,6 +493,95 @@ Default header name is `X-Email`, can custom config use set env `AUTH_PROXY_HEAD
 Recommended for current IdP to use LDAP protocol, using [authelia](https://www.authelia.com)
 
 Recommended for current IdP to use OIDC protocol, using [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy)
+
+## Web Search Functionality
+
+> [!TIP]
+> Web Search functionality is based on [Tavily API](https://tavily.com/) implementation, allowing ChatGPT to access the latest web information to answer questions.
+
+### Features
+
+- **Real-time Web Search**: Get the latest web information based on Tavily API
+- **Intelligent Query Extraction**: Automatically extract the most relevant search keywords from user questions
+- **Search Result Integration**: Seamlessly integrate search results into AI conversations
+- **Per-session Control**: Each conversation can independently enable or disable search functionality
+- **Search History**: Save search queries and results to database
+- **Configurable System Messages**: Support custom search-related system prompt messages
+
+### Configuration
+
+#### 1. Get Tavily API Key
+
+1. Visit [Tavily Official Website](https://tavily.com/) to register an account
+2. Obtain API Key
+
+#### 2. Administrator Configuration
+
+1. Login to the system as an administrator
+2. Go to system settings page
+3. Find "Web Search Configuration" option
+4. Fill in the following configurations:
+   - **Enable Status**: Turn on/off global search functionality
+   - **API Key**: Enter Tavily API Key
+   - **Max Search Results**: Set the maximum number of search results returned per search (1-20, default 10)
+   - **Search Query System Message**: Prompt template for extracting search keywords
+   - **Search Result System Message**: Prompt template for processing search results
+
+#### 3. System Message Templates
+
+**Search Query Extraction Template** (for extracting search keywords from user questions):
+```
+You are a search query extraction assistant. Extract the most relevant search query from user's question and wrap it with <search_query></search_query> tags.
+Current time: {current_time}
+```
+
+**Search Result Processing Template** (for processing conversations with search results):
+```
+You are a helpful assistant with access to real-time web search results. Use the provided search information to give accurate and up-to-date responses.
+Current time: {current_time}
+```
+
+### Usage
+
+#### User Operations
+
+1. **Enable Search Functionality**:
+   - In the conversation interface, find the search toggle button
+   - Click to enable web search functionality for the current session
+
+2. **Ask Questions for Real-time Information**:
+   - After enabling search, directly ask ChatGPT questions that require real-time information
+   - The system will automatically search for relevant information and integrate it into the response
+
+3. **View Search History**:
+   - Search queries and results are saved in the database
+   - You can view specific search records through the database
+
+#### Workflow
+
+1. **User Question**: User asks a question in a search-enabled session
+2. **Query Extraction**: System uses AI to extract search keywords from the question
+3. **Web Search**: Call Tavily API for real-time search
+4. **Result Integration**: Provide search results as context to AI
+5. **Generate Response**: AI generates more accurate responses based on search results
+
+### Technical Implementation
+
+- **Search Engine**: Tavily API
+- **Query Extraction**: Use OpenAI API to intelligently extract keywords
+- **Result Format**: JSON format to store complete search results
+- **Data Storage**: MongoDB stores search queries and results
+- **Timeout Setting**: Search request timeout is 300 seconds
+- **Result Count Control**: Support configuration of maximum search results returned per search (1-20)
+
+### Notes
+
+- Web Search functionality requires additional Tavily API costs
+- Search functionality will increase response time
+- It is recommended to enable selectively based on actual needs
+- Administrators can control the global search functionality status
+- Each session can independently control whether to use search functionality
+- The maximum search results setting affects the detail level of search and API costs
 
 
 ## Contributing

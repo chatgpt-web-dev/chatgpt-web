@@ -1,25 +1,26 @@
-import * as dotenv from 'dotenv'
-import type { ChatGPTAPIOptions, ChatMessage, SendMessageOptions } from 'chatgpt'
-import { ChatGPTAPI, ChatGPTUnofficialProxyAPI } from 'chatgpt'
-import { SocksProxyAgent } from 'socks-proxy-agent'
-import httpsProxyAgent from 'https-proxy-agent'
-import fetch from 'node-fetch'
-import jwt_decode from 'jwt-decode'
-import type { AuditConfig, KeyConfig, UserInfo } from '../storage/model'
-import { Status } from '../storage/model'
-import { convertImageUrl } from '../utils/image'
+import type { ClientOptions } from 'openai'
+import type { RequestInit } from 'undici'
+import type { AuditConfig, Config, KeyConfig, SearchResult, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
-import { textAuditServices } from '../utils/textAudit'
+import type { ChatMessage, RequestOptions } from './types'
+import { tavily } from '@tavily/core'
+import dayjs from 'dayjs'
+import * as dotenv from 'dotenv'
+import OpenAI from 'openai'
+import * as undici from 'undici'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
+import { Status, UsageResponse } from '../storage/model'
+import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
 import { sendResponse } from '../utils'
+import { convertImageUrl } from '../utils/image'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
-import type { ChatContext, ChatGPTUnofficialProxyAPIOptions, JWT, ModelConfig } from '../types'
-import { getChatByMessageId, updateRoomAccountId } from '../storage/mongo'
-import type { RequestOptions } from './types'
-
-const { HttpsProxyAgent } = httpsProxyAgent
+import { textAuditServices } from '../utils/textAudit'
 
 dotenv.config()
+
+function renderSystemMessage(template: string, currentTime: string): string {
+  return template.replace(/\{current_time\}/g, currentTime)
+}
 
 const ErrorCodeMessage: Record<string, string> = {
   401: '[OpenAI] 提供错误的API密钥 | Incorrect API key provided',
@@ -31,169 +32,250 @@ const ErrorCodeMessage: Record<string, string> = {
 }
 
 let auditService: TextAuditService
-const _lockedKeys: { key: string; lockedTime: number }[] = []
+const _lockedKeys: { key: string, lockedTime: number }[] = []
 
-export async function initApi(key: KeyConfig, chatModel: string, maxContextCount: number) {
-  // More Info: https://github.com/transitive-bullshit/chatgpt-api
-
+export async function initApi(key: KeyConfig) {
   const config = await getCacheConfig()
-  const model = chatModel as string
+  const openaiBaseUrl = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
 
-  if (key.keyModel === 'ChatGPTAPI') {
-    const OPENAI_API_BASE_URL = isNotEmptyString(key.baseUrl) ? key.baseUrl : config.apiBaseUrl
-
-    let contextCount = 0
-    const options: ChatGPTAPIOptions = {
-      apiKey: key.key,
-      completionParams: { model },
-      debug: !config.apiDisableDebug,
-      messageStore: undefined,
-      getMessageById: async (id) => {
-        if (contextCount++ >= maxContextCount)
-          return null
-        return await getMessageById(id)
-      },
-    }
-
-    // Set the token limits based on the model's type. This is because different models have different token limits.
-    // The token limit includes the token count from both the message array sent and the model response.
-    // 'gpt-35-turbo' has a limit of 4096 tokens, 'gpt-4' and 'gpt-4-32k' have limits of 8192 and 32768 tokens respectively.
-    // Check if the model type is GPT-4-turbo
-    if (model.toLowerCase().includes('1106-preview')) {
-      // If it's a '1106-preview' model, set the maxModelTokens to 131072
-      options.maxModelTokens = 131072
-      options.maxResponseTokens = 32768
-    }
-    // Check if the model type includes '16k'
-    if (model.toLowerCase().includes('16k')) {
-      // If it's a '16k' model, set the maxModelTokens to 16384 and maxResponseTokens to 4096
-      options.maxModelTokens = 16384
-      options.maxResponseTokens = 4096
-    }
-    else if (model.toLowerCase().includes('32k')) {
-      // If it's a '32k' model, set the maxModelTokens to 32768 and maxResponseTokens to 8192
-      options.maxModelTokens = 32768
-      options.maxResponseTokens = 8192
-    }
-    else if (model.toLowerCase().includes('gpt-4')) {
-      // If it's a 'gpt-4' model, set the maxModelTokens and maxResponseTokens to 8192 and 2048 respectively
-      options.maxModelTokens = 8192
-      options.maxResponseTokens = 2048
-    }
-    else {
-      // If none of the above, use the default values, set the maxModelTokens and maxResponseTokens to 8192 and 2048 respectively
-      options.maxModelTokens = 4096
-      options.maxResponseTokens = 1024
-    }
-
-    if (isNotEmptyString(OPENAI_API_BASE_URL))
-      options.apiBaseUrl = `${OPENAI_API_BASE_URL}/v1`
-
-    await setupProxy(options)
-
-    return new ChatGPTAPI({ ...options })
+  const clientOptions: ClientOptions = {
+    baseURL: openaiBaseUrl,
+    apiKey: key.key,
   }
-  else {
-    const options: ChatGPTUnofficialProxyAPIOptions = {
-      accessToken: key.key,
-      apiReverseProxyUrl: isNotEmptyString(key.baseUrl)
-        ? key.baseUrl
-        : isNotEmptyString(config.reverseProxy)
-          ? config.reverseProxy
-          : 'https://ai.fakeopen.com/api/conversation',
-      model,
-      debug: !config.apiDisableDebug,
+
+  const httpsProxy = config.httpsProxy
+  if (httpsProxy && isNotEmptyString(httpsProxy)) {
+    clientOptions.fetch = (input: string | URL | Request, init: RequestInit) => {
+      return undici.fetch(input, {
+        ...init,
+        dispatcher: new undici.ProxyAgent({
+          uri: httpsProxy,
+        }),
+      })
     }
-
-    await setupProxy(options)
-
-    return new ChatGPTUnofficialProxyAPI({ ...options })
   }
+  return new OpenAI(clientOptions)
 }
-const processThreads: { userId: string; abort: AbortController; messageId: string }[] = []
+
+const processThreads: { userId: string, chatUuid: number, abort: AbortController }[] = []
+
 async function chatReplyProcess(options: RequestOptions) {
+  const globalConfig = await getCacheConfig()
   const model = options.room.chatModel
-  const key = await getRandomApiKey(options.user, model, options.room.accountId)
+  const searchEnabled = options.room.searchEnabled
+  const key = await getRandomApiKey(options.user, model)
   const userId = options.user._id.toString()
-  const maxContextCount = options.user.advanced.maxContextCount ?? 20
+  const maxContextCount = options.room.maxContextCount ?? 10
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  if (key.keyModel === 'ChatGPTUnofficialProxyAPI') {
-    if (!options.room.accountId)
-      updateRoomAccountId(userId, options.room.roomId, getAccountId(key.key))
-
-    if (options.lastContext && ((options.lastContext.conversationId && !options.lastContext.parentMessageId)
-      || (!options.lastContext.conversationId && options.lastContext.parentMessageId)))
-      throw new Error('无法在一个房间同时使用 AccessToken 以及 Api，请联系管理员，或新开聊天室进行对话 | Unable to use AccessToken and Api at the same time in the same room, please contact the administrator or open a new chat room for conversation')
-  }
-
-  const { message, uploadFileKeys, lastContext, process, systemMessage, temperature, top_p } = options
-
-  let content: string | {
-    type: string
-    text?: string
-    image_url?: {
-      url: string
-    }
-  }[] = message
-  if (uploadFileKeys && uploadFileKeys.length > 0) {
-    content = [
-      {
-        type: 'text',
-        text: message,
-      },
-    ]
-    for (const uploadFileKey of uploadFileKeys) {
-      content.push({
-        type: 'image_url',
-        image_url: {
-          url: await convertImageUrl(uploadFileKey),
-        },
-      })
-    }
-  }
+  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p, chatUuid } = options
 
   try {
-    const timeoutMs = (await getCacheConfig()).timeoutMs
-    let options: SendMessageOptions = { timeoutMs }
+    // Initialize OpenAI client
+    const openai = await initApi(key)
 
-    if (key.keyModel === 'ChatGPTAPI') {
-      if (isNotEmptyString(systemMessage))
-        options.systemMessage = systemMessage
-      options.completionParams = { model, temperature, top_p }
-    }
-
-    if (lastContext != null) {
-      if (key.keyModel === 'ChatGPTAPI')
-        options.parentMessageId = lastContext.parentMessageId
-      else
-        options = { ...lastContext }
-    }
-    const api = await initApi(key, model, maxContextCount)
-
+    // Create abort controller for cancellation
     const abort = new AbortController()
-    options.abortSignal = abort.signal
-    processThreads.push({ userId, abort, messageId })
-    const response = await api.sendMessage(content, {
-      ...options,
-      onProgress: (partialResponse) => {
-        process?.(partialResponse)
-      },
+    processThreads.push({ userId, chatUuid, abort })
+
+    // Prepare messages array for the chat completion
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = []
+
+    // Add previous messages from conversation history.
+    await addPreviousMessages(parentMessageId, maxContextCount, messages)
+
+    // Add system message if provided
+    if (isNotEmptyString(systemMessage)) {
+      messages.unshift({
+        role: 'system',
+        content: systemMessage,
+      })
+    }
+
+    // Prepare the user message content (text and images)
+    const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(message, uploadFileKeys)
+
+    // Add the user message
+    messages.push({
+      role: 'user',
+      content,
     })
+
+    let hasSearchResult = false
+    const searchConfig = globalConfig.searchConfig
+    if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
+      try {
+        messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+
+        const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
+          model,
+          messages,
+        }
+        if (key.keyModel === 'VLLM') {
+          // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+          getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
+            enable_thinking: false,
+          }
+        }
+        else if (key.keyModel === 'FastDeploy') {
+          getSearchQueryChatCompletionCreateBody.metadata = {
+            // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
+            enable_thinking: false,
+          }
+        }
+        const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
+        let searchQuery: string = completion.choices[0].message.content
+        const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
+        if (match)
+          searchQuery = match[1].trim()
+        else
+          searchQuery = ''
+
+        if (searchQuery) {
+          await updateChatSearchQuery(messageId, searchQuery)
+
+          process?.({
+            searchQuery,
+          })
+
+          const tvly = tavily({ apiKey: searchConfig.options?.apiKey })
+          const response = await tvly.search(
+            searchQuery,
+            {
+              // https://docs.tavily.com/documentation/best-practices/best-practices-search#search-depth%3Dadvanced-ideal-for-higher-relevance-in-search-results
+              searchDepth: 'advanced',
+              chunksPerSource: 3,
+              includeRawContent: searchConfig.options?.includeRawContent ?? false,
+              // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
+              // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
+              maxResults: searchConfig.options?.maxResults || 10,
+              // Max 120s, default to 60 https://github.com/tavily-ai/tavily-js/blob/de69e479c5d3f6c5d443465fa2c29407c0d3515d/src/search.ts#L118
+              timeout: 120,
+            },
+          )
+
+          const searchResults = response.results as SearchResult[]
+          const searchUsageTime = response.responseTime
+
+          await updateChatSearchResult(messageId, searchResults, searchUsageTime)
+
+          process?.({
+            searchResults,
+            searchUsageTime,
+          })
+
+          let searchResultContent = JSON.stringify(searchResults)
+          // remove image url
+          const base64Pattern = /!\[([^\]]*)\]\([^)]*\)/g
+          searchResultContent = searchResultContent.replace(base64Pattern, '$1')
+
+          messages.push({
+            role: 'user',
+            content: `Additional information from web searche engine.
+search query: <search_query>${searchQuery}</search_query>
+search result: <search_result>${searchResultContent}</search_result>`,
+          })
+
+          messages[0].content = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+          hasSearchResult = true
+        }
+      }
+      catch (e) {
+        globalThis.console.error('search error from tavily, ', e)
+      }
+    }
+
+    if (!hasSearchResult)
+      messages[0].content = systemMessage
+
+    // Create the chat completion with streaming
+    const chatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsStreaming = {
+      model,
+      messages,
+      temperature: temperature ?? undefined,
+      top_p: top_p ?? undefined,
+      stream: true,
+      stream_options: {
+        include_usage: true,
+      },
+    }
+    if (key.keyModel === 'VLLM') {
+      // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+      chatCompletionCreateBody.chat_template_kwargs = {
+        enable_thinking: options.room.thinkEnabled,
+      }
+    }
+    else if (key.keyModel === 'FastDeploy') {
+      chatCompletionCreateBody.metadata = {
+        // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
+        enable_thinking: options.room.thinkEnabled,
+      }
+    }
+    const stream = await openai.chat.completions.create(
+      chatCompletionCreateBody,
+      {
+        signal: abort.signal,
+      },
+    )
+
+    // Process the stream
+    let responseReasoning = ''
+    let responseText = ''
+    let responseId = ''
+    const usage = new UsageResponse()
+
+    for await (const chunk of stream) {
+      // Extract the content from the chunk
+      // @ts-expect-error For deepseek-reasoner model only. The reasoning contents of the assistant message, before the final answer.
+      const reasoningContent = chunk.choices[0]?.delta?.reasoning_content || ''
+      responseReasoning += reasoningContent
+      const content = chunk.choices[0]?.delta?.content || ''
+      responseText += content
+      responseId = chunk.id
+
+      const finish_reason = chunk.choices[0]?.finish_reason
+
+      // Build incremental response object
+      const responseChunk = {
+        id: chunk.id,
+        reasoning: responseReasoning, // Accumulated reasoning content
+        text: responseText, // Accumulated text content
+        role: 'assistant',
+        finish_reason,
+        // Incremental data
+        delta: {
+          reasoning: reasoningContent, // reasoning content in this chunk
+          text: content, // text content in this chunk
+        },
+      }
+
+      // Call the process callback if provided
+      process?.(responseChunk)
+
+      if (chunk?.usage?.total_tokens) {
+        usage.total_tokens = chunk?.usage?.total_tokens
+        usage.prompt_tokens = chunk?.usage?.prompt_tokens
+        usage.completion_tokens = chunk?.usage?.completion_tokens
+      }
+    }
+
+    // Final response object
+    const response = {
+      id: responseId || messageId,
+      reasoning: responseReasoning,
+      text: responseText,
+      role: 'assistant',
+      detail: {
+        usage,
+      },
+    }
+
     return sendResponse({ type: 'Success', data: response })
   }
   catch (error: any) {
-    const code = error.statusCode
-    if (code === 429 && (error.message.includes('Too Many Requests') || error.message.includes('Rate limit'))) {
-      // access token  Only one message at a time
-      if (options.tryCount++ < 3) {
-        _lockedKeys.push({ key: key.key, lockedTime: Date.now() })
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        return await chatReplyProcess(options)
-      }
-    }
+    const code = error.status || error.statusCode
     globalThis.console.error(error)
     if (Reflect.has(ErrorCodeMessage, code))
       return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
@@ -206,14 +288,12 @@ async function chatReplyProcess(options: RequestOptions) {
   }
 }
 
-export function abortChatProcess(userId: string) {
-  const index = processThreads.findIndex(d => d.userId === userId)
+export function abortChatProcess(userId: string, chatUuid: number) {
+  const index = processThreads.findIndex(d => d.userId === userId && d.chatUuid === chatUuid)
   if (index <= -1)
     return
-  const messageId = processThreads[index].messageId
   processThreads[index].abort.abort()
   processThreads.splice(index, 1)
-  return messageId
 }
 
 export function initAuditService(audit: AuditConfig) {
@@ -239,38 +319,11 @@ async function containsSensitiveWords(audit: AuditConfig, text: string): Promise
 }
 
 async function chatConfig() {
-  const config = await getOriginConfig() as ModelConfig
-  return sendResponse<ModelConfig>({
+  const config = await getOriginConfig()
+  return sendResponse<Config>({
     type: 'Success',
     data: config,
   })
-}
-
-async function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPIOptions) {
-  const config = await getCacheConfig()
-  if (isNotEmptyString(config.socksProxy)) {
-    const agent = new SocksProxyAgent({
-      hostname: config.socksProxy.split(':')[0],
-      port: Number.parseInt(config.socksProxy.split(':')[1]),
-      userId: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[0] : undefined,
-      password: isNotEmptyString(config.socksAuth) ? config.socksAuth.split(':')[1] : undefined,
-
-    })
-    options.fetch = (url, options) => {
-      return fetch(url, { agent, ...options })
-    }
-  }
-  else {
-    if (isNotEmptyString(config.httpsProxy)) {
-      const httpsProxy = config.httpsProxy
-      if (httpsProxy) {
-        const agent = new HttpsProxyAgent(httpsProxy)
-        options.fetch = (url, options) => {
-          return fetch(url, { agent, ...options })
-        }
-      }
-    }
-  }
 }
 
 async function getMessageById(id: string): Promise<ChatMessage | undefined> {
@@ -289,44 +342,20 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
     }
     else {
       if (isPrompt) { // prompt
-        let content: string | {
-          type: string
-          text?: string
-          image_url?: {
-            url: string
-          }
-        }[] = chatInfo.prompt
-        if (chatInfo.images && chatInfo.images.length > 0) {
-          content = [
-            {
-              type: 'text',
-              text: chatInfo.prompt,
-            },
-          ]
-          for (const image of chatInfo.images) {
-            content.push({
-              type: 'image_url',
-              image_url: {
-                url: await convertImageUrl(image),
-              },
-            })
-          }
-        }
+        const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(chatInfo.prompt, chatInfo.images)
         return {
           id,
-          conversationId: chatInfo.options.conversationId,
           parentMessageId,
           role: 'user',
-          text: content,
+          content,
         }
       }
       else {
         return { // completion
           id,
-          conversationId: chatInfo.options.conversationId,
           parentMessageId,
           role: 'assistant',
-          text: chatInfo.response,
+          content: chatInfo.response,
         }
       }
     }
@@ -354,25 +383,59 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
   return thisKey
 }
 
-async function getRandomApiKey(user: UserInfo, chatModel: string, accountId?: string): Promise<KeyConfig | undefined> {
-  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
-    .filter(d => d.chatModels.includes(chatModel))
-  if (accountId)
-    keys = keys.filter(d => d.keyModel === 'ChatGPTUnofficialProxyAPI' && getAccountId(d.key) === accountId)
+async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyConfig | undefined> {
+  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(chatModel))
 
   return randomKeyConfig(keys)
 }
 
-function getAccountId(accessToken: string): string {
-  try {
-    const jwt = jwt_decode(accessToken) as JWT
-    return jwt['https://api.openai.com/auth'].user_id
+// Helper function to create content with text and optional images
+async function createContent(text: string, images?: string[]): Promise<string | OpenAI.Chat.ChatCompletionContentPart[]> {
+  // If no images or empty array, return just the text
+  if (!images || images.length === 0)
+    return text
+
+  // Create content with text and images
+  const content: OpenAI.Chat.ChatCompletionContentPart[] = [
+    {
+      type: 'text',
+      text,
+    },
+  ]
+
+  for (const image of images) {
+    const imageUrl = await convertImageUrl(image)
+    if (imageUrl) {
+      content.push({
+        type: 'image_url',
+        image_url: {
+          url: imageUrl,
+        },
+      })
+    }
   }
-  catch (error) {
-    return ''
+
+  return content
+}
+
+// Helper function to add previous messages to the conversation context
+async function addPreviousMessages(parentMessageId: string, maxContextCount: number, messages: OpenAI.Chat.ChatCompletionMessageParam[]): Promise<void> {
+  // Recursively get previous messages
+  let currentMessageId = parentMessageId
+
+  while (currentMessageId) {
+    const currentChatMessage: ChatMessage | undefined = await getMessageById(currentMessageId)
+
+    messages.unshift({
+      content: currentChatMessage.content,
+      role: currentChatMessage.role,
+    } as OpenAI.Chat.ChatCompletionMessage)
+
+    currentMessageId = currentChatMessage?.parentMessageId
+
+    if (messages.length >= maxContextCount)
+      break
   }
 }
 
-export type { ChatContext, ChatMessage }
-
-export { chatReplyProcess, chatConfig, containsSensitiveWords }
+export { chatConfig, chatReplyProcess, containsSensitiveWords }

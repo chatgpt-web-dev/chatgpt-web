@@ -1,6 +1,3 @@
-import type { Ref } from 'vue'
-import { nextTick, ref } from 'vue'
-
 type ScrollElement = HTMLDivElement | null
 
 interface ScrollReturn {

@@ -1,11 +1,22 @@
 import type { WithId } from 'mongodb'
-import { MongoClient, ObjectId } from 'mongodb'
-import * as dotenv from 'dotenv'
+import type {
+  AdvancedConfig,
+  BuiltInPrompt,
+  ChatOptions,
+  Config,
+  GiftCard,
+  KeyConfig,
+  SearchResult,
+  UsageResponse,
+  UserPrompt,
+} from './model'
+import * as process from 'node:process'
 import dayjs from 'dayjs'
+import * as dotenv from 'dotenv'
+import { MongoClient, ObjectId } from 'mongodb'
 import { md5 } from '../utils/security'
-import type { AdvancedConfig, ChatOptions, Config, GiftCard, KeyConfig, UsageResponse } from './model'
-import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 import { getCacheConfig } from './config'
+import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 
 dotenv.config()
 
@@ -29,6 +40,8 @@ const userCol = client.db(dbName).collection<UserInfo>('user')
 const configCol = client.db(dbName).collection<Config>('config')
 const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
 const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
+const builtInPromptCol = client.db(dbName).collection<BuiltInPrompt>('built_in_prompt')
+const userPromptCol = client.db(dbName).collection<UserPrompt>('user_prompt')
 // 新增兑换券的数据库
 // {
 //   "_id": { "$comment": "Mongodb系统自动" , "$type": "ObjectId" },
@@ -57,13 +70,11 @@ export async function getAmtByCardNo(redeemCardNo: string) {
 }
 // 兑换后更新兑换券信息
 export async function updateGiftCard(redeemCardNo: string, userId: string) {
-  return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }
-    , { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
+  return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }, { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
 }
 // 使用对话后更新用户额度
 export async function updateAmountMinusOne(userId: string) {
-  const result = await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $inc: { useAmount: -1 } })
+  const result = await userCol.updateOne({ _id: new ObjectId(userId) }, { $inc: { useAmount: -1 } })
   return result.modifiedCount > 0
 }
 
@@ -78,8 +89,8 @@ export async function updateGiftCards(data: GiftCard[], overRide = true) {
   return insertResult
 }
 
-export async function insertChat(uuid: number, text: string, images: string[], roomId: number, options?: ChatOptions) {
-  const chatInfo = new ChatInfo(roomId, uuid, text, images, options)
+export async function insertChat(uuid: number, text: string, images: string[], roomId: number, model: string, options?: ChatOptions) {
+  const chatInfo = new ChatInfo(roomId, uuid, text, images, model, options)
   await chatCol.insertOne(chatInfo)
   return chatInfo
 }
@@ -92,13 +103,14 @@ export async function getChatByMessageId(messageId: string) {
   return await chatCol.findOne({ 'options.messageId': messageId })
 }
 
-export async function updateChat(chatId: string, response: string, messageId: string, conversationId: string, usage: UsageResponse, previousResponse?: []) {
+export async function updateChat(chatId: string, reasoning: string, response: string, messageId: string, model: string, usage: UsageResponse, previousResponse?: []) {
   const query = { _id: new ObjectId(chatId) }
   const update = {
     $set: {
+      'reasoning': reasoning,
       'response': response,
+      'model': model || '',
       'options.messageId': messageId,
-      'options.conversationId': conversationId,
       'options.prompt_tokens': usage?.prompt_tokens,
       'options.completion_tokens': usage?.completion_tokens,
       'options.total_tokens': usage?.total_tokens,
@@ -107,25 +119,50 @@ export async function updateChat(chatId: string, response: string, messageId: st
   }
 
   if (previousResponse)
-    // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
+  // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
     update.$set.previousResponse = previousResponse
 
   await chatCol.updateOne(query, update)
 }
 
-export async function insertChatUsage(userId: ObjectId,
-  roomId: number,
-  chatId: ObjectId,
-  messageId: string,
-  model: string,
-  usage: UsageResponse) {
+export async function updateChatSearchQuery(chatId: string, searchQuery: string) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchQuery,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateChatSearchResult(chatId: string, searchResults: SearchResult[], searchUsageTime: number) {
+  const query = { _id: new ObjectId(chatId) }
+  const update = {
+    $set: {
+      searchResults,
+      searchUsageTime,
+    },
+  }
+  const result = await chatCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, model: string, usage: UsageResponse) {
   const chatUsage = new ChatUsage(userId, roomId, chatId, messageId, model, usage)
   await usageCol.insertOne(chatUsage)
   return chatUsage
 }
 
-export async function createChatRoom(userId: string, title: string, roomId: number, chatModel: string) {
-  const room = new ChatRoom(userId, title, roomId, chatModel)
+export async function createChatRoom(userId: string, title: string, roomId: number, chatModel: string, maxContextCount: number) {
+  const config = await getCacheConfig()
+  if (!chatModel) {
+    chatModel = config?.siteConfig?.chatModels.split(',')[0]
+  }
+  if (maxContextCount === undefined) {
+    maxContextCount = 10
+  }
+  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false)
   await roomCol.insertOne(room)
   return room
 }
@@ -169,22 +206,44 @@ export async function updateRoomUsingContext(userId: string, roomId: number, usi
   return result.modifiedCount > 0
 }
 
-export async function updateRoomAccountId(userId: string, roomId: number, accountId: string) {
+export async function updateRoomChatModel(userId: string, roomId: number, chatModel: string) {
   const query = { userId, roomId }
   const update = {
     $set: {
-      accountId,
+      chatModel,
     },
   }
   const result = await roomCol.updateOne(query, update)
   return result.modifiedCount > 0
 }
 
-export async function updateRoomChatModel(userId: string, roomId: number, chatModel: string) {
+export async function updateRoomSearchEnabled(userId: string, roomId: number, searchEnabled: boolean) {
   const query = { userId, roomId }
   const update = {
     $set: {
-      chatModel,
+      searchEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomThinkEnabled(userId: string, roomId: number, thinkEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      thinkEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomMaxContextCount(userId: string, roomId: number, maxContextCount: number) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      maxContextCount,
     },
   }
   const result = await roomCol.updateOne(query, update)
@@ -197,6 +256,105 @@ export async function getChatRooms(userId: string) {
   for await (const doc of cursor)
     rooms.push(doc)
   return rooms
+}
+
+export async function getChatRoomsCount(userId: string, page: number, size: number) {
+  let total = 0
+  const skip = (page - 1) * size
+  const limit = size
+  const agg = []
+  if (userId !== null && userId !== 'undefined' && userId !== undefined && userId.trim().length !== 0) {
+    agg.push({
+      $match: {
+        userId,
+      },
+    })
+    total = await roomCol.countDocuments({ userId })
+  }
+  else {
+    total = await roomCol.countDocuments()
+  }
+  const agg2 = [
+    {
+      $lookup: {
+        from: 'chat',
+        localField: 'roomId',
+        foreignField: 'roomId',
+        as: 'chat',
+      },
+    },
+    {
+      $addFields: {
+        title: '$chat.prompt',
+        user_ObjectId: {
+          $toObjectId: '$userId',
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'user',
+        localField: 'user_ObjectId',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    {
+      $unwind: {
+        path: '$user',
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $sort: {
+        'chat.dateTime': -1,
+      },
+    },
+    {
+      $addFields: {
+        chatCount: {
+          $size: '$chat',
+        },
+        chat: {
+          $arrayElemAt: [
+            {
+              $slice: [
+                '$chat',
+                -1,
+              ],
+            },
+            0,
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        userId: 1,
+        title: '$chat.prompt',
+        username: '$user.name',
+        roomId: 1,
+        chatCount: 1,
+        dateTime: '$chat.dateTime',
+      },
+    },
+    {
+      $sort: {
+        dateTime: -1,
+      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+  ]
+  Array.prototype.push.apply(agg, agg2)
+
+  const cursor = roomCol.aggregate(agg)
+  const data = await cursor.toArray()
+  return { total, data }
 }
 
 export async function getChatRoom(userId: string, roomId: number) {
@@ -213,10 +371,15 @@ export async function deleteAllChatRooms(userId: string) {
   await chatCol.updateMany({ userId, status: Status.Normal }, { $set: { status: Status.Deleted } })
 }
 
-export async function getChats(roomId: number, lastId?: number): Promise<ChatInfo[]> {
+export async function getChats(roomId: number, lastId?: number, all?: string): Promise<ChatInfo[]> {
   if (!lastId)
     lastId = new Date().getTime()
-  const query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  let query = {}
+  if (all === null || all === 'undefined' || all === undefined || all.trim().length === 0)
+    query = { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+  else
+    query = { roomId, uuid: { $lt: lastId } }
+
   const limit = 20
   const cursor = chatCol.find(query).sort({ dateTime: -1 }).limit(limit)
   const chats = []
@@ -271,60 +434,65 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
-  if (status)
+  // Using `if (status !== null)` check because status.Normal value is 0, so `if (status)` would fail when status is Normal
+  if (status !== null)
     userInfo.status = status
 
   userInfo.roles = roles
   userInfo.remark = remark
+
+  // Initialize user configuration with default settings
   if (limit_switch != null)
     userInfo.limit_switch = limit_switch
   if (useAmount != null)
     userInfo.useAmount = useAmount
   else
     userInfo.useAmount = config?.siteConfig?.globalAmount ?? 10
+
+  // Use the first item from the globally available chatModel configuration as the default model for new users
+  userInfo.config = new UserConfig()
+  userInfo.config.chatModel = config?.siteConfig?.chatModels.split(',')[0]
+  userInfo.config.maxContextCount = 10
+
   await userCol.insertOne(userInfo)
   return userInfo
 }
 
 export async function updateUserInfo(userId: string, user: UserInfo) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
 }
 
 // 兑换后更新用户对话额度（兑换计算目前在前端完成，将总数报给后端）
 export async function updateUserAmount(userId: string, amt: number) {
-  return userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { useAmount: amt } })
+  return userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { useAmount: amt } })
 }
 
 export async function updateUserChatModel(userId: string, chatModel: string) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { 'config.chatModel': chatModel } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { 'config.chatModel': chatModel } })
+}
+
+export async function updateUserMaxContextCount(userId: string, maxContextCount: number) {
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { 'config.maxContextCount': maxContextCount } })
 }
 
 export async function updateUserAdvancedConfig(userId: string, config: AdvancedConfig) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { advanced: config } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { advanced: config } })
 }
 
 export async function updateUser2FA(userId: string, secretKey: string) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { secretKey, updateTime: new Date().toLocaleString() } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { secretKey, updateTime: new Date().toLocaleString() } })
 }
 
 export async function disableUser2FA(userId: string) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { secretKey: null, updateTime: new Date().toLocaleString() } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { secretKey: null, updateTime: new Date().toLocaleString() } })
 }
 
 export async function updateUserPassword(userId: string, password: string) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }
-    , { $set: { password, updateTime: new Date().toLocaleString() } })
+  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { password, updateTime: new Date().toLocaleString() } })
 }
 
 export async function updateUserPasswordWithVerifyOld(userId: string, oldPassword: string, newPassword: string) {
-  return userCol.updateOne({ _id: new ObjectId(userId), password: oldPassword }
-    , { $set: { password: newPassword, updateTime: new Date().toLocaleString() } })
+  return userCol.updateOne({ _id: new ObjectId(userId), password: oldPassword }, { $set: { password: newPassword, updateTime: new Date().toLocaleString() } })
 }
 
 export async function getUser(email: string): Promise<UserInfo> {
@@ -334,7 +502,7 @@ export async function getUser(email: string): Promise<UserInfo> {
   return userInfo
 }
 
-export async function getUsers(page: number, size: number): Promise<{ users: UserInfo[]; total: number }> {
+export async function getUsers(page: number, size: number): Promise<{ users: UserInfo[], total: number }> {
   const query = { status: { $ne: Status.Deleted } }
   const cursor = userCol.find(query).sort({ createTime: -1 })
   const total = await userCol.countDocuments(query)
@@ -362,7 +530,9 @@ async function initUserInfo(userInfo: WithId<UserInfo>) {
   if (userInfo.config == null)
     userInfo.config = new UserConfig()
   if (userInfo.config.chatModel == null)
+
     userInfo.config.chatModel = 'zjai'
+
   if (userInfo.roles == null || userInfo.roles.length <= 0) {
     userInfo.roles = []
     if (process.env.ROOT_USER === userInfo.email.toLowerCase())
@@ -465,8 +635,7 @@ export async function getUserStatisticsByDay(userId: ObjectId, start: number, en
     // Convert the timestamp to a Date object
     const date = dayjs(i, 'x').format('YYYY-MM-DD')
 
-    const dateData = aggStatics.find(x => x._id === date)
-      || { _id: date, promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+    const dateData = aggStatics.find(x => x._id === date) || { _id: date, promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
     result.promptTokens += dateData.promptTokens
     result.completionTokens += dateData.completionTokens
@@ -477,7 +646,7 @@ export async function getUserStatisticsByDay(userId: ObjectId, start: number, en
   return result
 }
 
-export async function getKeys(): Promise<{ keys: KeyConfig[]; total: number }> {
+export async function getKeys(): Promise<{ keys: KeyConfig[], total: number }> {
   const query = { status: { $ne: Status.Disabled } }
   const cursor = keyCol.find(query)
   const total = await keyCol.countDocuments(query)
@@ -497,4 +666,43 @@ export async function upsertKey(key: KeyConfig): Promise<KeyConfig> {
 
 export async function updateApiKeyStatus(id: string, status: Status) {
   await keyCol.updateOne({ _id: new ObjectId(id) }, { $set: { status } })
+}
+
+export async function getBuiltInPromptList(): Promise<{ data: BuiltInPrompt[], total: number }> {
+  const total = await builtInPromptCol.countDocuments()
+  const cursor = builtInPromptCol.find().sort({ _id: -1 })
+  const data = await cursor.toArray()
+  return { data, total }
+}
+
+export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
+  if (userPrompt._id === undefined) {
+    const doc = await userPromptCol.insertOne(userPrompt)
+    userPrompt._id = doc.insertedId
+  }
+  else {
+    await userPromptCol.replaceOne({ _id: userPrompt._id }, userPrompt, { upsert: true })
+  }
+  return userPrompt
+}
+export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[], total: number }> {
+  const query = { userId }
+  const total = await userPromptCol.countDocuments(query)
+  const cursor = userPromptCol.find(query).sort({ _id: -1 })
+  const data = await cursor.toArray()
+  return { data, total }
+}
+
+export async function deleteUserPrompt(id: string) {
+  const query = { _id: new ObjectId(id) }
+  await userPromptCol.deleteOne(query)
+}
+
+export async function clearUserPrompt(userId: string) {
+  const query = { userId }
+  await userPromptCol.deleteMany(query)
+}
+
+export async function importUserPrompt(userPromptList: UserPrompt[]) {
+  await userPromptCol.insertMany(userPromptList)
 }

@@ -1,14 +1,12 @@
 <script setup lang='ts'>
-import { computed, onMounted, ref } from 'vue'
-import { NAvatar, NButton, NTag } from 'naive-ui'
-import { useRoute } from 'vue-router'
-import { UserRole } from '../Setting/model'
-import { useAuthStore, useUserStore } from '@/store'
 import defaultAvatar from '@/assets/avatar.jpg'
+import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { useAuthStore, useUserStore } from '@/store'
 import { isString } from '@/utils/is'
 import Permission from '@/views/chat/layout/Permission.vue'
-import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { UserRole } from '../Setting/model'
 
+const { t } = useI18n()
 const route = useRoute()
 const userStore = useUserStore()
 const authStore = useAuthStore()
@@ -59,7 +57,7 @@ onMounted(async () => {
         @click="showPermission = true"
       >
         <span v-if="!!authStore.session?.auth && !authStore.token" class="text-xl text-[#ff69b4] dark:text-white">
-          {{ $t('common.notLoggedIn') }}
+          {{ t('common.notLoggedIn') }}
         </span>
         <span v-else class="text-xl text-[#ff69b4] dark:text-white">
           {{ authStore .session?.title }}
