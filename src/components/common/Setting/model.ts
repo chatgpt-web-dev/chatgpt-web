@@ -122,9 +122,9 @@ export class UserPrompt {
   }
 }
 
-export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy'
+export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy' | 'ResponsesAPI'
 
-export const apiModelOptions = ['ChatGPTAPI', 'VLLM', 'FastDeploy'].map((model: string) => {
+export const apiModelOptions = ['ChatGPTAPI', 'VLLM', 'FastDeploy', 'ResponsesAPI'].map((model: string) => {
   return {
     label: model,
     key: model,

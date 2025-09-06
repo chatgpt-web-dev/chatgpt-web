@@ -1,6 +1,6 @@
 import type { ClientOptions } from 'openai'
 import type { RequestInit } from 'undici'
-import type { AuditConfig, Config, KeyConfig, SearchResult, UserInfo } from '../storage/model'
+import type { APIMODEL, AuditConfig, Config, KeyConfig, SearchResult, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
@@ -71,6 +71,7 @@ async function chatReplyProcess(options: RequestOptions) {
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
   const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p, chatUuid } = options
+  let instructions = systemMessage
 
   try {
     // Initialize OpenAI client
@@ -81,52 +82,81 @@ async function chatReplyProcess(options: RequestOptions) {
     processThreads.push({ userId, chatUuid, abort })
 
     // Prepare messages array for the chat completion
-    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = []
+    const messages: Array<OpenAI.Chat.ChatCompletionMessageParam | OpenAI.Responses.ResponseInputItem> = []
 
     // Add previous messages from conversation history.
-    await addPreviousMessages(parentMessageId, maxContextCount, messages)
+    await addPreviousMessages(parentMessageId, maxContextCount, messages, key.keyModel)
 
-    // Add system message if provided
-    if (isNotEmptyString(systemMessage)) {
-      messages.unshift({
-        role: 'system',
-        content: systemMessage,
-      })
+    if (key.keyModel === 'ResponsesAPI') {
+      // Prepare the user message content (text and images)
+      const content: string | OpenAI.Responses.ResponseInputContent[] = await createContentResponsesAPI(message, uploadFileKeys)
+
+      // Add the user message
+      messages.push({
+        role: 'user',
+        content,
+      } as OpenAI.Responses.ResponseInputItem)
     }
+    else {
+      // Add system message if provided
+      if (isNotEmptyString(systemMessage)) {
+        messages.unshift({
+          role: 'system',
+          content: systemMessage,
+        })
+      }
 
-    // Prepare the user message content (text and images)
-    const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(message, uploadFileKeys)
+      // Prepare the user message content (text and images)
+      const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(message, uploadFileKeys)
 
-    // Add the user message
-    messages.push({
-      role: 'user',
-      content,
-    })
+      // Add the user message
+      messages.push({
+        role: 'user',
+        content,
+      } as OpenAI.Chat.ChatCompletionMessageParam)
+    }
 
     let hasSearchResult = false
     const searchConfig = globalConfig.searchConfig
     if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
       try {
-        messages[0].content = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+        const systemMessageGetSearchQuery = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
 
-        const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
-          model,
-          messages,
+        // Use Responses API or Chat Completions to get search query
+        let searchQuery: string = ''
+        if (key.keyModel === 'ResponsesAPI') {
+          const response = await openai.responses.create({
+            model,
+            instructions: systemMessageGetSearchQuery,
+            input: messages as OpenAI.Responses.ResponseInput,
+            reasoning: {
+              effort: 'minimal',
+            },
+            store: false,
+          })
+          searchQuery = response.output_text
         }
-        if (key.keyModel === 'VLLM') {
-          // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
-          getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
-            enable_thinking: false,
+        else {
+          (messages as OpenAI.Chat.ChatCompletionMessageParam[])[0].content = systemMessageGetSearchQuery
+          const getSearchQueryChatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsNonStreaming = {
+            model,
+            messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
           }
-        }
-        else if (key.keyModel === 'FastDeploy') {
-          getSearchQueryChatCompletionCreateBody.metadata = {
-            // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
-            enable_thinking: false,
+          if (key.keyModel === 'VLLM') {
+            // @ts-expect-error vLLM supports a set of parameters that are not part of the OpenAI API.
+            getSearchQueryChatCompletionCreateBody.chat_template_kwargs = {
+              enable_thinking: false,
+            }
           }
+          else if (key.keyModel === 'FastDeploy') {
+            getSearchQueryChatCompletionCreateBody.metadata = {
+              // @ts-expect-error FastDeploy supports a set of parameters that are not part of the OpenAI API.
+              enable_thinking: false,
+            }
+          }
+          const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
+          searchQuery = completion.choices[0].message.content as string
         }
-        const completion = await openai.chat.completions.create(getSearchQueryChatCompletionCreateBody)
-        let searchQuery: string = completion.choices[0].message.content
         const match = searchQuery.match(/<search_query>([\s\S]*)<\/search_query>/i)
         if (match)
           searchQuery = match[1].trim()
@@ -178,7 +208,10 @@ search query: <search_query>${searchQuery}</search_query>
 search result: <search_result>${searchResultContent}</search_result>`,
           })
 
-          messages[0].content = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+          instructions = renderSystemMessage(searchConfig.systemMessageWithSearchResult, dayjs().format('YYYY-MM-DD HH:mm:ss'))
+          if (key.keyModel !== 'ResponsesAPI') {
+            (messages as OpenAI.Chat.ChatCompletionMessageParam[])[0].content = instructions
+          }
           hasSearchResult = true
         }
       }
@@ -187,13 +220,89 @@ search result: <search_result>${searchResultContent}</search_result>`,
       }
     }
 
-    if (!hasSearchResult)
-      messages[0].content = systemMessage
+    if (!hasSearchResult && key.keyModel !== 'ResponsesAPI')
+      (messages as OpenAI.Chat.ChatCompletionMessageParam[])[0].content = systemMessage
 
-    // Create the chat completion with streaming
+    // Choose API by key model
+    // ResponsesAPI branch (OpenAI Responses API)
+    if (key.keyModel === 'ResponsesAPI') {
+      let reasoning: OpenAI.Reasoning
+      if (options.room.thinkEnabled) {
+        reasoning = {
+          effort: 'high',
+          summary: 'detailed',
+        }
+      }
+      else {
+        reasoning = {
+          effort: 'minimal',
+        }
+      }
+      const stream = await openai.responses.create(
+        {
+          model,
+          instructions,
+          input: messages as OpenAI.Responses.ResponseInput,
+          reasoning,
+          store: false,
+          stream: true,
+        },
+        {
+          signal: abort.signal,
+        },
+      )
+
+      // Process the stream from Responses API
+      let responseReasoning = ''
+      let responseText = ''
+      let responseId = ''
+      const usage = new UsageResponse()
+
+      for await (const event of stream) {
+        if (event.type === 'response.reasoning_summary_text.delta') {
+          const delta: string = event.delta || ''
+          responseReasoning += delta
+          process?.({
+            delta: { reasoning: delta },
+          })
+        }
+        else if (event.type === 'response.reasoning_summary_text.done') {
+          responseReasoning += '\n'
+          process?.({
+            delta: { reasoning: '\n' },
+          })
+        }
+        else if (event.type === 'response.output_text.delta') {
+          const delta: string = event.delta || ''
+          responseText += delta
+          process?.({
+            text: responseText,
+            delta: { text: delta },
+          })
+        }
+        else if (event.type === 'response.completed') {
+          const resp = event.response
+          responseId = resp.id
+          usage.prompt_tokens = resp.usage.input_tokens
+          usage.completion_tokens = resp.usage.output_tokens
+          usage.total_tokens = resp.usage.total_tokens
+        }
+      }
+
+      const response = {
+        id: responseId || messageId,
+        reasoning: responseReasoning,
+        text: responseText,
+        role: 'assistant',
+        detail: { usage },
+      }
+      return sendResponse({ type: 'Success', data: response })
+    }
+
+    // Create the chat completion with streaming (Chat Completions API / compatible backends)
     const chatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsStreaming = {
       model,
-      messages,
+      messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
       temperature: temperature ?? undefined,
       top_p: top_p ?? undefined,
       stream: true,
@@ -326,7 +435,7 @@ async function chatConfig() {
   })
 }
 
-async function getMessageById(id: string): Promise<ChatMessage | undefined> {
+async function getMessageById(id: string, model: APIMODEL): Promise<ChatMessage | undefined> {
   const isPrompt = id.startsWith('prompt_')
   const chatInfo = await getChatByMessageId(isPrompt ? id.substring(7) : id)
 
@@ -337,12 +446,18 @@ async function getMessageById(id: string): Promise<ChatMessage | undefined> {
 
     if (chatInfo.status !== Status.Normal) { // jumps over deleted messages
       return parentMessageId
-        ? getMessageById(parentMessageId)
+        ? getMessageById(parentMessageId, model)
         : undefined
     }
     else {
       if (isPrompt) { // prompt
-        const content: string | OpenAI.Chat.ChatCompletionContentPart[] = await createContent(chatInfo.prompt, chatInfo.images)
+        let content: string | OpenAI.Chat.ChatCompletionContentPart[] | OpenAI.Responses.ResponseInputContent[]
+        if (model === 'ResponsesAPI') {
+          content = await createContentResponsesAPI(chatInfo.prompt, chatInfo.images)
+        }
+        else {
+          content = await createContent(chatInfo.prompt, chatInfo.images)
+        }
         return {
           id,
           parentMessageId,
@@ -418,13 +533,41 @@ async function createContent(text: string, images?: string[]): Promise<string | 
   return content
 }
 
+// Helper function to create content with text and optional images when use responsesAPI
+async function createContentResponsesAPI(text: string, images?: string[]): Promise<string | OpenAI.Responses.ResponseInputContent[]> {
+  // If no images or empty array, return just the text
+  if (!images || images.length === 0)
+    return text
+
+  // Create content with text and images
+  const content: OpenAI.Responses.ResponseInputContent[] = [
+    {
+      type: 'input_text',
+      text,
+    },
+  ]
+
+  for (const image of images) {
+    const imageUrl = await convertImageUrl(image)
+    if (imageUrl) {
+      content.push({
+        detail: 'auto',
+        type: 'input_image',
+        image_url: imageUrl,
+      })
+    }
+  }
+
+  return content
+}
+
 // Helper function to add previous messages to the conversation context
-async function addPreviousMessages(parentMessageId: string, maxContextCount: number, messages: OpenAI.Chat.ChatCompletionMessageParam[]): Promise<void> {
+async function addPreviousMessages(parentMessageId: string, maxContextCount: number, messages: Array<OpenAI.Chat.ChatCompletionMessageParam | OpenAI.Responses.ResponseInputItem>, model: APIMODEL): Promise<void> {
   // Recursively get previous messages
   let currentMessageId = parentMessageId
 
   while (currentMessageId) {
-    const currentChatMessage: ChatMessage | undefined = await getMessageById(currentMessageId)
+    const currentChatMessage: ChatMessage | undefined = await getMessageById(currentMessageId, model)
 
     messages.unshift({
       content: currentChatMessage.content,
