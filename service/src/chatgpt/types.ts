@@ -3,7 +3,7 @@ import type { ChatRoom, SearchResult, UserInfo } from 'src/storage/model'
 
 export interface ChatMessage {
   id: string
-  content: string | OpenAI.Chat.ChatCompletionContentPart[]
+  content: string | OpenAI.Chat.ChatCompletionContentPart[] | OpenAI.Responses.ResponseInputContent[]
   role: OpenAI.Chat.ChatCompletionRole
   name?: string
   delta?: string

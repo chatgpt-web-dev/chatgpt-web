@@ -3,6 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": false,
+  "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67",
   "description": "ChatGPT Web Service",
   "author": "ChatGPT Web Contributors <dev@chatgpt-web.dev>",
   "keywords": [
@@ -40,7 +41,7 @@
     "mongodb": "^6.16.0",
     "multer": "^2.0.0",
     "nodemailer": "^6.9.13",
-    "openai": "^5.1.0",
+    "openai": "^5.19.1",
     "request-ip": "^3.3.0",
     "speakeasy": "^2.0.0",
     "tsx": "^4.7.0",

@@ -18,9 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: pnpm install
       - name: Lint
@@ -38,9 +37,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: pnpm install
       - name: Typecheck

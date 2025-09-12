@@ -7,13 +7,13 @@ ARG RELEASE_VERSION=v0.0.0
 ENV VITE_GIT_COMMIT_HASH=$GIT_COMMIT_HASH
 ENV VITE_RELEASE_VERSION=$RELEASE_VERSION
 
-RUN npm install pnpm@8 -g
-
 WORKDIR /app
 
 COPY ./package.json /app
 
 COPY ./pnpm-lock.yaml /app
+
+RUN corepack enable
 
 RUN pnpm install
 
@@ -24,13 +24,13 @@ RUN pnpm run build
 # build backend
 FROM node:22-alpine AS backend
 
-RUN npm install pnpm@8 -g
-
 WORKDIR /app
 
 COPY /service/package.json /app
 
 COPY /service/pnpm-lock.yaml /app
+
+RUN corepack enable
 
 RUN pnpm install
 
@@ -43,13 +43,13 @@ FROM node:22-alpine
 
 RUN apk add --no-cache tini
 
-RUN npm install pnpm@8 -g
-
 WORKDIR /app
 
 COPY /service/package.json /app
 
 COPY /service/pnpm-lock.yaml /app
+
+RUN corepack enable
 
 RUN pnpm install --production && rm -rf /root/.npm /root/.pnpm-store /usr/local/share/.cache /tmp/*
 
