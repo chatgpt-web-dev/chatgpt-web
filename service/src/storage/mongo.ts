@@ -1,4 +1,4 @@
-import type { WithId } from 'mongodb'
+import type { Filter, WithId } from 'mongodb'
 import type {
   AdvancedConfig,
   BuiltInPrompt,
@@ -502,8 +502,11 @@ export async function getUser(email: string): Promise<UserInfo> {
   return userInfo
 }
 
-export async function getUsers(page: number, size: number): Promise<{ users: UserInfo[], total: number }> {
-  const query = { status: { $ne: Status.Deleted } }
+export async function getUsers(page: number, size: number, search?: string): Promise<{ users: UserInfo[], total: number }> {
+  const query: Filter<UserInfo> = { status: { $ne: Status.Deleted } }
+  if (search && search.trim()) {
+    query.email = { $regex: search.trim(), $options: 'i' }
+  }
   const cursor = userCol.find(query).sort({ createTime: -1 })
   const total = await userCol.countDocuments(query)
   const skip = (page - 1) * size
