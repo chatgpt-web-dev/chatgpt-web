@@ -299,6 +299,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         lastResponse = chunk
 
         // set sse event by different data type
+        if (chunk.searching !== undefined) {
+          sendSSEData('searching', { searching: chunk.searching })
+        }
         if (chunk.searchQuery) {
           sendSSEData('search_query', { searchQuery: chunk.searchQuery })
         }

@@ -20,6 +20,7 @@ export function fetchChatConfig<T = any>() {
 interface SSEEventHandlers {
   onMessage?: (data: any) => void
   onDelta?: (delta: { reasoning?: string, text?: string }) => void
+  onSearching?: (data: { searching: boolean }) => void
   onSearchQuery?: (data: { searchQuery: string }) => void
   onSearchResults?: (data: { searchResults: any[], searchUsageTime: number }) => void
   onComplete?: (data: any) => void
@@ -86,6 +87,9 @@ export function fetchChatAPIProcessSSE(
               // Dispatch to different handlers based on data type
               if (jsonData.message) {
                 handlers.onError?.(jsonData.message)
+              }
+              else if (jsonData.searching !== undefined) {
+                handlers.onSearching?.(jsonData)
               }
               else if (jsonData.searchQuery) {
                 handlers.onSearchQuery?.(jsonData)

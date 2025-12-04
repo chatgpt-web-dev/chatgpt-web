@@ -13,6 +13,7 @@ export interface ChatMessage {
 
 export interface ResponseChunk {
   id?: string
+  searching?: boolean
   searchQuery?: string
   searchResults?: SearchResult[]
   searchUsageTime?: number

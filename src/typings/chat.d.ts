@@ -8,6 +8,7 @@ declare namespace Chat {
   interface Chat {
     uuid?: number
     dateTime: string
+    searching?: boolean
     searchQuery?: string
     searchResults?: SearchResult[]
     searchUsageTime?: number

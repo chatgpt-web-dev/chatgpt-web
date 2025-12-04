@@ -134,6 +134,7 @@ async function onConversation() {
     let lastText = ''
     let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
+      let searching: boolean | undefined
       let searchQuery: string
       let searchResults: Chat.SearchResult[]
       let searchUsageTime: number
@@ -146,8 +147,19 @@ async function onConversation() {
         options,
         signal: controller.signal,
       }, {
+        onSearching: (data) => {
+          searching = data.searching
+          chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              searching: data.searching,
+            },
+          )
+        },
         onSearchQuery: (data) => {
           searchQuery = data.searchQuery
+          searching = false
         },
         onSearchResults: (data) => {
           searchResults = data.searchResults
@@ -166,6 +178,7 @@ async function onConversation() {
             dataSources.value.length - 1,
             {
               dateTime: new Date().toLocaleString(),
+              searching,
               searchQuery,
               searchResults,
               searchUsageTime,
@@ -183,8 +196,10 @@ async function onConversation() {
         },
         onMessage: async (data) => {
           // Handle complete message data (compatibility mode)
-          if (data.searchQuery)
+          if (data.searchQuery) {
             searchQuery = data.searchQuery
+            searching = false
+          }
           if (data.searchResults)
             searchResults = data.searchResults
           if (data.searchUsageTime)
@@ -204,6 +219,7 @@ async function onConversation() {
             dataSources.value.length - 1,
             {
               dateTime: new Date().toLocaleString(),
+              searching,
               searchQuery,
               searchResults,
               searchUsageTime,
@@ -243,6 +259,7 @@ async function onConversation() {
             dataSources.value.length - 1,
             {
               dateTime: new Date().toLocaleString(),
+              searching: false,
               searchQuery,
               searchResults,
               searchUsageTime,
@@ -369,6 +386,7 @@ async function onRegenerate(index: number) {
     let lastText = ''
     let accumulatedReasoning = ''
     const fetchChatAPIOnce = async () => {
+      let searching: boolean | undefined
       let searchQuery: string
       let searchResults: Chat.SearchResult[]
       let searchUsageTime: number
@@ -381,8 +399,19 @@ async function onRegenerate(index: number) {
         options,
         signal: controller.signal,
       }, {
+        onSearching: (data) => {
+          searching = data.searching
+          chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              searching: data.searching,
+            },
+          )
+        },
         onSearchQuery: (data) => {
           searchQuery = data.searchQuery
+          searching = false
         },
         onSearchResults: (data) => {
           searchResults = data.searchResults
@@ -402,6 +431,7 @@ async function onRegenerate(index: number) {
             index,
             {
               dateTime: new Date().toLocaleString(),
+              searching,
               searchQuery,
               searchResults,
               searchUsageTime,
@@ -420,8 +450,10 @@ async function onRegenerate(index: number) {
         },
         onMessage: async (data) => {
           // Handle complete message data (compatibility mode)
-          if (data.searchQuery)
+          if (data.searchQuery) {
             searchQuery = data.searchQuery
+            searching = false
+          }
           if (data.searchResults)
             searchResults = data.searchResults
           if (data.searchUsageTime)
@@ -440,6 +472,7 @@ async function onRegenerate(index: number) {
             index,
             {
               dateTime: new Date().toLocaleString(),
+              searching,
               searchQuery,
               searchResults,
               searchUsageTime,
@@ -480,6 +513,10 @@ async function onRegenerate(index: number) {
             index,
             {
               dateTime: new Date().toLocaleString(),
+              searching: false,
+              searchQuery,
+              searchResults,
+              searchUsageTime,
               reasoning: data?.reasoning || accumulatedReasoning,
               finish_reason: data?.finish_reason,
               text: data?.text || lastText,
@@ -895,6 +932,7 @@ onUnmounted(() => {
                   :index="index"
                   :current-nav-index="currentNavIndexRef"
                   :date-time="item.dateTime"
+                  :searching="item?.searching"
                   :search-query="item?.searchQuery"
                   :search-results="item?.searchResults"
                   :search-usage-time="item?.searchUsageTime"

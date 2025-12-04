@@ -119,6 +119,10 @@ async function chatReplyProcess(options: RequestOptions) {
     let hasSearchResult = false
     const searchConfig = globalConfig.searchConfig
     if (searchConfig.enabled && searchConfig?.options?.apiKey && searchEnabled) {
+      // Send searching status before starting to fetch search query
+      process?.({
+        searching: true,
+      })
       try {
         const systemMessageGetSearchQuery = renderSystemMessage(searchConfig.systemMessageGetSearchQuery, dayjs().format('YYYY-MM-DD HH:mm:ss'))
 
@@ -214,9 +218,19 @@ search result: <search_result>${searchResultContent}</search_result>`,
           }
           hasSearchResult = true
         }
+        else {
+          // Search query is empty, indicating this question doesn't need search, close search box
+          process?.({
+            searching: false,
+          })
+        }
       }
       catch (e) {
         globalThis.console.error('search error from tavily, ', e)
+        // Close search box when search error occurs
+        process?.({
+          searching: false,
+        })
       }
     }
 
