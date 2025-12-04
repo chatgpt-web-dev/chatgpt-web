@@ -244,10 +244,10 @@ export function fetchUpdateUserMaxContextCount<T = any>(maxContextCount: number)
   })
 }
 
-export function fetchGetUsers<T = any>(page: number, size: number) {
+export function fetchGetUsers<T = any>(page: number, size: number, search?: string) {
   return get<T>({
     url: '/users',
-    data: { page, size },
+    data: { page, size, search },
   })
 }
 

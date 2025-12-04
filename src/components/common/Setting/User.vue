@@ -14,13 +14,14 @@ const loading = ref(false)
 const show = ref(false)
 const handleSaving = ref(false)
 const userRef = ref(new UserInfo([UserRole.User]))
+const searchKeyword = ref('')
 
 const users = ref([])
 
 function createColumns(): DataTableColumns {
   return [
     {
-      title: 'Email',
+      title: t('setting.user.email'),
       key: 'email',
       resizable: true,
       width: 200,
@@ -28,7 +29,7 @@ function createColumns(): DataTableColumns {
       maxWidth: 200,
     },
     {
-      title: 'Register Time',
+      title: t('setting.user.registerTime'),
       key: 'createTime',
       resizable: true,
       width: 200,
@@ -36,7 +37,7 @@ function createColumns(): DataTableColumns {
       maxWidth: 200,
     },
     {
-      title: 'Verify Time',
+      title: t('setting.user.verifyTime'),
       key: 'verifyTime',
       resizable: true,
       width: 200,
@@ -44,7 +45,7 @@ function createColumns(): DataTableColumns {
       maxWidth: 200,
     },
     {
-      title: 'Roles',
+      title: t('setting.user.roles'),
       key: 'status',
       resizable: true,
       width: 200,
@@ -70,7 +71,7 @@ function createColumns(): DataTableColumns {
       },
     },
     {
-      title: 'Status',
+      title: t('setting.user.status'),
       key: 'status',
       width: 80,
       render(row: any) {
@@ -78,7 +79,7 @@ function createColumns(): DataTableColumns {
       },
     },
     {
-      title: 'Remark',
+      title: t('setting.user.remark'),
       key: 'remark',
       resizable: true,
       width: 200,
@@ -87,7 +88,7 @@ function createColumns(): DataTableColumns {
     },
     // switch off amt limit
     {
-      title: 'Limit Enabled',
+      title: t('setting.user.limitEnabled'),
       key: 'limit_switch',
       resizable: true,
       width: 100,
@@ -99,7 +100,7 @@ function createColumns(): DataTableColumns {
     },
     // 新增额度信息
     {
-      title: 'Amounts',
+      title: t('setting.user.amounts'),
       key: 'useAmount',
       resizable: true,
       width: 80,
@@ -107,7 +108,7 @@ function createColumns(): DataTableColumns {
       maxWidth: 100,
     },
     {
-      title: 'Action',
+      title: t('setting.user.action'),
       key: '_id',
       width: 220,
       fixed: 'right',
@@ -136,7 +137,7 @@ function createColumns(): DataTableColumns {
               },
               onClick: () => handleEditUser(row),
             },
-            { default: () => t('chat.editUser') },
+            { default: () => t('setting.user.editUser') },
           ))
         }
         if (row.status === Status.PreVerify || row.status === Status.AdminVerify) {
@@ -147,7 +148,7 @@ function createColumns(): DataTableColumns {
               type: 'info',
               onClick: () => handleUpdateUserStatus(row._id, Status.Normal),
             },
-            { default: () => t('chat.verifiedUser') },
+            { default: () => t('setting.user.verifiedUser') },
           ))
         }
         if (row.secretKey) {
@@ -158,7 +159,7 @@ function createColumns(): DataTableColumns {
               type: 'warning',
               onClick: () => handleDisable2FA(row._id),
             },
-            { default: () => t('chat.disable2FA') },
+            { default: () => t('setting.user.disable2FA') },
           ))
         }
         return actions
@@ -175,7 +176,7 @@ const pagination = reactive ({
   pageCount: 1,
   itemCount: 1,
   prefix({ itemCount }: { itemCount: number | undefined }) {
-    return `Total is ${itemCount}.`
+    return `${t('setting.user.total')}: ${itemCount}`
   },
   showSizePicker: true,
   pageSizes: [25, 50, 100],
@@ -196,7 +197,7 @@ async function handleGetUsers(page: number) {
   users.value.length = 0
   loading.value = true
   const size = pagination.pageSize
-  const data = (await fetchGetUsers(page, size)).data
+  const data = (await fetchGetUsers(page, size, searchKeyword.value || undefined)).data
   data.users.forEach((user: never) => {
     users.value.push(user)
   })
@@ -206,11 +207,16 @@ async function handleGetUsers(page: number) {
   loading.value = false
 }
 
+function handleSearch() {
+  pagination.page = 1
+  handleGetUsers(1)
+}
+
 async function handleUpdateUserStatus(userId: string, status: Status) {
   if (status === Status.Deleted) {
     dialog.warning({
-      title: t('chat.deleteUser'),
-      content: t('chat.deleteUserConfirm'),
+      title: t('setting.user.deleteUser'),
+      content: t('setting.user.deleteUserConfirm'),
       positiveText: t('common.yes'),
       negativeText: t('common.no'),
       onPositiveClick: async () => {
@@ -229,8 +235,8 @@ async function handleUpdateUserStatus(userId: string, status: Status) {
 
 async function handleDisable2FA(userId: string) {
   dialog.warning({
-    title: t('chat.disable2FA'),
-    content: t('chat.disable2FAConfirm'),
+    title: t('setting.user.disable2FA'),
+    content: t('setting.user.disable2FAConfirm'),
     positiveText: t('common.yes'),
     negativeText: t('common.no'),
     onPositiveClick: async () => {
@@ -273,9 +279,21 @@ onMounted(async () => {
   <div class="p-4 space-y-5 min-h-[200px]">
     <div class="space-y-6">
       <NSpace vertical :size="12">
-        <NSpace>
-          <NButton @click="handleNewUser()">
-            New User
+        <NSpace justify="space-between" align="center">
+          <NSpace>
+            <NInput
+              v-model:value="searchKeyword"
+              :placeholder="t('setting.user.searchUserPlaceholder')"
+              clearable
+              style="width: 280px"
+              @keyup.enter="handleSearch"
+            />
+            <NButton type="primary" @click="handleSearch">
+              {{ t('setting.user.searchUser') }}
+            </NButton>
+          </NSpace>
+          <NButton type="primary" @click="handleNewUser()">
+            {{ t('setting.user.newUser') }}
           </NButton>
         </NSpace>
         <NDataTable
