@@ -24,6 +24,12 @@ const searchBtnTitle = computed(() => {
   return t('chat.expandCollapseSearchResults')
 })
 
+const searchHeadingText = computed(() => {
+  if (props.searchQuery)
+    return `${t('chat.searchQuery')}: ${props.searchQuery}`
+  return t('chat.searching')
+})
+
 const shouldShowSearchingIndicator = computed(() => {
   return props.loading && !props.searchEnd
 })
@@ -96,7 +102,7 @@ function toggleCollapse() {
           <span class="text-blue-700 dark:text-blue-200 truncate">{{ t('chat.searching') }}</span>
           <span class="ml-1.5 mr-5 text-blue-400 dark:text-blue-500">|</span>
         </template>
-        <span class="text-blue-800 dark:text-blue-100 truncate">{{ `${t('chat.searchQuery')}: ${searchQuery}` }}</span>
+        <span class="text-blue-800 dark:text-blue-100 truncate">{{ searchHeadingText }}</span>
         <template v-if="searchUsageTime">
           <span class="mr-1.5 ml-5 text-blue-400 dark:text-blue-500">|</span>
           <span class="text-blue-600 dark:text-blue-300 truncate">{{ `${t('chat.searchUsageTime')}: ${searchUsageTime.toFixed(2)}s` }}</span>

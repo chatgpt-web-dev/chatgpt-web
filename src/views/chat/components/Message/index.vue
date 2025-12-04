@@ -22,6 +22,7 @@ interface Props {
   currentNavIndex: number
   dateTime?: string
   model?: string
+  searching?: boolean
   searchQuery?: string
   searchResults?: Chat.SearchResult[]
   searchUsageTime?: number
@@ -230,7 +231,7 @@ function isEventTargetValid(event: any) {
         </NSpace>
       </p>
       <Search
-        v-if="searchQuery"
+        v-if="searching || searchQuery"
         :search-query="searchQuery"
         :search-results="searchResults"
         :search-usage-time="searchUsageTime"
