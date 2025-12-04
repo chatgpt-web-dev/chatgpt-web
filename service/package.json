@@ -14,13 +14,12 @@
     "mongodb"
   ],
   "engines": {
-    "node": "^16 || ^18 || ^20 || ^22"
+    "node": "^20 || ^22 || ^24"
   },
   "scripts": {
     "start": "tsx ./src/index.ts",
     "dev": "tsx watch --inspect ./src/index.ts",
     "prod": "node --import tsx/esm ./build/index.js",
-    "prod-node18": "node --loader tsx/esm ./build/index.js",
     "type-check": "tsc --noEmit",
     "build": "pnpm clean && tsc && pnpm copy",
     "copy": "copyfiles -u 1 src/utils/templates/* build",
@@ -30,36 +29,36 @@
     "common:cleanup": "rimraf node_modules && rimraf pnpm-lock.yaml"
   },
   "dependencies": {
-    "@tavily/core": "^0.5.3",
-    "axios": "^1.8.4",
-    "dayjs": "^1.11.13",
-    "dotenv": "^16.0.3",
-    "express": "^5.1.0",
-    "express-rate-limit": "^6.7.0",
-    "file-type": "^19.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "mongodb": "^6.16.0",
-    "multer": "^2.0.0",
-    "nodemailer": "^6.9.13",
-    "openai": "^5.19.1",
+    "@tavily/core": "^0.5.13",
+    "axios": "1.12.0",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "file-type": "^21.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.0.0",
+    "multer": "^2.0.2",
+    "nodemailer": "7.0.7",
+    "openai": "^6.9.1",
     "request-ip": "^3.3.0",
     "speakeasy": "^2.0.0",
-    "tsx": "^4.7.0",
-    "undici": "^6.21.3"
+    "tsx": "^4.21.0",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.13.2",
-    "@types/express": "^5.0.1",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/multer": "^1.4.11",
-    "@types/node": "^22.15.29",
-    "@types/nodemailer": "^6.4.14",
+    "@antfu/eslint-config": "^6.3.0",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.10.1",
+    "@types/nodemailer": "^7.0.4",
     "@types/request-ip": "^0.0.41",
     "@types/speakeasy": "^2.0.10",
     "copyfiles": "^2.4.1",
-    "eslint": "^9.28.0",
-    "jiti": "^2.4.2",
-    "rimraf": "^6.0.1",
-    "typescript": "~5.8.3"
+    "eslint": "^9.39.1",
+    "jiti": "^2.6.1",
+    "rimraf": "^6.1.2",
+    "typescript": "~5.9.3"
   }
 }

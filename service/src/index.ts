@@ -857,7 +857,7 @@ router.post('/search-test', rootAuth, async (req, res) => {
       {
         searchDepth: 'advanced',
         chunksPerSource: 3,
-        includeRawContent: search.options?.includeRawContent ?? false,
+        includeRawContent: search.options?.includeRawContent ? 'markdown' : false,
         maxResults,
         timeout: 120,
       },

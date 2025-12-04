@@ -1,5 +1,5 @@
 # build front-end
-FROM node:22-alpine AS frontend
+FROM node:24-alpine AS frontend
 
 ARG GIT_COMMIT_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ARG RELEASE_VERSION=v0.0.0
@@ -22,7 +22,7 @@ COPY . /app
 RUN pnpm run build
 
 # build backend
-FROM node:22-alpine AS backend
+FROM node:24-alpine AS backend
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ COPY /service /app
 RUN pnpm build
 
 # service
-FROM node:22-alpine
+FROM node:24-alpine
 
 RUN apk add --no-cache tini
 

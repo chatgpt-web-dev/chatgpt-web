@@ -177,7 +177,7 @@ async function chatReplyProcess(options: RequestOptions) {
               // https://docs.tavily.com/documentation/best-practices/best-practices-search#search-depth%3Dadvanced-ideal-for-higher-relevance-in-search-results
               searchDepth: 'advanced',
               chunksPerSource: 3,
-              includeRawContent: searchConfig.options?.includeRawContent ?? false,
+              includeRawContent: searchConfig.options?.includeRawContent ? 'markdown' : false,
               // 0 <= x <= 20 https://docs.tavily.com/documentation/api-reference/endpoint/search#body-max-results
               // https://docs.tavily.com/documentation/best-practices/best-practices-search#max-results-limiting-the-number-of-results
               maxResults: searchConfig.options?.maxResults || 10,

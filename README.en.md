@@ -139,7 +139,7 @@ For all parameter variables, check [here](#docker-parameter-example) or see:
 
 ### Node
 
-`node` requires version `^16 || ^18 || ^20 || ^22`, and multiple local `node` versions can be managed using [nvm](https://github.com/nvm-sh/nvm).
+`node` requires version `^20 || ^22 || ^24`, and multiple local `node` versions can be managed using [nvm](https://github.com/nvm-sh/nvm).
 
 ```shell
 node -v
