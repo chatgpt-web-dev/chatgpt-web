@@ -129,8 +129,9 @@ async function chatReplyProcess(options: RequestOptions) {
         // Use Responses API or Chat Completions to get search query
         let searchQuery: string = ''
         if (key.keyModel === 'ResponsesAPI') {
+          const modelGetSearchQuery = model.startsWith('gpt-5') ? 'gpt-5-nano' : model
           const response = await openai.responses.create({
-            model,
+            model: modelGetSearchQuery,
             instructions: systemMessageGetSearchQuery,
             input: messages as OpenAI.Responses.ResponseInput,
             reasoning: {
@@ -254,7 +255,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
       }
       else {
         reasoning = {
-          effort: 'minimal',
+          effort: model.startsWith('gpt-5.') ? 'none' : 'minimal',
         }
       }
       const stream = await openai.responses.create(
