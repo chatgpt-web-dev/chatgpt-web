@@ -135,44 +135,4 @@ function toggleCollapse() {
 
 <style lang="less">
 @import url(./style.less);
-
-.prose {
-  code {
-    background-color: rgba(209,213,219,0.3);
-    padding: .2em .4em;
-    margin: 0;
-    font-size: 85%;
-    border-radius: 3px;
-  }
-  pre {
-    background-color: rgba(229,231,235,1);
-    color: rgba(55,65,81,1);
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    overflow-x: auto;
-    code {
-      background-color: transparent;
-      padding: 0;
-      margin: 0;
-      font-size: inherit;
-      border-radius: 0;
-      color: inherit;
-    }
-  }
-}
-.dark .prose {
-  color: rgba(209,213,219,1);
-  code {
-    background-color: rgba(55,65,81,0.5);
-    color: rgba(229,231,235,1);
-  }
-  pre {
-    background-color: rgba(31,41,55,1);
-    color: rgba(229,231,235,1);
-  }
-}
-
-.whitespace-pre-wrap {
-  white-space: normal;
-}
 </style>
