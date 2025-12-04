@@ -237,6 +237,11 @@ search result: <search_result>${searchResultContent}</search_result>`,
     if (!hasSearchResult && key.keyModel !== 'ResponsesAPI')
       (messages as OpenAI.Chat.ChatCompletionMessageParam[])[0].content = systemMessage
 
+    // Send generating status before starting to generate response
+    process?.({
+      generating: true,
+    })
+
     // Choose API by key model
     // ResponsesAPI branch (OpenAI Responses API)
     if (key.keyModel === 'ResponsesAPI') {

@@ -302,6 +302,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         if (chunk.searching !== undefined) {
           sendSSEData('searching', { searching: chunk.searching })
         }
+        if (chunk.generating !== undefined) {
+          sendSSEData('generating', { generating: chunk.generating })
+        }
         if (chunk.searchQuery) {
           sendSSEData('search_query', { searchQuery: chunk.searchQuery })
         }

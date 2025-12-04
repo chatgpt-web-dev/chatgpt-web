@@ -157,6 +157,15 @@ async function onConversation() {
             },
           )
         },
+        onGenerating: (data) => {
+          chatStore.updateChatMessage(
+            currentChatRoom.value!.roomId,
+            dataSources.value.length - 1,
+            {
+              loading: data.generating,
+            },
+          )
+        },
         onSearchQuery: (data) => {
           searchQuery = data.searchQuery
           searching = false
@@ -406,6 +415,15 @@ async function onRegenerate(index: number) {
             dataSources.value.length - 1,
             {
               searching: data.searching,
+            },
+          )
+        },
+        onGenerating: (data) => {
+          updateChatSome(
+            currentChatRoom.value!.roomId,
+            index,
+            {
+              loading: data.generating,
             },
           )
         },

@@ -54,8 +54,11 @@ const wrapClass = computed(() => {
 
 const text = computed(() => {
   const value = props.text ?? ''
-  if (!props.asRawText)
-    return mdi.render(value)
+  if (!props.asRawText) {
+    const rendered = mdi.render(value)
+    // If markdown is empty, render a p tag to ensure cursor can be displayed
+    return rendered.trim() === '' ? '<p></p>' : rendered
+  }
   return value
 })
 
