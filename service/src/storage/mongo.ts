@@ -431,14 +431,40 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
     {
       $lookup: {
         from: 'chat',
-        localField: 'roomId',
-        foreignField: 'roomId',
-        as: 'chat',
+        let: { roomId: '$roomId' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$roomId', '$$roomId'] },
+                  { $ne: ['$status', Status.InversionDeleted] },
+                ],
+              },
+            },
+          },
+          {
+            $sort: { dateTime: -1 },
+          },
+          {
+            $group: {
+              _id: null,
+              chatCount: { $sum: 1 },
+              lastChat: { $first: '$$ROOT' },
+            },
+          },
+        ],
+        as: 'chatInfo',
       },
     },
     {
       $addFields: {
-        title: '$chat.prompt',
+        chatCount: {
+          $ifNull: [{ $arrayElemAt: ['$chatInfo.chatCount', 0] }, 0],
+        },
+        lastChat: {
+          $arrayElemAt: ['$chatInfo.lastChat', 0],
+        },
         user_ObjectId: {
           $toObjectId: '$userId',
         },
@@ -450,6 +476,13 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
         localField: 'user_ObjectId',
         foreignField: '_id',
         as: 'user',
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+            },
+          },
+        ],
       },
     },
     {
@@ -459,36 +492,13 @@ export async function getChatRoomsCount(userId: string, page: number, size: numb
       },
     },
     {
-      $sort: {
-        'chat.dateTime': -1,
-      },
-    },
-    {
-      $addFields: {
-        chatCount: {
-          $size: '$chat',
-        },
-        chat: {
-          $arrayElemAt: [
-            {
-              $slice: [
-                '$chat',
-                -1,
-              ],
-            },
-            0,
-          ],
-        },
-      },
-    },
-    {
       $project: {
         userId: 1,
-        title: '$chat.prompt',
+        title: { $ifNull: ['$lastChat.prompt', ''] },
         username: '$user.name',
         roomId: 1,
         chatCount: 1,
-        dateTime: '$chat.dateTime',
+        dateTime: { $ifNull: ['$lastChat.dateTime', null] },
       },
     },
     {

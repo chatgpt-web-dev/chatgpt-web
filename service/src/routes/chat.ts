@@ -2,6 +2,7 @@ import type { ResponseChunk } from '../chatgpt/types'
 import type { ChatInfo, ChatOptions, UsageResponse, UserInfo } from '../storage/model'
 import type { RequestProps } from '../types'
 import * as console from 'node:console'
+import * as process from 'node:process'
 import Router from 'express'
 import { ObjectId } from 'mongodb'
 import { abortChatProcess, chatReplyProcess, containsSensitiveWords } from '../chatgpt'
@@ -38,12 +39,14 @@ router.get('/chat-history', auth, async (req, res) => {
       return
     }
 
+    // When 'all' parameter is not empty, it means requesting to view all users' chat history
+    // This requires: 1) user must be an admin, 2) ADMIN_VIEW_CHAT_HISTORY_ENABLED environment variable must be set to 'true'
     if (all !== null && all !== 'undefined' && all !== undefined && all.trim().length !== 0) {
       const config = await getCacheConfig()
       if (config.siteConfig.loginEnabled) {
         try {
           const user = await getUserById(userId)
-          if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin)) {
+          if (user == null || user.status !== Status.Normal || !user.roles.includes(UserRole.Admin) || process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED !== 'true') {
             res.send({ status: 'Fail', message: '无权限 | No permission.', data: null })
             return
           }

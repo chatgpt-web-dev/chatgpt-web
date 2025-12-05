@@ -377,8 +377,15 @@ export function fetchDeleteChatRoom<T = any>(roomId: number) {
 }
 
 export function fetchGetChatHistory<T = any>(roomId: number, lastId?: number, all?: string) {
+  let url = `/chat-history?roomId=${roomId}`
+  if (lastId !== undefined && lastId !== null) {
+    url += `&lastId=${lastId}`
+  }
+  if (all !== undefined && all !== null) {
+    url += `&all=${all}`
+  }
   return get<T>({
-    url: `/chat-history?roomId=${roomId}&lastId=${lastId}&all=${all}`,
+    url,
   })
 }
 

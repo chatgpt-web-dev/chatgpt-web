@@ -24,6 +24,7 @@ interface SessionResponse {
   }[]
   usageCountLimit: boolean
   showWatermark: boolean
+  adminViewChatHistoryEnabled?: boolean
   userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, config: UserConfig }
 }
 
