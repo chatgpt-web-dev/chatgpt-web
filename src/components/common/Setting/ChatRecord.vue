@@ -5,6 +5,8 @@ import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import Message from '@/views/chat/components/Message/index.vue'
 
+const { t } = useI18n()
+
 interface HistoryChat {
   uuid?: number
   model?: string
@@ -70,13 +72,13 @@ const columns = [{
           show.value = true
           dataSources.value.length = 0
           chatLoading.value = true
-          fetchGetChatHistory(row.uuid, undefined, 'all').then((res: any) => {
+          fetchGetChatHistory(row.roomId, undefined, 'all').then((res: any) => {
             dataSources.value = res.data as HistoryChat[]
             chatLoading.value = false
           })
         },
       },
-      { default: () => 'view' },
+      { default: () => t('setting.view') },
     ))
     return actions
   },
@@ -144,6 +146,7 @@ onMounted(async () => {
       <NSelect
         v-model:value="selectUserId"
         style="width: 250px"
+        filterable
         :options="userOptions"
         @update:value="handleSelectUser"
       />

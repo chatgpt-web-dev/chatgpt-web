@@ -2,7 +2,7 @@
 import { SvgIcon } from '@/components/common'
 import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useUserStore } from '@/store'
+import { useAuthStore, useUserStore } from '@/store'
 import About from './About.vue'
 import Advanced from './Advanced.vue'
 import Announcement from './Anonuncement.vue'
@@ -25,6 +25,7 @@ const emit = defineEmits<Emit>()
 const { t } = useI18n()
 
 const userStore = useUserStore()
+const authStore = useAuthStore()
 const { isMobile } = useBasicLayout()
 
 interface Props {
@@ -36,6 +37,11 @@ interface Emit {
 }
 
 const active = ref('General')
+
+// Check if admin view chat history is enabled
+const showChatRecordTab = computed(() => {
+  return userStore.userInfo.root && authStore.session?.adminViewChatHistoryEnabled === true
+})
 
 const show = computed({
   get() {
@@ -99,7 +105,7 @@ const show = computed({
           </template>
           <About />
         </NTabPane>
-        <NTabPane v-if="userStore.userInfo.root" name="ChatRecord" tab="ChatRecord">
+        <NTabPane v-if="showChatRecordTab" name="ChatRecord" tab="ChatRecord">
           <template #tab>
             <SvgIcon class="text-lg" icon="ic:outline-chat" />
             <span class="ml-2">{{ t('setting.chatRecord') }}</span>

@@ -117,6 +117,7 @@
     "statistics": "Statistics",
     "config": "Base Config",
     "chatRecord": "Chat History",
+    "view": "View",
     "siteConfig": "Site Config",
     "mailConfig": "Mail Config",
     "auditConfig": "Audit Config",

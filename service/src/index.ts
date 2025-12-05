@@ -180,6 +180,7 @@ router.post('/session', async (req, res) => {
             chatModels,
             allChatModels: chatModelOptions,
             showWatermark: config.siteConfig?.showWatermark,
+            adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
           },
         })
         return
@@ -244,6 +245,7 @@ router.post('/session', async (req, res) => {
           allChatModels: chatModelOptions,
           usageCountLimit: config.siteConfig?.usageCountLimit,
           showWatermark: config.siteConfig?.showWatermark,
+          adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
           userInfo,
         },
       })
@@ -261,6 +263,7 @@ router.post('/session', async (req, res) => {
         chatModels: chatModelOptions,
         allChatModels: chatModelOptions,
         showWatermark: config.siteConfig?.showWatermark,
+        adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
         userInfo,
       },
     })
