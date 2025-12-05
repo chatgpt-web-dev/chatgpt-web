@@ -258,6 +258,12 @@ search result: <search_result>${searchResultContent}</search_result>`,
           effort: model.startsWith('gpt-5.') ? 'none' : 'minimal',
         }
       }
+
+      // This model does not support setting reasoning effort, so set reasoning to empty object
+      if (model === 'gpt-5.1-chat-latest') {
+        reasoning = {}
+      }
+
       const stream = await openai.responses.create(
         {
           model,
