@@ -24,6 +24,8 @@ const url = process.env.MONGODB_URL
 
 let client: MongoClient
 let dbName: string
+let isInitialized = false
+
 try {
   client = new MongoClient(url)
   const parsedUrl = new URL(url)
@@ -52,6 +54,157 @@ const userPromptCol = client.db(dbName).collection<UserPrompt>('user_prompt')
 //   "redeemed_date": { "$comment": "执行成功兑换的日期，考虑通用性选择了String类型，由new Date().toLocaleString()产生", "$type": "String" }
 // }
 const redeemCol = client.db(dbName).collection<GiftCard>('giftcards')
+
+/**
+ * Initialize all database indexes
+ * This should be called once when the application starts
+ * Note: createIndex is idempotent - it won't fail if index already exists
+ */
+
+async function initializeIndexes() {
+  try {
+    // ============================================
+    // chat_room collection indexes
+    // ============================================
+    // Index for /api/chatrooms: getChatRooms(userId)
+    // Query: { userId, status: { $ne: Status.Deleted } }
+    await roomCol.createIndex({ userId: 1, status: 1 }, { name: 'idx_userId_status' })
+
+    // Index for getChatRoom: { userId, roomId, status: { $ne: Status.Deleted } }
+    await roomCol.createIndex({ userId: 1, roomId: 1, status: 1 }, { name: 'idx_userId_roomId_status' })
+
+    // Index for existsChatRoom: { roomId, userId }
+    await roomCol.createIndex({ roomId: 1, userId: 1 }, { name: 'idx_roomId_userId' })
+
+    // Index for getChatRoomsCount aggregation lookup
+    await roomCol.createIndex({ roomId: 1 }, { name: 'idx_roomId' })
+
+    globalThis.console.log('✓ chat_room collection indexes created')
+
+    // ============================================
+    // chat collection indexes
+    // ============================================
+    // Index for /api/chat-history: getChats(roomId, lastId, all)
+    // Query: { roomId, uuid: { $lt: lastId }, status: { $ne: Status.Deleted } }
+    // Sort: { dateTime: -1 }
+    await chatCol.createIndex(
+      { roomId: 1, uuid: -1, dateTime: -1, status: 1 },
+      { name: 'idx_roomId_uuid_dateTime_status' },
+    )
+
+    // Alternative index for queries without status filter
+    await chatCol.createIndex(
+      { roomId: 1, uuid: -1, dateTime: -1 },
+      { name: 'idx_roomId_uuid_dateTime' },
+    )
+
+    // Index for getChat: { roomId, uuid }
+    await chatCol.createIndex({ roomId: 1, uuid: 1 }, { name: 'idx_roomId_uuid' })
+
+    // Index for getChatByMessageId: { 'options.messageId': messageId }
+    await chatCol.createIndex({ 'options.messageId': 1 }, { name: 'idx_options_messageId' })
+
+    // Index for getChatRoomsCount aggregation lookup
+    await chatCol.createIndex({ roomId: 1, dateTime: -1 }, { name: 'idx_roomId_dateTime' })
+
+    // Index for deleteAllChatRooms: updateMany({ userId, status: Status.Normal }, ...)
+    await chatCol.createIndex({ userId: 1, status: 1 }, { name: 'idx_userId_status' })
+
+    globalThis.console.log('✓ chat collection indexes created')
+
+    // ============================================
+    // user collection indexes
+    // ============================================
+    // Index for getUser: { email }
+    try {
+      await userCol.createIndex({ email: 1 }, { name: 'idx_email', unique: true })
+    }
+    catch (error: any) {
+      // Ignore error if unique index already exists
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
+
+    // Index for getUsers: { status: { $ne: Status.Deleted } } with sort by createTime
+    await userCol.createIndex({ status: 1, createTime: -1 }, { name: 'idx_status_createTime' })
+
+    globalThis.console.log('✓ user collection indexes created')
+
+    // ============================================
+    // chat_usage collection indexes
+    // ============================================
+    // Index for getUserStatisticsByDay: { dateTime, userId }
+    await usageCol.createIndex({ dateTime: 1, userId: 1 }, { name: 'idx_dateTime_userId' })
+
+    globalThis.console.log('✓ chat_usage collection indexes created')
+
+    // ============================================
+    // giftcards collection indexes
+    // ============================================
+    // Index for getAmtByCardNo: { cardno }
+    try {
+      await redeemCol.createIndex({ cardno: 1 }, { name: 'idx_cardno', unique: true })
+    }
+    catch (error: any) {
+      // Ignore error if unique index already exists
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
+
+    globalThis.console.log('✓ giftcards collection indexes created')
+
+    // ============================================
+    // user_prompt collection indexes
+    // ============================================
+    // Index for getUserPromptList: { userId }
+    await userPromptCol.createIndex({ userId: 1 }, { name: 'idx_userId' })
+
+    globalThis.console.log('✓ user_prompt collection indexes created')
+
+    // ============================================
+    // key_config collection indexes
+    // ============================================
+    // Index for getKeys: { status: { $ne: Status.Disabled } }
+    await keyCol.createIndex({ status: 1 }, { name: 'idx_status' })
+
+    globalThis.console.log('✓ key_config collection indexes created')
+
+    globalThis.console.log('✓ All database indexes initialized successfully')
+  }
+  catch (error: any) {
+    // Log error but don't throw - allow application to start even if index creation fails
+    globalThis.console.error('⚠ Warning: Error initializing database indexes:', error.message)
+    globalThis.console.error('  Application will continue to start. You may need to create indexes manually.')
+  }
+}
+
+/**
+ * Initialize MongoDB connection and indexes
+ * This should be called once when the application starts
+ */
+export async function initializeMongoDB() {
+  if (isInitialized) {
+    return
+  }
+
+  try {
+    // Connect to MongoDB
+    await client.connect()
+    globalThis.console.log('✓ MongoDB connected successfully')
+
+    // Initialize indexes
+    await initializeIndexes()
+
+    isInitialized = true
+  }
+  catch (error: any) {
+    globalThis.console.error('✗ Error initializing MongoDB:', error.message)
+    // Don't throw - allow application to continue
+    // MongoDB operations will fail gracefully if connection is not established
+  }
+}
 
 /**
  * 插入聊天信息

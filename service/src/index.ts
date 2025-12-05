@@ -25,6 +25,7 @@ import {
   getUserById,
   getUsers,
   getUserStatisticsByDay,
+  initializeMongoDB,
   updateApiKeyStatus,
   updateConfig,
   updateGiftCard,
@@ -998,5 +999,12 @@ app.use('/api', uploadRouter)
 
 app.use('', router)
 app.use('/api', router)
+
+// Initialize MongoDB connection and indexes on startup
+initializeMongoDB().catch((error) => {
+  console.error('Failed to initialize MongoDB:', error)
+  // Continue startup even if initialization fails
+  // MongoDB operations will fail gracefully if connection is not established
+})
 
 app.listen(3002, () => globalThis.console.log('Server is running on port 3002'))
