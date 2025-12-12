@@ -1,11 +1,8 @@
 import type { AuthJwtPayload } from '../types'
-import * as dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import { authProxyHeaderName, getCacheConfig } from '../storage/config'
 import { Status, UserRole } from '../storage/model'
 import { getUser, getUserById } from '../storage/mongo'
-
-dotenv.config()
 
 async function rootAuth(req, res, next) {
   const config = await getCacheConfig()
