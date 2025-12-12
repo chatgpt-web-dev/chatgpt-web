@@ -5,7 +5,6 @@ import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
 import dayjs from 'dayjs'
-import * as dotenv from 'dotenv'
 import OpenAI from 'openai'
 import * as undici from 'undici'
 import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/config'
@@ -15,8 +14,6 @@ import { sendResponse } from '../utils'
 import { convertImageUrl } from '../utils/image'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import { textAuditServices } from '../utils/textAudit'
-
-dotenv.config()
 
 function renderSystemMessage(template: string, currentTime: string): string {
   return template.replace(/\{current_time\}/g, currentTime)

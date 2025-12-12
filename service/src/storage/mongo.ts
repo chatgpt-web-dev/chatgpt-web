@@ -12,13 +12,10 @@ import type {
 } from './model'
 import * as process from 'node:process'
 import dayjs from 'dayjs'
-import * as dotenv from 'dotenv'
 import { MongoClient, ObjectId } from 'mongodb'
 import { md5 } from '../utils/security'
 import { getCacheConfig } from './config'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
-
-dotenv.config()
 
 const url = process.env.MONGODB_URL
 

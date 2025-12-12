@@ -1,12 +1,9 @@
 import type { RequestHandler } from 'express'
 import type { Options } from 'express-rate-limit'
 import * as process from 'node:process'
-import * as dotenv from 'dotenv'
 import { rateLimit } from 'express-rate-limit'
 import requestIp from 'request-ip'
 import { isNotEmptyString } from '../utils/is'
-
-dotenv.config()
 
 const MAX_REQUEST_PER_HOUR = process.env.MAX_REQUEST_PER_HOUR
 const AUTH_MAX_REQUEST_PER_MINUTE = process.env.AUTH_MAX_REQUEST_PER_MINUTE

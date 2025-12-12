@@ -1,12 +1,9 @@
 import type { TextAuditServiceProvider } from 'src/utils/textAudit'
 import * as process from 'node:process'
-import * as dotenv from 'dotenv'
 import { ObjectId } from 'mongodb'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
 import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SearchConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
-
-dotenv.config()
 
 let cachedConfig: Config | undefined
 let cacheExpiration = 0

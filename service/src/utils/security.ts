@@ -1,9 +1,6 @@
 import { createHash } from 'node:crypto'
 import * as process from 'node:process'
-import * as dotenv from 'dotenv'
 import { getCacheConfig } from '../storage/config'
-
-dotenv.config()
 
 export function md5(input: string) {
   input = input + process.env.PASSWORD_MD5_SALT
