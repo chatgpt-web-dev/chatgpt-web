@@ -256,8 +256,9 @@ search result: <search_result>${searchResultContent}</search_result>`,
         }
       }
 
-      // This model does not support setting reasoning effort, so set reasoning to empty object
-      if (model === 'gpt-5.1-chat-latest') {
+      // Models that start with 'gpt' and end with 'chat-latest' (e.g., gpt-5.1-chat-latest, gpt-5.2-chat-latest)
+      // do not support setting reasoning effort, so set reasoning to empty object
+      if (model.startsWith('gpt') && model.endsWith('chat-latest')) {
         reasoning = {}
       }
 
