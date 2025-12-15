@@ -96,7 +96,7 @@ export async function getOriginConfig() {
   }
 
   if (!isNotEmptyString(config.siteConfig.chatModels))
-    config.siteConfig.chatModels = 'gpt-4.1,gpt-4.1-mini,gpt-4.1-nano'
+    config.siteConfig.chatModels = 'gpt-5.2,gpt-5-mini,gpt-5-nano'
   return config
 }
 
