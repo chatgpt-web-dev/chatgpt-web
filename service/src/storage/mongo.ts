@@ -1,4 +1,4 @@
-import type { Filter, WithId } from 'mongodb'
+import type { Collection, Filter, WithId } from 'mongodb'
 import type {
   AdvancedConfig,
   BuiltInPrompt,
@@ -17,40 +17,20 @@ import { md5 } from '../utils/security'
 import { getCacheConfig } from './config'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 
-const url = process.env.MONGODB_URL
-
 let client: MongoClient
 let dbName: string
 let isInitialized = false
 
-try {
-  client = new MongoClient(url)
-  const parsedUrl = new URL(url)
-  dbName = (parsedUrl.pathname && parsedUrl.pathname !== '/') ? parsedUrl.pathname.substring(1) : 'chatgpt'
-}
-catch (e) {
-  globalThis.console.error('MongoDB url invalid. please ensure set valid env MONGODB_URL.', e.message)
-  process.exit(1)
-}
-
-const chatCol = client.db(dbName).collection<ChatInfo>('chat')
-const roomCol = client.db(dbName).collection<ChatRoom>('chat_room')
-const userCol = client.db(dbName).collection<UserInfo>('user')
-const configCol = client.db(dbName).collection<Config>('config')
-const usageCol = client.db(dbName).collection<ChatUsage>('chat_usage')
-const keyCol = client.db(dbName).collection<KeyConfig>('key_config')
-const builtInPromptCol = client.db(dbName).collection<BuiltInPrompt>('built_in_prompt')
-const userPromptCol = client.db(dbName).collection<UserPrompt>('user_prompt')
-// 新增兑换券的数据库
-// {
-//   "_id": { "$comment": "Mongodb系统自动" , "$type": "ObjectId" },
-//   "cardno": { "$comment": "卡号（可以用csv导入）", "$type": "String" },
-//   "amount": { "$comment": "卡号对应的额度", "$type": "Int32" },
-//   "redeemed": { "$comment": "标记是否已被兑换，0｜1表示false｜true，目前类型为Int是为图方便和测试考虑以后识别泄漏啥的（多次被兑换）", "$type": "Int32" },
-//   "redeemed_by": { "$comment": "执行成功兑换的用户", "$type": "String" },
-//   "redeemed_date": { "$comment": "执行成功兑换的日期，考虑通用性选择了String类型，由new Date().toLocaleString()产生", "$type": "String" }
-// }
-const redeemCol = client.db(dbName).collection<GiftCard>('giftcards')
+// Collections - initialized in initializeMongoDB()
+let chatCol: Collection<ChatInfo>
+let roomCol: Collection<ChatRoom>
+let userCol: Collection<UserInfo>
+let configCol: Collection<Config>
+let usageCol: Collection<ChatUsage>
+let keyCol: Collection<KeyConfig>
+let builtInPromptCol: Collection<BuiltInPrompt>
+let userPromptCol: Collection<UserPrompt>
+let redeemCol: Collection<GiftCard>
 
 /**
  * Initialize all database indexes
@@ -187,9 +167,31 @@ export async function initializeMongoDB() {
   }
 
   try {
+    const url = process.env.MONGODB_URL
+    if (!url) {
+      throw new Error('MONGODB_URL environment variable is not set')
+    }
+
+    // Initialize MongoDB client
+    client = new MongoClient(url)
+    const parsedUrl = new URL(url)
+    dbName = (parsedUrl.pathname && parsedUrl.pathname !== '/') ? parsedUrl.pathname.substring(1) : 'chatgpt'
+
     // Connect to MongoDB
     await client.connect()
     globalThis.console.log('✓ MongoDB connected successfully')
+
+    // Initialize collections
+    const db = client.db(dbName)
+    chatCol = db.collection<ChatInfo>('chat')
+    roomCol = db.collection<ChatRoom>('chat_room')
+    userCol = db.collection<UserInfo>('user')
+    configCol = db.collection<Config>('config')
+    usageCol = db.collection<ChatUsage>('chat_usage')
+    keyCol = db.collection<KeyConfig>('key_config')
+    builtInPromptCol = db.collection<BuiltInPrompt>('built_in_prompt')
+    userPromptCol = db.collection<UserPrompt>('user_prompt')
+    redeemCol = db.collection<GiftCard>('giftcards')
 
     // Initialize indexes
     await initializeIndexes()
