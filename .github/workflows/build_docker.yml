@@ -1,127 +1,152 @@
+# 工作流名称
 name: Build and push docker image
 
+# 触发条件配置
 on:
   push:
-    branches: [main]
+    branches: [main]  # 当推送到main分支时触发
   release:
-    types: [created] # This will only run on new releases
+    types: [created]  # 当创建新的release时触发
 
+# 定义作业
 jobs:
+  # 第一个作业：更新Docker Hub描述
   docker_hub_description:
-    name: Docker Hub description
-    runs-on: ubuntu-latest
+    name: Docker Hub description  # 作业名称
+    runs-on: ubuntu-latest  # 运行环境
     steps:
+      # 检出代码
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            README.en.md
+          sparse-checkout: |  # 只检出特定文件
+            README.en.md  # 仅检出英文README文件
+      
+      # 更新Docker Hub仓库描述
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web
-          # Description length should be no longer than 100 characters.
+          username: ${{ secrets.DOCKERHUB_USERNAME }}  # Docker Hub用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }}  # Docker Hub访问令牌
+          repository: jsntwdj/zjai-web  # 目标仓库
+          # 简短描述（不超过100字符）
           short-description: A third-party ChatGPT Web UI page, through the official OpenAI completion API.
-          readme-filepath: README.en.md
-          enable-url-completion: true
+          readme-filepath: README.en.md  # 使用的README文件路径
+          enable-url-completion: true  # 启用URL自动补全
 
+  # 第二个作业：构建多平台镜像
   build:
-    name: Build multi-platform images
+    name: Build multi-platform images  # 作业名称
     strategy:
-      fail-fast: false
+      fail-fast: false  # 一个平台失败不影响其他平台
       matrix:
         include:
-          - platform: linux/amd64
-            os: ubuntu-latest
-          - platform: linux/arm64
-            os: ubuntu-24.04-arm
-    runs-on: ${{ matrix.os }}
+          - platform: linux/amd64  # AMD64架构
+            os: ubuntu-latest  # 使用的运行器
+          - platform: linux/arm64  # ARM64架构
+            os: ubuntu-24.04-arm  # ARM架构专用运行器
+    runs-on: ${{ matrix.os }}  # 使用矩阵中定义的操作系统
     steps:
+      # 检出代码
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 准备环境变量
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV  # 将平台信息转换为环境变量格式
 
+      # 生成Docker元数据（标签等）
       - name: Docker meta
-        id: meta
+        id: meta  # 步骤ID，用于后续引用
         uses: docker/metadata-action@v5
         with:
-          images: ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web
+          images: jsntwdj/zjai-web  # 目标镜像名称
 
+      # 登录Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}  # Docker Hub用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }}  # Docker Hub访问令牌
 
+      # 设置Docker Buildx（多平台构建工具）
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 构建并推送镜像
       - name: Build and push by digest
-        id: build
+        id: build  # 步骤ID，用于后续引用
         uses: docker/build-push-action@v6
         with:
-          context: .
-          platforms: ${{ matrix.platform }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GIT_COMMIT_HASH=${{ github.sha }}
-            RELEASE_VERSION=${{ github.ref_name }}
-          outputs: type=image,name=${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web,push-by-digest=true,name-canonical=true,push=true
+          context: .  # 构建上下文为当前目录
+          platforms: ${{ matrix.platform }}  # 使用矩阵中定义的平台
+          labels: ${{ steps.meta.outputs.labels }}  # 使用元数据步骤生成的标签
+          build-args: |  # 构建参数
+            GIT_COMMIT_HASH=${{ github.sha }}  # 注入Git提交哈希
+            RELEASE_VERSION=${{ github.ref_name }}  # 注入发布版本号
+          outputs: type=image,name=jsntwdj/zjai-web,push-by-digest=true,name-canonical=true,push=true
 
+      # 导出镜像摘要(digest)
       - name: Export digest
         run: |
-          mkdir -p ${{ runner.temp }}/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+          mkdir -p ${{ runner.temp }}/digests  # 创建临时目录
+          digest="${{ steps.build.outputs.digest }}"  # 获取构建步骤输出的摘要
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"  # 保存摘要到文件
 
+      # 上传摘要文件作为制品
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ env.PLATFORM_PAIR }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
+          name: digests-${{ env.PLATFORM_PAIR }}  # 制品名称包含平台信息
+          path: ${{ runner.temp }}/digests/*  # 上传所有摘要文件
+          if-no-files-found: error  # 如果没有文件则报错
+          retention-days: 1  # 制品保留1天
 
+  # 第三个作业：合并多平台镜像
   merge:
-    name: Merge multi-platform images
-    runs-on: ubuntu-latest
+    name: Merge multi-platform images  # 作业名称
+    runs-on: ubuntu-latest  # 运行环境
     needs:
-      - build
+      - build  # 依赖build作业完成
     steps:
+      # 下载之前上传的摘要制品
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
-          path: ${{ runner.temp }}/digests
-          pattern: digests-*
-          merge-multiple: true
+          path: ${{ runner.temp }}/digests  # 下载路径
+          pattern: digests-*  # 匹配所有摘要制品
+          merge-multiple: true  # 合并多个制品
 
+      # 登录Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}  # Docker Hub用户名
+          password: ${{ secrets.DOCKERHUB_TOKEN }}  # Docker Hub访问令牌
 
+      # 设置Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 生成Docker元数据
       - name: Docker meta
-        id: meta
+        id: meta  # 步骤ID，用于后续引用
         uses: docker/metadata-action@v5
         with:
-          images: ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web
+          images: jsntwdj/zjai-web  # 目标镜像名称
 
+      # 创建多平台清单并推送
       - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
+        working-directory: ${{ runner.temp }}/digests  # 工作目录设置为摘要文件所在目录
         run: |
+          # 使用jq解析元数据生成标签，并创建多平台清单
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web@sha256:%s ' *)
+            $(printf 'jsntwdj/zjai-web@sha256:%s ' *)
 
+      # 检查生成的镜像
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ vars.DOCKERHUB_NAMESPACE }}/chatgpt-web:${{ steps.meta.outputs.version }}
+          # 检查镜像详情，验证多平台支持
+          docker buildx imagetools inspect jsntwdj/zjai-web:${{ steps.meta.outputs.version }}
