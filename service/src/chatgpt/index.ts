@@ -274,7 +274,8 @@ search result: <search_result>${searchResultContent}</search_result>`,
           store: options.room.toolsEnabled,
           stream: true,
           ...(tools && tools.length > 0 && { tools: tools as any }),
-          ...(previousResponseId && { previous_response_id: previousResponseId }),
+          // 如果有图片代表是编辑当前图片，不传递该参数，否则传递该参数
+          ...(previousResponseId && uploadFileKeys.length === 0 && { previous_response_id: previousResponseId }),
         },
         {
           signal: abort.signal,

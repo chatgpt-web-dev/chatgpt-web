@@ -911,8 +911,22 @@ async function handleToggleToolsEnabled() {
   if (!currentChatRoom.value)
     return
 
-  await chatStore.setChatToolsEnabled(!currentChatRoom.value.toolsEnabled)
-  if (currentChatRoom.value.toolsEnabled)
+  const newToolsEnabled = !currentChatRoom.value.toolsEnabled
+  await chatStore.setChatToolsEnabled(newToolsEnabled)
+
+  // 如果打开tools enable，则关闭联网搜索和深度思考
+  if (newToolsEnabled) {
+    if (currentChatRoom.value.searchEnabled) {
+      await chatStore.setChatSearchEnabled(false)
+      ms.warning(t('chat.turnOffSearch'))
+    }
+    if (currentChatRoom.value.thinkEnabled) {
+      await chatStore.setChatThinkEnabled(false)
+      ms.warning(t('chat.turnOffThink'))
+    }
+  }
+
+  if (newToolsEnabled)
     ms.success(t('chat.turnOnTools'))
   else
     ms.warning(t('chat.turnOffTools'))

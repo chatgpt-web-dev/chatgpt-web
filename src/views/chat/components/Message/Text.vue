@@ -5,6 +5,7 @@ import MarkdownIt from 'markdown-it'
 import mila from 'markdown-it-link-attributes'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { copyToClip } from '@/utils/copy'
+import ImagePreview from './ImagePreview.vue'
 
 const props = defineProps<Props>()
 
@@ -23,6 +24,66 @@ interface Props {
 const { isMobile } = useBasicLayout()
 
 const textRef = ref<HTMLElement>()
+
+// Image preview state
+const previewVisible = ref(false)
+const previewImages = ref<string[]>([]) // 所有预览图片URL
+const previewImageNames = ref<string[]>([]) // 所有预览图片名称
+const currentImageIndex = ref(0) // 当前图片索引
+
+// Open image preview with multi-image support
+function openImagePreview(url: string, name: string, _imageType: 'upload' | 'tool' = 'upload', index?: number) {
+  // 收集所有图片
+  const allImages: string[] = []
+  const allNames: string[] = []
+
+  // 添加用户上传的图片
+  if (props.images && props.images.length > 0) {
+    props.images.forEach((v, _i) => {
+      allImages.push(getImageUrl(v))
+      allNames.push(getImageName(v))
+    })
+  }
+
+  // 添加AI生成的图片
+  if (props.toolImages && props.toolImages.length > 0) {
+    props.toolImages.forEach((v, _i) => {
+      allImages.push(getImageUrl(v))
+      allNames.push(getImageName(v))
+    })
+  }
+
+  previewImages.value = allImages
+  previewImageNames.value = allNames
+
+  // 确定当前图片索引
+  if (index !== undefined) {
+    currentImageIndex.value = index
+  }
+  else {
+    // 根据URL找到索引
+    const foundIndex = allImages.findIndex(img => img === url)
+    currentImageIndex.value = foundIndex >= 0 ? foundIndex : 0
+  }
+
+  previewVisible.value = true
+}
+
+// Get full image URL
+function getImageUrl(v: string): string {
+  if (v.startsWith('data:image/')) {
+    return v
+  }
+  return `/uploads/${v}`
+}
+
+// Get image name from URL
+function getImageName(v: string): string {
+  if (v.startsWith('data:image/')) {
+    return 'image.png'
+  }
+  return v.split('/').pop() || 'image.png'
+}
 
 const mdi = new MarkdownIt({
   html: false,
@@ -117,16 +178,37 @@ onUnmounted(() => {
       </div>
       <div v-else class="w-full whitespace-pre-wrap break-words" v-text="text" />
       <!-- User uploaded images -->
-      <img v-for="(v, i) of images" :key="`upload-${i}`" :src="`/uploads/${v}`" alt="" width="160px">
-      <!-- AI-generated images from tool calls (local file names or base64 for backward compatibility) -->
-      <img
-        v-for="(v, i) of toolImages"
-        :key="`tool-${i}`"
-        :src="v.startsWith('data:image/') ? v : `/uploads/${v}`"
-        alt=""
-        width="160px"
-      >
+      <div class="flex flex-wrap gap-2 mt-2">
+        <div
+          v-for="(v, i) of images"
+          :key="`upload-${i}`"
+          class="cursor-pointer hover:opacity-80 transition-opacity"
+          @click="openImagePreview(getImageUrl(v), getImageName(v), 'upload', i)"
+        >
+          <img :src="getImageUrl(v)" alt="" width="160px" class="rounded border border-gray-300">
+        </div>
+        <!-- AI-generated images from tool calls (local file names or base64 for backward compatibility) -->
+        <div
+          v-for="(v, i) of toolImages"
+          :key="`tool-${i}`"
+          class="cursor-pointer hover:opacity-80 transition-opacity"
+          @click="openImagePreview(getImageUrl(v), getImageName(v), 'tool', images ? images.length + i : i)"
+        >
+          <img :src="getImageUrl(v)" alt="" width="160px" class="rounded border border-gray-300">
+        </div>
+      </div>
     </div>
+
+    <!-- Image preview component -->
+    <ImagePreview
+      :visible="previewVisible"
+      :images="previewImages"
+      :image-names="previewImageNames"
+      :current-index="currentImageIndex"
+      @update:visible="previewVisible = $event"
+      @update:current-index="currentImageIndex = $event"
+      @close="previewVisible = false"
+    />
   </div>
 </template>
 
