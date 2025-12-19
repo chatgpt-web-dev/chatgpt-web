@@ -261,6 +261,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let result
   let message: ChatInfo
   let user = await getUserById(userId)
+  let errorMessage: string | null = null
 
   // SSE helper functions
   const sendSSEData = (eventType: string, data: any) => {
@@ -363,12 +364,34 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     sendSSEEnd()
   }
   catch (error) {
-    sendSSEError(error?.message || 'Unknown error')
+    errorMessage = error?.message || 'Unknown error'
+    sendSSEError(errorMessage)
     sendSSEEnd()
   }
   finally {
     res.end()
     try {
+      // 如果 message 未创建，无法保存错误信息
+      if (!message) {
+        return
+      }
+
+      // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
+      const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
+      
+      if (finalErrorMessage) {
+        await updateChat(
+          message._id as unknown as string,
+          '',
+          finalErrorMessage,
+          '',
+          model,
+          {} as UsageResponse,
+          regenerate && message.options.messageId ? (message.previousResponse || []).concat([{ response: message.response, options: message.options }]) as [] : undefined,
+        )
+        return
+      }
+
       if (result == null || result === undefined || result.status !== 'Success') {
         if (result && result.status !== 'Success')
           lastResponse = { text: result.message }

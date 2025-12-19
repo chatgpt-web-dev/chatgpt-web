@@ -334,6 +334,9 @@ export async function createChatRoom(userId: string, title: string, roomId: numb
     maxContextCount = 10
   }
   const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false, false)
+  // 创建房间后，需要根据chatModel判断并设置imageUploadEnabled
+  // 这里先设置为false，后续在room-create接口中会根据chatModel动态判断
+  room.imageUploadEnabled = false
   await roomCol.insertOne(room)
   return room
 }
@@ -415,6 +418,17 @@ export async function updateRoomToolsEnabled(userId: string, roomId: number, too
   const update = {
     $set: {
       toolsEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomImageUploadEnabled(userId: string, roomId: number, imageUploadEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      imageUploadEnabled,
     },
   }
   const result = await roomCol.updateOne(query, update)

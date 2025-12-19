@@ -12,6 +12,7 @@ export class ConfigState {
   auditConfig?: AuditConfig
   searchConfig?: SearchConfig
   announceConfig?: AnnounceConfig
+  toolsEnabled?: boolean
 }
 
 export class UserConfig {
@@ -101,6 +102,8 @@ export class KeyConfig {
   status: Status
   remark: string
   baseUrl?: string
+  toolsEnabled?: boolean
+  imageUploadEnabled?: boolean
   constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel

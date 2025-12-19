@@ -1,5 +1,6 @@
 import Router from 'express'
 import { auth } from '../middleware/auth'
+import { getCacheApiKeys } from '../storage/config'
 import {
   createChatRoom,
   deleteChatRoom,
@@ -9,6 +10,7 @@ import {
   getUserById,
   renameChatRoom,
   updateRoomChatModel,
+  updateRoomImageUploadEnabled,
   updateRoomMaxContextCount,
   updateRoomPrompt,
   updateRoomSearchEnabled,
@@ -16,6 +18,7 @@ import {
   updateRoomToolsEnabled,
   updateRoomUsingContext,
 } from '../storage/mongo'
+import { hasAnyRole } from '../utils/is'
 
 export const router = Router()
 
@@ -36,6 +39,7 @@ router.get('/chatrooms', auth, async (req, res) => {
         searchEnabled: !!r.searchEnabled,
         thinkEnabled: !!r.thinkEnabled,
         toolsEnabled: !!r.toolsEnabled,
+        imageUploadEnabled: !!r.imageUploadEnabled,
       })
     })
     res.send({ status: 'Success', message: null, data: result })
@@ -89,6 +93,16 @@ router.post('/room-create', auth, async (req, res) => {
     const user = await getUserById(userId)
     const { title, roomId } = req.body as { title: string, roomId: number }
     const room = await createChatRoom(userId, title, roomId, user.config?.chatModel, user.config?.maxContextCount)
+    // 根据chatModel判断并设置imageUploadEnabled
+    if (user && room.chatModel) {
+      const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+      const imageUploadEnabled = keys.some(key =>
+        key.chatModels.includes(room.chatModel)
+        && key.imageUploadEnabled === true,
+      )
+      await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
+      room.imageUploadEnabled = imageUploadEnabled || false
+    }
     res.send({ status: 'Success', message: null, data: room })
   }
   catch (error) {
@@ -134,10 +148,44 @@ router.post('/room-chatmodel', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { chatModel, roomId } = req.body as { chatModel: string, roomId: number }
     const success = await updateRoomChatModel(userId, roomId, chatModel)
-    if (success)
-      res.send({ status: 'Success', message: 'Saved successfully', data: null })
-    else
+
+    if (success) {
+      // 根据新选择的chatModel，动态判断toolsEnabled
+      const user = await getUserById(userId)
+      if (user) {
+        const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+        const responsesApiKeysForModel = keys.filter(key =>
+          key.keyModel === 'ResponsesAPI'
+          && key.chatModels.includes(chatModel),
+        )
+        const toolsEnabled = responsesApiKeysForModel.length > 0
+          && responsesApiKeysForModel.every(key => key.toolsEnabled === true)
+        const imageUploadEnabled = keys.some(key =>
+          key.chatModels.includes(chatModel)
+          && key.imageUploadEnabled === true,
+        )
+
+        // 更新房间的toolsEnabled状态
+        await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
+        // 更新房间的imageUploadEnabled状态
+        await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
+
+        res.send({
+          status: 'Success',
+          message: 'Saved successfully',
+          data: {
+            toolsEnabled: toolsEnabled || false,
+            imageUploadEnabled: imageUploadEnabled || false,
+          },
+        })
+      }
+      else {
+        res.send({ status: 'Success', message: 'Saved successfully', data: null })
+      }
+    }
+    else {
       res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+    }
   }
   catch (error) {
     console.error(error)

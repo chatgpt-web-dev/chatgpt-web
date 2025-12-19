@@ -87,7 +87,8 @@ export class ChatRoom {
   searchEnabled: boolean
   thinkEnabled: boolean
   toolsEnabled?: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean, toolsEnabled?: boolean) {
+  imageUploadEnabled?: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean, toolsEnabled?: boolean, imageUploadEnabled?: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
@@ -98,6 +99,7 @@ export class ChatRoom {
     this.searchEnabled = searchEnabled
     this.thinkEnabled = thinkEnabled
     this.toolsEnabled = toolsEnabled
+    this.imageUploadEnabled = imageUploadEnabled
   }
 }
 
@@ -299,6 +301,8 @@ export class KeyConfig {
   status: Status
   remark: string
   baseUrl?: string
+  toolsEnabled?: boolean
+  imageUploadEnabled?: boolean
   constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel

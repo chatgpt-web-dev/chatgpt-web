@@ -907,34 +907,6 @@ async function handleToggleUsingContext() {
     ms.warning(t('chat.turnOffContext'))
 }
 
-async function handleToggleToolsEnabled() {
-  if (!currentChatRoom.value)
-    return
-
-  const newToolsEnabled = !currentChatRoom.value.toolsEnabled
-  await chatStore.setChatToolsEnabled(newToolsEnabled)
-
-  // 如果打开tools enable，则关闭联网搜索和深度思考
-  if (newToolsEnabled) {
-    if (currentChatRoom.value.searchEnabled) {
-      await chatStore.setChatSearchEnabled(false)
-      ms.warning(t('chat.turnOffSearch'))
-    }
-    if (currentChatRoom.value.thinkEnabled) {
-      await chatStore.setChatThinkEnabled(false)
-      ms.warning(t('chat.turnOffThink'))
-    }
-  }
-
-  if (newToolsEnabled)
-    ms.success(t('chat.turnOnTools'))
-  else
-    ms.warning(t('chat.turnOffTools'))
-
-  // 重置 lastToolResponseId，因为工具状态已改变
-  lastToolResponseId.value = ''
-}
-
 // 可优化部分
 // 搜索选项计算，这里使用value作为索引项，所以当出现重复value时渲染异常(多项同时出现选中效果)
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
@@ -1124,7 +1096,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center space-x-2">
-            <div>
+            <div v-if="currentChatRoom?.imageUploadEnabled">
               <NUpload
                 action="/api/upload-image"
                 list-type="image"
@@ -1186,18 +1158,6 @@ onUnmounted(() => {
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:lightbulb-outline" />
                 <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
-              </span>
-            </HoverButton>
-            <HoverButton
-              v-if="!isMobile"
-              :tooltip="currentChatRoom?.toolsEnabled ? t('chat.clickTurnOffTools') : t('chat.clickTurnOnTools')"
-              :tooltip-help="t('chat.toolsHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatRoom?.toolsEnabled, 'text-[#a8071a]': !currentChatRoom?.toolsEnabled }"
-              @click="handleToggleToolsEnabled"
-            >
-              <span class="text-xl flex items-center">
-                <SvgIcon icon="ri:image-edit-line" />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.toolsEnabled ? t('chat.toolsEnabled') : t('chat.toolsDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton

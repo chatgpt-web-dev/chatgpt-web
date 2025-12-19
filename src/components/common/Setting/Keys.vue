@@ -306,6 +306,26 @@ onMounted(async () => {
             />
           </div>
         </div>
+        <div v-if="keyConfig.keyModel === 'ResponsesAPI'" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('chat.tools') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false"
+              :value="keyConfig.toolsEnabled || false"
+              @update:value="(val) => { keyConfig.toolsEnabled = val }"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.imageUpload') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false"
+              :value="keyConfig.imageUploadEnabled || false"
+              @update:value="(val) => { keyConfig.imageUploadEnabled = val }"
+            />
+          </div>
+        </div>
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]">{{ t('setting.remark') }}</span>
           <div class="flex-1">

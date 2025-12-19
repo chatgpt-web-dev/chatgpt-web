@@ -46,6 +46,7 @@ declare namespace Chat {
     searchEnabled: boolean
     thinkEnabled: boolean
     toolsEnabled?: boolean
+    imageUploadEnabled?: boolean
   }
 
   interface ConversationRequest {

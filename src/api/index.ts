@@ -67,6 +67,8 @@ export function fetchChatAPIProcessSSE(
   }
 
   return new Promise((resolve, reject) => {
+    let currentEventType: string | null = null
+
     fetchService.postStream(
       {
         url: '/chat-process',
@@ -79,21 +81,31 @@ export function fetchChatAPIProcessSSE(
             return
 
           if (line.startsWith('event: ')) {
-            // const _eventType = line.substring(7).trim()
+            currentEventType = line.substring(7).trim()
             return
           }
 
           if (line.startsWith('data: ')) {
-            const data = line.substring(6).trim()
+            const dataStr = line.substring(6).trim()
 
-            if (data === '[DONE]') {
+            if (dataStr === '[DONE]') {
               handlers.onEnd?.()
               resolve()
               return
             }
 
             try {
-              const jsonData = JSON.parse(data)
+              if (currentEventType === 'error') {
+                const errorDataStr = JSON.parse(dataStr)
+                const errorData = JSON.parse(errorDataStr)
+                if (errorData.message) {
+                  handlers.onError?.(errorData.message)
+                }
+                currentEventType = null
+                return
+              }
+
+              const jsonData = JSON.parse(dataStr)
 
               // Dispatch to different handlers based on data type
               if (jsonData.message) {
@@ -120,9 +132,13 @@ export function fetchChatAPIProcessSSE(
               else {
                 handlers.onMessage?.(jsonData)
               }
+
+              // 重置事件类型
+              currentEventType = null
             }
             catch (e) {
-              console.error('Failed to parse SSE data:', data, e)
+              console.error('Failed to parse SSE data:', dataStr, e)
+              currentEventType = null
             }
           }
         },
