@@ -15,6 +15,7 @@ interface Props {
   error?: boolean
   text?: string
   images?: string[]
+  toolImages?: string[] // Local file names from AI-generated images (stored as local file names, e.g., "image-xxx.png")
   loading?: boolean
   asRawText?: boolean
 }
@@ -115,7 +116,16 @@ onUnmounted(() => {
         <div v-else class="w-full whitespace-pre-wrap break-words" v-text="text" />
       </div>
       <div v-else class="w-full whitespace-pre-wrap break-words" v-text="text" />
-      <img v-for="(v, i) of images" :key="i" :src="`/uploads/${v}`" alt="" width="160px">
+      <!-- User uploaded images -->
+      <img v-for="(v, i) of images" :key="`upload-${i}`" :src="`/uploads/${v}`" alt="" width="160px">
+      <!-- AI-generated images from tool calls (local file names or base64 for backward compatibility) -->
+      <img
+        v-for="(v, i) of toolImages"
+        :key="`tool-${i}`"
+        :src="v.startsWith('data:image/') ? v : `/uploads/${v}`"
+        alt=""
+        width="160px"
+      >
     </div>
   </div>
 </template>

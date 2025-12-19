@@ -51,6 +51,9 @@ const loadingChatUuid = ref<number>(-1)
 
 const currentNavIndexRef = ref<number>(-1)
 
+// 存储上一次工具调用的响应ID，用于传递 previousResponseId
+const lastToolResponseId = ref<string>('')
+
 let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
@@ -145,6 +148,8 @@ async function onConversation() {
         prompt: message,
         uploadFileKeys,
         options,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
+        previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {
         onSearching: (data) => {
@@ -173,6 +178,41 @@ async function onConversation() {
         onSearchResults: (data) => {
           searchResults = data.searchResults
           searchUsageTime = data.searchUsageTime
+        },
+        onToolCalls: async (data) => {
+          // Handle tool calls (e.g., image generation results)
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+
+          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          const editImageId = (data as any).editImageId
+          const responseId = (data as any).id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
+          if (imageToolCalls.length > 0) {
+            // Extract file IDs from tool calls (now stored as file IDs instead of base64)
+            const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+            // Get current chat to preserve existing fields
+            const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, dataSources.value.length - 1)
+            if (currentChat) {
+              await chatStore.updateChatMessage(
+                currentChatRoom.value!.roomId,
+                dataSources.value.length - 1,
+                {
+                  ...currentChat,
+                  tool_calls: toolCalls,
+                  tool_images: imageResults, // Store file IDs instead of base64
+                  editImageId: editImageId || undefined,
+                },
+              )
+            }
+          }
         },
         onDelta: async (delta) => {
           // Handle incremental data
@@ -240,6 +280,7 @@ async function onConversation() {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
 
@@ -263,6 +304,21 @@ async function onConversation() {
               }
             : undefined
 
+          // 处理 tool_calls 和 editImageId
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+          const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+          // 存储 editImageId（优先使用 editImageId，否则使用 response id）
+          const editImageId = data.editImageId
+          const responseId = data.id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
           await chatStore.updateChatMessage(
             currentChatRoom.value!.roomId,
             dataSources.value.length - 1,
@@ -280,6 +336,9 @@ async function onConversation() {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: toolCalls,
+              tool_images: imageResults.length > 0 ? imageResults : undefined,
+              editImageId: editImageId || undefined,
             },
           )
         },
@@ -406,6 +465,8 @@ async function onRegenerate(index: number) {
         regenerate: true,
         prompt: message,
         options,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
+        previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {
         onSearching: (data) => {
@@ -434,6 +495,41 @@ async function onRegenerate(index: number) {
         onSearchResults: (data) => {
           searchResults = data.searchResults
           searchUsageTime = data.searchUsageTime
+        },
+        onToolCalls: async (data) => {
+          // Handle tool calls (e.g., image generation results)
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+
+          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          const editImageId = (data as any).editImageId
+          const responseId = (data as any).id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
+          if (imageToolCalls.length > 0) {
+            // Extract file IDs from tool calls (now stored as file IDs instead of base64)
+            const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+            // Get current chat to preserve existing fields
+            const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, index)
+            if (currentChat) {
+              updateChat(
+                currentChatRoom.value!.roomId,
+                index,
+                {
+                  ...currentChat,
+                  tool_calls: toolCalls,
+                  tool_images: imageResults, // Store file IDs instead of base64
+                  editImageId: editImageId || undefined,
+                },
+              )
+            }
+          }
         },
         onDelta: async (delta) => {
           // 处理增量数据
@@ -504,6 +600,7 @@ async function onRegenerate(index: number) {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
 
@@ -545,6 +642,7 @@ async function onRegenerate(index: number) {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
         },
@@ -809,6 +907,20 @@ async function handleToggleUsingContext() {
     ms.warning(t('chat.turnOffContext'))
 }
 
+async function handleToggleToolsEnabled() {
+  if (!currentChatRoom.value)
+    return
+
+  await chatStore.setChatToolsEnabled(!currentChatRoom.value.toolsEnabled)
+  if (currentChatRoom.value.toolsEnabled)
+    ms.success(t('chat.turnOnTools'))
+  else
+    ms.warning(t('chat.turnOffTools'))
+
+  // 重置 lastToolResponseId，因为工具状态已改变
+  lastToolResponseId.value = ''
+}
+
 // 可优化部分
 // 搜索选项计算，这里使用value作为索引项，所以当出现重复value时渲染异常(多项同时出现选中效果)
 // 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
@@ -958,6 +1070,7 @@ onUnmounted(() => {
                   :finish-reason="item?.finish_reason"
                   :text="item.text"
                   :images="item.images"
+                  :tool-images="item.tool_images"
                   :inversion="item.inversion"
                   :response-count="item.responseCount"
                   :usage="item && item.usage || undefined"
@@ -1059,6 +1172,18 @@ onUnmounted(() => {
               <span class="text-xl flex items-center">
                 <SvgIcon icon="mdi:lightbulb-outline" />
                 <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton
+              v-if="!isMobile"
+              :tooltip="currentChatRoom?.toolsEnabled ? t('chat.clickTurnOffTools') : t('chat.clickTurnOnTools')"
+              :tooltip-help="t('chat.toolsHelp')"
+              :class="{ 'text-[#4b9e5f]': currentChatRoom?.toolsEnabled, 'text-[#a8071a]': !currentChatRoom?.toolsEnabled }"
+              @click="handleToggleToolsEnabled"
+            >
+              <span class="text-xl flex items-center">
+                <SvgIcon icon="ri:image-edit-line" />
+                <span class="ml-1 text-sm">{{ currentChatRoom?.toolsEnabled ? t('chat.toolsEnabled') : t('chat.toolsDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton

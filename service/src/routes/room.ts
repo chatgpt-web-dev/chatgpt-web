@@ -13,6 +13,7 @@ import {
   updateRoomPrompt,
   updateRoomSearchEnabled,
   updateRoomThinkEnabled,
+  updateRoomToolsEnabled,
   updateRoomUsingContext,
 } from '../storage/mongo'
 
@@ -34,6 +35,7 @@ router.get('/chatrooms', auth, async (req, res) => {
         chatModel: r.chatModel,
         searchEnabled: !!r.searchEnabled,
         thinkEnabled: !!r.thinkEnabled,
+        toolsEnabled: !!r.toolsEnabled,
       })
     })
     res.send({ status: 'Success', message: null, data: result })
@@ -180,6 +182,22 @@ router.post('/room-think-enabled', auth, async (req, res) => {
     const userId = req.headers.userId as string
     const { thinkEnabled, roomId } = req.body as { thinkEnabled: boolean, roomId: number }
     const success = await updateRoomThinkEnabled(userId, roomId, thinkEnabled)
+    if (success)
+      res.send({ status: 'Success', message: 'Saved successfully', data: null })
+    else
+      res.send({ status: 'Fail', message: 'Saved Failed', data: null })
+  }
+  catch (error) {
+    console.error(error)
+    res.send({ status: 'Fail', message: 'Update error', data: null })
+  }
+})
+
+router.post('/room-tools-enabled', auth, async (req, res) => {
+  try {
+    const userId = req.headers.userId as string
+    const { toolsEnabled, roomId } = req.body as { toolsEnabled: boolean, roomId: number }
+    const success = await updateRoomToolsEnabled(userId, roomId, toolsEnabled)
     if (success)
       res.send({ status: 'Success', message: 'Saved successfully', data: null })
     else

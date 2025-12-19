@@ -86,7 +86,8 @@ export class ChatRoom {
   chatModel: string
   searchEnabled: boolean
   thinkEnabled: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean) {
+  toolsEnabled?: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean, toolsEnabled?: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
@@ -96,6 +97,7 @@ export class ChatRoom {
     this.chatModel = chatModel
     this.searchEnabled = searchEnabled
     this.thinkEnabled = thinkEnabled
+    this.toolsEnabled = toolsEnabled
   }
 }
 

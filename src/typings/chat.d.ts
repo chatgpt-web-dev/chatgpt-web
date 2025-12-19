@@ -16,6 +16,9 @@ declare namespace Chat {
     finish_reason?: string
     text: string
     images?: string[]
+    tool_calls?: Array<{ type: string, result?: string }>
+    tool_images?: string[] // Local file names from tool calls (stored as local file names, e.g., "image-xxx.png", accessible via /uploads/filename)
+    editImageId?: string // OpenAI file ID for editing images (used as previousResponseId)
     inversion?: boolean
     responseCount?: number
     error?: boolean
@@ -42,6 +45,7 @@ declare namespace Chat {
     chatModel: string
     searchEnabled: boolean
     thinkEnabled: boolean
+    toolsEnabled?: boolean
   }
 
   interface ConversationRequest {

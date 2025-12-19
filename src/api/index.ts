@@ -24,6 +24,7 @@ interface SSEEventHandlers {
   onGenerating?: (data: { generating: boolean }) => void
   onSearchQuery?: (data: { searchQuery: string }) => void
   onSearchResults?: (data: { searchResults: any[], searchUsageTime: number }) => void
+  onToolCalls?: (data: { tool_calls?: Array<{ type: string, result?: string }> }) => void
   onComplete?: (data: any) => void
   onError?: (error: string) => void
   onEnd?: () => void
@@ -38,6 +39,8 @@ export function fetchChatAPIProcessSSE(
     prompt: string
     uploadFileKeys?: string[]
     options?: { conversationId?: string, parentMessageId?: string }
+    tools?: Array<{ type: 'image_generation' }>
+    previousResponseId?: string
     signal?: AbortSignal
   },
   handlers: SSEEventHandlers,
@@ -54,6 +57,13 @@ export function fetchChatAPIProcessSSE(
     systemMessage: userStore.userInfo.advanced.systemMessage,
     temperature: userStore.userInfo.advanced.temperature,
     top_p: userStore.userInfo.advanced.top_p,
+  }
+
+  if (params.tools && params.tools.length > 0) {
+    data.tools = params.tools
+  }
+  if (params.previousResponseId) {
+    data.previousResponseId = params.previousResponseId
   }
 
   return new Promise((resolve, reject) => {
@@ -100,6 +110,9 @@ export function fetchChatAPIProcessSSE(
               }
               else if (jsonData.searchResults) {
                 handlers.onSearchResults?.(jsonData)
+              }
+              else if (jsonData.tool_calls) {
+                handlers.onToolCalls?.(jsonData)
               }
               else if (jsonData.m) {
                 handlers.onDelta?.(jsonData.m)
@@ -366,6 +379,13 @@ export function fetchUpdateChatRoomThinkEnabled<T = any>(thinkEnabled: boolean, 
   return post<T>({
     url: '/room-think-enabled',
     data: { thinkEnabled, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomToolsEnabled<T = any>(toolsEnabled: boolean, roomId: number) {
+  return post<T>({
+    url: '/room-tools-enabled',
+    data: { toolsEnabled, roomId },
   })
 }
 

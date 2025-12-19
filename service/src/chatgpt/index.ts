@@ -11,7 +11,7 @@ import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/con
 import { Status, UsageResponse } from '../storage/model'
 import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
 import { sendResponse } from '../utils'
-import { convertImageUrl } from '../utils/image'
+import { convertImageUrl, saveBase64ToFile } from '../utils/image'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import { textAuditServices } from '../utils/textAudit'
 
@@ -67,7 +67,7 @@ async function chatReplyProcess(options: RequestOptions) {
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p, chatUuid } = options
+  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, systemMessage, temperature, top_p, chatUuid } = options
   let instructions = systemMessage
 
   try {
@@ -261,6 +261,9 @@ search result: <search_result>${searchResultContent}</search_result>`,
       if (model.startsWith('gpt') && model.endsWith('chat-latest')) {
         reasoning = {}
       }
+      if (options.room.toolsEnabled) {
+        reasoning = {}
+      }
 
       const stream = await openai.responses.create(
         {
@@ -268,8 +271,10 @@ search result: <search_result>${searchResultContent}</search_result>`,
           instructions,
           input: messages as OpenAI.Responses.ResponseInput,
           reasoning,
-          store: false,
+          store: options.room.toolsEnabled,
           stream: true,
+          ...(tools && tools.length > 0 && { tools: tools as any }),
+          ...(previousResponseId && { previous_response_id: previousResponseId }),
         },
         {
           signal: abort.signal,
@@ -281,6 +286,8 @@ search result: <search_result>${searchResultContent}</search_result>`,
       let responseText = ''
       let responseId = ''
       const usage = new UsageResponse()
+      const toolCalls: Array<{ type: string, result?: any }> = []
+      let editImageId: string | undefined
 
       for await (const event of stream) {
         if (event.type === 'response.reasoning_summary_text.delta') {
@@ -310,6 +317,33 @@ search result: <search_result>${searchResultContent}</search_result>`,
           usage.prompt_tokens = resp.usage.input_tokens
           usage.completion_tokens = resp.usage.output_tokens
           usage.total_tokens = resp.usage.total_tokens
+
+          // Extract tool calls from response
+          if (resp.output && Array.isArray(resp.output)) {
+            editImageId = responseId
+            for (const output of resp.output) {
+              if (output.type === 'image_generation_call' && output.result) {
+                // 将 base64 图片保存为本地文件
+                const base64Data = output.result
+                const fileName = await saveBase64ToFile(base64Data)
+
+                if (fileName) {
+                  // 使用本地文件名作为 result（用于显示）
+                  toolCalls.push({
+                    type: 'image_generation',
+                    result: fileName, // 使用本地文件名，前端通过 /uploads/filename 访问
+                  })
+                }
+                else {
+                  // 如果保存文件失败，保留原始 base64 数据
+                  toolCalls.push({
+                    type: 'image_generation',
+                    result: base64Data,
+                  })
+                }
+              }
+            }
+          }
         }
       }
 
@@ -319,6 +353,8 @@ search result: <search_result>${searchResultContent}</search_result>`,
         text: responseText,
         role: 'assistant',
         detail: { usage },
+        ...(toolCalls.length > 0 && { tool_calls: toolCalls }),
+        ...(editImageId && { editImageId }),
       }
       return sendResponse({ type: 'Success', data: response })
     }

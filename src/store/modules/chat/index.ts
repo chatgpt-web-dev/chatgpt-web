@@ -10,6 +10,7 @@ import {
   fetchUpdateChatRoomMaxContextCount,
   fetchUpdateChatRoomSearchEnabled,
   fetchUpdateChatRoomThinkEnabled,
+  fetchUpdateChatRoomToolsEnabled,
   fetchUpdateChatRoomUsingContext,
   fetchUpdateUserChatModel,
   fetchUpdateUserMaxContextCount,
@@ -181,6 +182,15 @@ export const useChatStore = defineStore('chat-store', () => {
     await fetchUpdateChatRoomThinkEnabled(thinkEnabled, state.active!)
   }
 
+  const setChatToolsEnabled = async (toolsEnabled: boolean) => {
+    const index = findRoomIndex(state.active)
+    if (index === -1)
+      return
+
+    state.chatRooms[index].toolsEnabled = toolsEnabled
+    await fetchUpdateChatRoomToolsEnabled(toolsEnabled, state.active!)
+  }
+
   const deleteChatRoom = async (index: number) => {
     await fetchDeleteChatRoom(state.chatRooms[index].roomId)
     state.chatRooms.splice(index, 1)
@@ -270,6 +280,7 @@ export const useChatStore = defineStore('chat-store', () => {
     setChatModel,
     setChatSearchEnabled,
     setChatThinkEnabled,
+    setChatToolsEnabled,
     addNewChatRoom,
     deleteChatRoom,
     setActive,

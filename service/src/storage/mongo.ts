@@ -314,7 +314,7 @@ export async function createChatRoom(userId: string, title: string, roomId: numb
   if (maxContextCount === undefined) {
     maxContextCount = 10
   }
-  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false)
+  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false, false)
   await roomCol.insertOne(room)
   return room
 }
@@ -385,6 +385,17 @@ export async function updateRoomThinkEnabled(userId: string, roomId: number, thi
   const update = {
     $set: {
       thinkEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomToolsEnabled(userId: string, roomId: number, toolsEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      toolsEnabled,
     },
   }
   const result = await roomCol.updateOne(query, update)
