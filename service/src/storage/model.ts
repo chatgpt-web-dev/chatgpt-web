@@ -141,6 +141,9 @@ export class ChatInfo {
   status: Status = Status.Normal
   options: ChatOptions
   previousResponse?: previousResponse[]
+  tool_images?: string[] // AI-generated image file names
+  tool_calls?: Array<{ type: string, result?: any }> // Tool calls from AI
+  editImageId?: string // Edit image ID for image generation
   constructor(roomId: number, uuid: number, prompt: string, images: string[], model: string, options: ChatOptions) {
     this.roomId = roomId
     this.model = model

@@ -88,7 +88,9 @@ router.get('/chat-history', auth, async (req, res) => {
               estimated: c.options.estimated || null,
             }
           : undefined
-        result.push({
+
+        // Build response object with tool-related fields
+        const responseObj: any = {
           uuid: c.uuid,
           dateTime: new Date(c.dateTime).toLocaleString(),
           searchQuery: c.searchQuery,
@@ -111,7 +113,17 @@ router.get('/chat-history', auth, async (req, res) => {
             },
           },
           usage,
-        })
+        }
+
+        // Add tool-related fields if they exist
+        if (c.tool_images)
+          responseObj.tool_images = c.tool_images
+        if (c.tool_calls)
+          responseObj.tool_calls = c.tool_calls
+        if (c.editImageId)
+          responseObj.editImageId = c.editImageId
+
+        result.push(responseObj)
       }
     })
 
@@ -367,13 +379,46 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         // eslint-disable-next-line no-unsafe-finally
         return
 
+      // Extract tool_calls, tool_images, and editImageId from result.data
+      const tool_calls = result.data.tool_calls
+      const editImageId = result.data.editImageId
+      let tool_images: string[] | undefined
+      if (tool_calls && Array.isArray(tool_calls)) {
+        // Extract image file names from tool_calls where type is 'image_generation'
+        tool_images = tool_calls
+          .filter((tool: any) => tool.type === 'image_generation' && tool.result)
+          .map((tool: any) => tool.result)
+      }
+
       if (regenerate && message.options.messageId) {
         const previousResponse = message.previousResponse || []
         previousResponse.push({ response: message.response, options: message.options })
-        await updateChat(message._id as unknown as string, result.data.reasoning, result.data.text, result.data.id, model, result.data.detail?.usage as UsageResponse, previousResponse as [])
+        await updateChat(
+          message._id as unknown as string,
+          result.data.reasoning,
+          result.data.text,
+          result.data.id,
+          model,
+          result.data.detail?.usage as UsageResponse,
+          previousResponse as [],
+          tool_images,
+          tool_calls,
+          editImageId,
+        )
       }
       else {
-        await updateChat(message._id as unknown as string, result.data.reasoning, result.data.text, result.data.id, model, result.data.detail?.usage as UsageResponse)
+        await updateChat(
+          message._id as unknown as string,
+          result.data.reasoning,
+          result.data.text,
+          result.data.id,
+          model,
+          result.data.detail?.usage as UsageResponse,
+          undefined,
+          tool_images,
+          tool_calls,
+          editImageId,
+        )
       }
 
       if (result.data.detail?.usage) {
