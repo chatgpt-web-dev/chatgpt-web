@@ -97,19 +97,18 @@ export class KeyConfig {
   _id?: string
   key: string
   keyModel: APIMODEL
-  chatModels: string[]
+  chatModel: string
+  modelAlias?: string
   userRoles: UserRole[]
   status: Status
   remark: string
   baseUrl?: string
   toolsEnabled?: boolean
   imageUploadEnabled?: boolean
-  toolsDisplayName?: string
-  imageUploadDisplayName?: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
+  constructor(key: string, keyModel: APIMODEL, chatModel: string, userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
-    this.chatModels = chatModels
+    this.chatModel = chatModel
     this.userRoles = userRoles
     this.status = Status.Normal
     this.remark = remark

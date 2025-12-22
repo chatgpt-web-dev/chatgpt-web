@@ -262,6 +262,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   let message: ChatInfo
   let user = await getUserById(userId)
   let errorMessage: string | null = null
+  let shouldEarlyExit = false
 
   // SSE helper functions
   const sendSSEData = (eventType: string, data: any) => {
@@ -290,78 +291,81 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         if (Number(useAmount) <= 0 && user.limit_switch) {
           sendSSEError('提问次数用完啦 | Question limit reached')
           sendSSEEnd()
-          res.end()
-          return
+          shouldEarlyExit = true
         }
       }
     }
 
-    if (config.auditConfig.enabled || config.auditConfig.customizeEnabled) {
+    if (!shouldEarlyExit && (config.auditConfig.enabled || config.auditConfig.customizeEnabled)) {
       if (!user.roles.includes(UserRole.Admin) && await containsSensitiveWords(config.auditConfig, prompt)) {
         sendSSEError('含有敏感词 | Contains sensitive words')
         sendSSEEnd()
-        res.end()
-        return
+        shouldEarlyExit = true
       }
     }
 
-    message = regenerate ? await getChat(roomId, uuid) : await insertChat(uuid, prompt, uploadFileKeys, roomId, model, options as ChatOptions)
-
-    result = await chatReplyProcess({
-      message: prompt,
-      uploadFileKeys,
-      parentMessageId: options?.parentMessageId,
-      previousResponseId,
-      tools,
-      process: (chunk: ResponseChunk) => {
-        lastResponse = chunk
-
-        // set sse event by different data type
-        if (chunk.searching !== undefined) {
-          sendSSEData('searching', { searching: chunk.searching })
-        }
-        if (chunk.generating !== undefined) {
-          sendSSEData('generating', { generating: chunk.generating })
-        }
-        if (chunk.searchQuery) {
-          sendSSEData('search_query', { searchQuery: chunk.searchQuery })
-        }
-        if (chunk.searchResults) {
-          sendSSEData('search_results', {
-            searchResults: chunk.searchResults,
-            searchUsageTime: chunk.searchUsageTime,
-          })
-        }
-        if (chunk.delta) {
-          // send SSE event with delta type
-          sendSSEData('delta', { m: chunk.delta })
-        }
-        else {
-          // send all data
-          sendSSEData('message', {
-            id: chunk.id,
-            reasoning: chunk.reasoning,
-            text: chunk.text,
-            role: chunk.role,
-            finish_reason: chunk.finish_reason,
-          })
-        }
-      },
-      systemMessage,
-      temperature,
-      top_p,
-      user,
-      messageId: message._id.toString(),
-      room,
-      chatUuid: uuid,
-    })
-
-    // 发送最终完成数据
-    if (result && result.status === 'Success') {
-      sendSSEData('complete', result.data)
+    if (shouldEarlyExit) {
+      // Early exit handled in finally block
     }
+    else {
+      message = regenerate ? await getChat(roomId, uuid) : await insertChat(uuid, prompt, uploadFileKeys, roomId, model, options as ChatOptions)
 
-    sendSSEEnd()
+      result = await chatReplyProcess({
+        message: prompt,
+        uploadFileKeys,
+        parentMessageId: options?.parentMessageId,
+        previousResponseId,
+        tools,
+        process: (chunk: ResponseChunk) => {
+          lastResponse = chunk
+
+          // set sse event by different data type
+          if (chunk.searching !== undefined) {
+            sendSSEData('searching', { searching: chunk.searching })
+          }
+          if (chunk.generating !== undefined) {
+            sendSSEData('generating', { generating: chunk.generating })
+          }
+          if (chunk.searchQuery) {
+            sendSSEData('search_query', { searchQuery: chunk.searchQuery })
+          }
+          if (chunk.searchResults) {
+            sendSSEData('search_results', {
+              searchResults: chunk.searchResults,
+              searchUsageTime: chunk.searchUsageTime,
+            })
+          }
+          if (chunk.delta) {
+            // send SSE event with delta type
+            sendSSEData('delta', { m: chunk.delta })
+          }
+          else {
+            // send all data
+            sendSSEData('message', {
+              id: chunk.id,
+              reasoning: chunk.reasoning,
+              text: chunk.text,
+              role: chunk.role,
+              finish_reason: chunk.finish_reason,
+            })
+          }
+        },
+        systemMessage,
+        temperature,
+        top_p,
+        user,
+        messageId: message._id.toString(),
+        room,
+        chatUuid: uuid,
+      })
+
+      // 发送最终完成数据
+      if (result && result.status === 'Success') {
+        sendSSEData('complete', result.data)
+      }
+
+      sendSSEEnd()
+    }
   }
   catch (error) {
     errorMessage = error?.message || 'Unknown error'
@@ -370,90 +374,92 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   }
   finally {
     res.end()
-    try {
-      // 如果 message 未创建，无法保存错误信息
-      if (message) {
-        // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
-        const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
+    if (!shouldEarlyExit) {
+      try {
+        // 如果 message 未创建，无法保存错误信息
+        if (message) {
+          // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
+          const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
 
-        if (finalErrorMessage) {
-          await updateChat(
-            message._id as unknown as string,
-            '',
-            finalErrorMessage,
-            '',
-            model,
-            {} as UsageResponse,
-            regenerate && message.options.messageId ? (message.previousResponse || []).concat([{ response: message.response, options: message.options }]) as [] : undefined,
-          )
-        }
-        else {
-          if (result == null || result === undefined || result.status !== 'Success') {
-            if (result && result.status !== 'Success')
-              lastResponse = { text: result.message }
-            result = { data: lastResponse }
+          if (finalErrorMessage) {
+            await updateChat(
+              message._id as unknown as string,
+              '',
+              finalErrorMessage,
+              '',
+              model,
+              {} as UsageResponse,
+              regenerate && message.options.messageId ? (message.previousResponse || []).concat([{ response: message.response, options: message.options }]) as [] : undefined,
+            )
           }
-
-          if (result.data !== undefined) {
-            // Extract tool_calls, tool_images, and editImageId from result.data
-            const tool_calls = result.data.tool_calls
-            const editImageId = result.data.editImageId
-            let tool_images: string[] | undefined
-            if (tool_calls && Array.isArray(tool_calls)) {
-              // Extract image file names from tool_calls where type is 'image_generation'
-              tool_images = tool_calls
-                .filter((tool: any) => tool.type === 'image_generation' && tool.result)
-                .map((tool: any) => tool.result)
+          else {
+            if (result == null || result === undefined || result.status !== 'Success') {
+              if (result && result.status !== 'Success')
+                lastResponse = { text: result.message }
+              result = { data: lastResponse }
             }
 
-            if (regenerate && message.options.messageId) {
-              const previousResponse = message.previousResponse || []
-              previousResponse.push({ response: message.response, options: message.options })
-              await updateChat(
-                message._id as unknown as string,
-                result.data.reasoning,
-                result.data.text,
-                result.data.id,
-                model,
-                result.data.detail?.usage as UsageResponse,
-                previousResponse as [],
-                tool_images,
-                tool_calls,
-                editImageId,
-              )
-            }
-            else {
-              await updateChat(
-                message._id as unknown as string,
-                result.data.reasoning,
-                result.data.text,
-                result.data.id,
-                model,
-                result.data.detail?.usage as UsageResponse,
-                undefined,
-                tool_images,
-                tool_calls,
-                editImageId,
-              )
-            }
+            if (result.data !== undefined) {
+              // Extract tool_calls, tool_images, and editImageId from result.data
+              const tool_calls = result.data.tool_calls
+              const editImageId = result.data.editImageId
+              let tool_images: string[] | undefined
+              if (tool_calls && Array.isArray(tool_calls)) {
+                // Extract image file names from tool_calls where type is 'image_generation'
+                tool_images = tool_calls
+                  .filter((tool: any) => tool.type === 'image_generation' && tool.result)
+                  .map((tool: any) => tool.result)
+              }
 
-            if (result.data.detail?.usage) {
-              await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
+              if (regenerate && message.options.messageId) {
+                const previousResponse = message.previousResponse || []
+                previousResponse.push({ response: message.response, options: message.options })
+                await updateChat(
+                  message._id as unknown as string,
+                  result.data.reasoning,
+                  result.data.text,
+                  result.data.id,
+                  model,
+                  result.data.detail?.usage as UsageResponse,
+                  previousResponse as [],
+                  tool_images,
+                  tool_calls,
+                  editImageId,
+                )
+              }
+              else {
+                await updateChat(
+                  message._id as unknown as string,
+                  result.data.reasoning,
+                  result.data.text,
+                  result.data.id,
+                  model,
+                  result.data.detail?.usage as UsageResponse,
+                  undefined,
+                  tool_images,
+                  tool_calls,
+                  editImageId,
+                )
+              }
+
+              if (result.data.detail?.usage) {
+                await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
+              }
+              // update personal useAmount moved here
+              // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
+              if (config.siteConfig?.usageCountLimit) {
+                if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
+                  await updateAmountMinusOne(userId)
+              }
             }
-            // update personal useAmount moved here
-            // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
-            if (config.siteConfig?.usageCountLimit) {
-              if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
-                await updateAmountMinusOne(userId)
-            }
+            // 如果 result.data === undefined，什么也不做
           }
-          // 如果 result.data === undefined，什么也不做
         }
+        // 如果 !message，什么也不做
       }
-      // 如果 !message，什么也不做
-    }
-    catch (error) {
-      globalThis.console.error(error)
+      catch (error) {
+        globalThis.console.error(error)
+      }
     }
   }
 })

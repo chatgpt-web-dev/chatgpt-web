@@ -199,6 +199,7 @@
     "userRoles": "User Role",
     "status": "Status",
     "chatModels": "Chat Models",
+    "modelAlias": "모델 별칭",
     "imageUpload": "이미지 업로드",
     "defaultChatModel": "기본 대화 모델",
     "remark": "Remark",

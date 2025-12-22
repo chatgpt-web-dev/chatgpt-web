@@ -210,10 +210,10 @@ router.post('/session', async (req, res) => {
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
 
       // 为每个 key 和模型的组合生成不同的选项
-      const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean, toolsDisplayName?: string, imageUploadDisplayName?: string }>>()
+      const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean, modelAlias?: string }>>()
       chatModelOptions.forEach((chatModel) => {
         keys.forEach((key) => {
-          if (key.chatModels.includes(chatModel.value)) {
+          if (key.chatModel === chatModel.value) {
             const keyId = key._id.toString()
             if (!modelKeyMap.has(chatModel.value)) {
               modelKeyMap.set(chatModel.value, [])
@@ -223,8 +223,7 @@ router.post('/session', async (req, res) => {
               keyId,
               toolsEnabled: key.toolsEnabled || false,
               imageUploadEnabled: key.imageUploadEnabled || false,
-              toolsDisplayName: key.toolsDisplayName,
-              imageUploadDisplayName: key.imageUploadDisplayName,
+              modelAlias: key.modelAlias,
             })
           }
         })
@@ -251,33 +250,19 @@ router.post('/session', async (req, res) => {
           const config = groupConfigs[0] // 取第一个作为代表
           const suffix = []
           if (config.toolsEnabled) {
-            const displayName = config.toolsDisplayName || 'Tools'
-            suffix.push(displayName)
+            suffix.push('Tools')
           }
           if (config.imageUploadEnabled) {
-            const displayName = config.imageUploadDisplayName || 'Image'
-            suffix.push(displayName)
+            suffix.push('Image')
           }
 
-          // 构建标签后缀
-          let labelSuffix = ''
-          if (suffix.length > 0) {
-            // 有特殊功能
-            labelSuffix = groupConfigs.length > 1
-              ? ` (${suffix.join(', ')}, ${groupConfigs.length})`
-              : ` (${suffix.join(', ')})`
-          }
-          else {
-            // 没有特殊功能
-            labelSuffix = groupConfigs.length > 1
-              ? ` (${groupConfigs.length})`
-              : ''
-          }
+          // 使用模型别名或默认标签
+          const displayModalName = config.modelAlias || thisChatModel.label
 
           // 构建选项
           if (suffix.length === 0 && groupConfigs.length > 0) {
             chatModels.push({
-              label: `${thisChatModel.label}${labelSuffix}`,
+              label: `${displayModalName}`,
               key: modelValue,
               value: modelValue,
             })
@@ -285,7 +270,7 @@ router.post('/session', async (req, res) => {
           else {
             // 需要key来判断用走特殊逻辑
             chatModels.push({
-              label: `${thisChatModel.label}${labelSuffix}`,
+              label: `${displayModalName}`,
               key: `${modelValue}|${config.keyId}`,
               value: `${modelValue}|${config.keyId}`,
             })

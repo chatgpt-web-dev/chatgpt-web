@@ -199,6 +199,7 @@
     "userRoles": "用戶權限",
     "status": "狀態",
     "chatModels": "對話模型",
+    "modelAlias": "模型別名",
     "imageUpload": "圖片上傳",
     "defaultChatModel": "預設對話模型",
     "remark": "備註",

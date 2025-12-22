@@ -199,6 +199,7 @@
     "userRoles": "User Role",
     "status": "Status",
     "chatModels": "Chat Models",
+    "modelAlias": "Model Alias",
     "imageUpload": "Image Upload",
     "defaultChatModel": "Default Chat Model",
     "remark": "Remark",

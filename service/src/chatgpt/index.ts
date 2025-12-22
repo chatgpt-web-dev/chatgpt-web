@@ -571,7 +571,7 @@ async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyCo
     specifiedKeyId = parts[1]
   }
 
-  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(actualModelName))
+  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModel === actualModelName)
 
   // 如果指定了 keyId，只返回匹配的 key
   if (specifiedKeyId) {

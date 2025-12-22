@@ -109,7 +109,7 @@ router.post('/room-create', auth, async (req, res) => {
       let toolsEnabled = false
       if (specifiedKeyId) {
         // 如果指定了 keyId，使用该 key 的配置
-        const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModels.includes(actualModelName))
+        const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
         if (specifiedKey) {
           imageUploadEnabled = specifiedKey.imageUploadEnabled || false
           toolsEnabled = specifiedKey.toolsEnabled || false
@@ -198,7 +198,7 @@ router.post('/room-chatmodel', auth, async (req, res) => {
 
         if (specifiedKeyId) {
           // 如果指定了 keyId，使用该 key 的配置
-          const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModels.includes(actualModelName))
+          const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
           if (specifiedKey) {
             toolsEnabled = specifiedKey.toolsEnabled || false
             imageUploadEnabled = specifiedKey.imageUploadEnabled || false

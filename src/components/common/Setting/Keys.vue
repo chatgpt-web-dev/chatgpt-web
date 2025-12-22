@@ -16,7 +16,7 @@ const { isMobile } = useBasicLayout()
 const loading = ref(false)
 const show = ref(false)
 const handleSaving = ref(false)
-const keyConfig = ref(new KeyConfig('', 'ChatGPTAPI', [], [], ''))
+const keyConfig = ref(new KeyConfig('', 'ChatGPTAPI', '', [], ''))
 
 const keys = ref([])
 function createColumns(): DataTableColumns {
@@ -42,25 +42,18 @@ function createColumns(): DataTableColumns {
     },
     {
       title: 'Chat Model',
-      key: 'chatModels',
-      width: 300,
+      key: 'chatModel',
+      width: 200,
       render(row: any) {
-        const tags = row.chatModels.map((chatModel: string) => {
-          return h(
-            NTag,
-            {
-              style: {
-                marginRight: '6px',
-              },
-              type: 'info',
-              bordered: false,
-            },
-            {
-              default: () => chatModel,
-            },
-          )
-        })
-        return tags
+        return row.chatModel || '-'
+      },
+    },
+    {
+      title: 'Model Alias',
+      key: 'modelAlias',
+      width: 150,
+      render(row: any) {
+        return row.modelAlias || '-'
       },
     },
     {
@@ -202,7 +195,7 @@ async function handleUpdateKeyConfig() {
 }
 
 function handleNewKey() {
-  keyConfig.value = new KeyConfig('', 'ChatGPTAPI', [], [], '')
+  keyConfig.value = new KeyConfig('', 'ChatGPTAPI', '', [], '')
   show.value = true
 }
 
@@ -233,7 +226,7 @@ onMounted(async () => {
           :data="keys"
           :pagination="pagination"
           :max-height="444"
-          :scroll-x="1300"
+          :scroll-x="1500"
           striped @update:page="handleGetKeys"
         />
       </NSpace>
@@ -277,10 +270,19 @@ onMounted(async () => {
           <div class="flex-1">
             <NSelect
               style="width: 100%"
-              multiple
-              :value="keyConfig.chatModels"
+              :value="keyConfig.chatModel"
               :options="authStore.session?.allChatModels"
-              @update-value="value => keyConfig.chatModels = value"
+              @update-value="value => keyConfig.chatModel = value"
+            />
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.modelAlias') }}</span>
+          <div class="flex-1">
+            <NInput
+              v-model:value="keyConfig.modelAlias"
+              style="width: 100%"
+              placeholder=""
             />
           </div>
         </div>
@@ -317,16 +319,6 @@ onMounted(async () => {
               />
             </div>
           </div>
-          <div v-if="keyConfig.toolsEnabled" class="flex items-center space-x-4">
-            <span class="shrink-0 w-[100px]">{{ t('setting.toolsDisplayName') }}</span>
-            <div class="flex-1">
-              <NInput
-                v-model:value="keyConfig.toolsDisplayName"
-                style="width: 100%"
-                placeholder="Tools"
-              />
-            </div>
-          </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="flex items-center space-x-4">
@@ -336,16 +328,6 @@ onMounted(async () => {
                 :round="false"
                 :value="keyConfig.imageUploadEnabled || false"
                 @update:value="(val) => { keyConfig.imageUploadEnabled = val }"
-              />
-            </div>
-          </div>
-          <div v-if="keyConfig.imageUploadEnabled" class="flex items-center space-x-4">
-            <span class="shrink-0 w-[100px]">{{ t('setting.imageUploadDisplayName') }}</span>
-            <div class="flex-1">
-              <NInput
-                v-model:value="keyConfig.imageUploadDisplayName"
-                style="width: 100%"
-                placeholder="Image"
               />
             </div>
           </div>
