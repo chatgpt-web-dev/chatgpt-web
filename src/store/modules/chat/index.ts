@@ -60,6 +60,8 @@ export const useChatStore = defineStore('chat-store', () => {
       maxContextCount: result.data?.maxContextCount ?? 10,
       searchEnabled: result.data?.searchEnabled,
       thinkEnabled: result.data?.thinkEnabled,
+      toolsEnabled: result.data?.toolsEnabled,
+      imageUploadEnabled: result.data?.imageUploadEnabled,
     })
 
     state.chat.unshift({ roomId, data: [] })

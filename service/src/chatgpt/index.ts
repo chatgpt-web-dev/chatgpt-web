@@ -58,9 +58,11 @@ const processThreads: { userId: string, chatUuid: number, abort: AbortController
 
 async function chatReplyProcess(options: RequestOptions) {
   const globalConfig = await getCacheConfig()
-  const model = options.room.chatModel
+  const chatModelWithKeyId = options.room.chatModel
+  // 解析模型名称，支持格式 "modelName|keyId"，提取实际的模型名称用于 API 调用
+  const model = chatModelWithKeyId.includes('|') ? chatModelWithKeyId.split('|')[0] : chatModelWithKeyId
   const searchEnabled = options.room.searchEnabled
-  const key = await getRandomApiKey(options.user, model)
+  const key = await getRandomApiKey(options.user, chatModelWithKeyId)
   const userId = options.user._id.toString()
   const maxContextCount = options.room.maxContextCount ?? 10
   const messageId = options.messageId
@@ -560,7 +562,22 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
 }
 
 async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyConfig | undefined> {
-  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(chatModel))
+  // 解析模型名称，支持格式 "modelName|keyId"
+  let actualModelName = chatModel
+  let specifiedKeyId: string | undefined
+  if (chatModel.includes('|')) {
+    const parts = chatModel.split('|')
+    actualModelName = parts[0]
+    specifiedKeyId = parts[1]
+  }
+
+  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(actualModelName))
+
+  // 如果指定了 keyId，只返回匹配的 key
+  if (specifiedKeyId) {
+    keys = keys.filter(key => key._id.toString() === specifiedKeyId)
+    return keys.length > 0 ? keys[0] : undefined
+  }
 
   return randomKeyConfig(keys)
 }

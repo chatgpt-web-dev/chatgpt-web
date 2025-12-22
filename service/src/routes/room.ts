@@ -95,13 +95,42 @@ router.post('/room-create', auth, async (req, res) => {
     const room = await createChatRoom(userId, title, roomId, user.config?.chatModel, user.config?.maxContextCount)
     // 根据chatModel判断并设置imageUploadEnabled
     if (user && room.chatModel) {
+      // 解析模型名称，支持格式 "modelName|keyId"
+      let actualModelName = room.chatModel
+      let specifiedKeyId: string | undefined
+      if (room.chatModel.includes('|')) {
+        const parts = room.chatModel.split('|')
+        actualModelName = parts[0]
+        specifiedKeyId = parts[1]
+      }
+
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
-      const imageUploadEnabled = keys.some(key =>
-        key.chatModels.includes(room.chatModel)
-        && key.imageUploadEnabled === true,
-      )
+      let imageUploadEnabled = false
+      let toolsEnabled = false
+      if (specifiedKeyId) {
+        // 如果指定了 keyId，使用该 key 的配置
+        const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModels.includes(actualModelName))
+        if (specifiedKey) {
+          imageUploadEnabled = specifiedKey.imageUploadEnabled || false
+          toolsEnabled = specifiedKey.toolsEnabled || false
+        }
+      }
+      else {
+        // 如果没有指定 keyId，使用原有逻辑
+        imageUploadEnabled = false
+        toolsEnabled = false
+      }
+
       await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
+      await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
+      if (toolsEnabled) {
+        await updateRoomThinkEnabled(userId, roomId, false)
+        await updateRoomSearchEnabled(userId, roomId, false)
+        room.thinkEnabled = false
+        room.searchEnabled = false
+      }
       room.imageUploadEnabled = imageUploadEnabled || false
+      room.toolsEnabled = toolsEnabled || false
     }
     res.send({ status: 'Success', message: null, data: room })
   }
@@ -153,17 +182,32 @@ router.post('/room-chatmodel', auth, async (req, res) => {
       // 根据新选择的chatModel，动态判断toolsEnabled
       const user = await getUserById(userId)
       if (user) {
+        // 解析模型名称，支持格式 "modelName|keyId"
+        let actualModelName = chatModel
+        let specifiedKeyId: string | undefined
+        if (chatModel.includes('|')) {
+          const parts = chatModel.split('|')
+          actualModelName = parts[0]
+          specifiedKeyId = parts[1]
+        }
+
         const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
-        const responsesApiKeysForModel = keys.filter(key =>
-          key.keyModel === 'ResponsesAPI'
-          && key.chatModels.includes(chatModel),
-        )
-        const toolsEnabled = responsesApiKeysForModel.length > 0
-          && responsesApiKeysForModel.every(key => key.toolsEnabled === true)
-        const imageUploadEnabled = keys.some(key =>
-          key.chatModels.includes(chatModel)
-          && key.imageUploadEnabled === true,
-        )
+
+        let toolsEnabled = false
+        let imageUploadEnabled = false
+
+        if (specifiedKeyId) {
+          // 如果指定了 keyId，使用该 key 的配置
+          const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModels.includes(actualModelName))
+          if (specifiedKey) {
+            toolsEnabled = specifiedKey.toolsEnabled || false
+            imageUploadEnabled = specifiedKey.imageUploadEnabled || false
+          }
+        }
+        else {
+          toolsEnabled = false
+          imageUploadEnabled = false
+        }
 
         // 更新房间的toolsEnabled状态
         await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
