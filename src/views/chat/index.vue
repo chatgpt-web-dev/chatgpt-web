@@ -991,6 +991,83 @@ const uploadHeaders = computed(() => {
   }
 })
 
+// 支持的图片类型
+const VALID_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
+// 粘贴图片
+async function handlePasteImage(event: ClipboardEvent) {
+  // 检查图片上传功能是否开启
+  if (!currentChatRoom.value?.imageUploadEnabled) {
+    ms.warning(t('chat.imageUploadDisabled') || '图片上传功能已关闭', {
+      duration: 2000,
+    })
+    return
+  }
+
+  const items = event.clipboardData?.items
+  if (!items || items.length === 0)
+    return
+
+  // 查找图片类型的剪贴板项
+  const imageItem = Array.from(items).find(item => item.type.includes('image'))
+  if (!imageItem)
+    return
+
+  event.preventDefault() // 阻止默认粘贴行为
+
+  const file = imageItem.getAsFile()
+  if (!file) {
+    ms.warning(t('chat.imageUploadFailed') || '无法获取图片文件', {
+      duration: 2000,
+    })
+    return
+  }
+
+  // 检查文件类型
+  if (!VALID_IMAGE_TYPES.includes(file.type)) {
+    ms.warning(t('chat.invalidImageType') || '不支持的图片格式，仅支持 PNG、JPEG、WEBP', {
+      duration: 2000,
+    })
+    return
+  }
+
+  try {
+    // 创建 FormData
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 上传图片
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: uploadHeaders.value,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const result = await response.json()
+    if (result.status === 'Success' && result.data?.fileKey) {
+      uploadFileKeysRef.value.push(result.data.fileKey)
+      ms.success(t('chat.imageUploadSuccess') || '图片上传成功', {
+        duration: 1500,
+      })
+    }
+    else {
+      ms.error(result.message || t('chat.imageUploadFailed') || '图片上传失败', {
+        duration: 2000,
+      })
+    }
+  }
+  catch (error) {
+    console.error('上传图片失败:', error)
+    ms.error(t('chat.imageUploadFailed') || '图片上传失败', {
+      duration: 2000,
+    })
+  }
+}
+
 onMounted(() => {
   firstLoading.value = true
   handleSyncChat()
@@ -1198,6 +1275,7 @@ onUnmounted(() => {
                   @focus="handleFocus"
                   @blur="handleBlur"
                   @keypress="handleEnter"
+                  @paste="handlePasteImage"
                 />
               </template>
             </NAutoComplete>

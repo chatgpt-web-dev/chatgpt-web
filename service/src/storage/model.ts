@@ -303,6 +303,8 @@ export class KeyConfig {
   baseUrl?: string
   toolsEnabled?: boolean
   imageUploadEnabled?: boolean
+  toolsDisplayName?: string
+  imageUploadDisplayName?: string
   constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel

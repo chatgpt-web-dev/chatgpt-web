@@ -306,24 +306,48 @@ onMounted(async () => {
             />
           </div>
         </div>
-        <div v-if="keyConfig.keyModel === 'ResponsesAPI'" class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ t('chat.tools') }}</span>
-          <div class="flex-1">
-            <NSwitch
-              :round="false"
-              :value="keyConfig.toolsEnabled || false"
-              @update:value="(val) => { keyConfig.toolsEnabled = val }"
-            />
+        <div v-if="keyConfig.keyModel === 'ResponsesAPI'" class="grid grid-cols-2 gap-4">
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('chat.tools') }}</span>
+            <div class="flex-1">
+              <NSwitch
+                :round="false"
+                :value="keyConfig.toolsEnabled || false"
+                @update:value="(val) => { keyConfig.toolsEnabled = val }"
+              />
+            </div>
+          </div>
+          <div v-if="keyConfig.toolsEnabled" class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.toolsDisplayName') }}</span>
+            <div class="flex-1">
+              <NInput
+                v-model:value="keyConfig.toolsDisplayName"
+                style="width: 100%"
+                placeholder="Tools"
+              />
+            </div>
           </div>
         </div>
-        <div class="flex items-center space-x-4">
-          <span class="shrink-0 w-[100px]">{{ t('setting.imageUpload') }}</span>
-          <div class="flex-1">
-            <NSwitch
-              :round="false"
-              :value="keyConfig.imageUploadEnabled || false"
-              @update:value="(val) => { keyConfig.imageUploadEnabled = val }"
-            />
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.imageUpload') }}</span>
+            <div class="flex-1">
+              <NSwitch
+                :round="false"
+                :value="keyConfig.imageUploadEnabled || false"
+                @update:value="(val) => { keyConfig.imageUploadEnabled = val }"
+              />
+            </div>
+          </div>
+          <div v-if="keyConfig.imageUploadEnabled" class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.imageUploadDisplayName') }}</span>
+            <div class="flex-1">
+              <NInput
+                v-model:value="keyConfig.imageUploadDisplayName"
+                style="width: 100%"
+                placeholder="Image"
+              />
+            </div>
           </div>
         </div>
         <div class="flex items-center space-x-4">

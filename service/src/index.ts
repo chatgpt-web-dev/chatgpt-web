@@ -210,7 +210,7 @@ router.post('/session', async (req, res) => {
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
 
       // 为每个 key 和模型的组合生成不同的选项
-      const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean }>>()
+      const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean, toolsDisplayName?: string, imageUploadDisplayName?: string }>>()
       chatModelOptions.forEach((chatModel) => {
         keys.forEach((key) => {
           if (key.chatModels.includes(chatModel.value)) {
@@ -223,6 +223,8 @@ router.post('/session', async (req, res) => {
               keyId,
               toolsEnabled: key.toolsEnabled || false,
               imageUploadEnabled: key.imageUploadEnabled || false,
+              toolsDisplayName: key.toolsDisplayName,
+              imageUploadDisplayName: key.imageUploadDisplayName,
             })
           }
         })
@@ -248,10 +250,14 @@ router.post('/session', async (req, res) => {
         configGroups.forEach((groupConfigs) => {
           const config = groupConfigs[0] // 取第一个作为代表
           const suffix = []
-          if (config.toolsEnabled)
-            suffix.push('Tools')
-          if (config.imageUploadEnabled)
-            suffix.push('Image')
+          if (config.toolsEnabled) {
+            const displayName = config.toolsDisplayName || 'Tools'
+            suffix.push(displayName)
+          }
+          if (config.imageUploadEnabled) {
+            const displayName = config.imageUploadDisplayName || 'Image'
+            suffix.push(displayName)
+          }
 
           // 构建标签后缀
           let labelSuffix = ''

@@ -372,87 +372,85 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     res.end()
     try {
       // 如果 message 未创建，无法保存错误信息
-      if (!message) {
-        return
-      }
+      if (message) {
+        // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
+        const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
 
-      // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
-      const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
-      
-      if (finalErrorMessage) {
-        await updateChat(
-          message._id as unknown as string,
-          '',
-          finalErrorMessage,
-          '',
-          model,
-          {} as UsageResponse,
-          regenerate && message.options.messageId ? (message.previousResponse || []).concat([{ response: message.response, options: message.options }]) as [] : undefined,
-        )
-        return
-      }
+        if (finalErrorMessage) {
+          await updateChat(
+            message._id as unknown as string,
+            '',
+            finalErrorMessage,
+            '',
+            model,
+            {} as UsageResponse,
+            regenerate && message.options.messageId ? (message.previousResponse || []).concat([{ response: message.response, options: message.options }]) as [] : undefined,
+          )
+        }
+        else {
+          if (result == null || result === undefined || result.status !== 'Success') {
+            if (result && result.status !== 'Success')
+              lastResponse = { text: result.message }
+            result = { data: lastResponse }
+          }
 
-      if (result == null || result === undefined || result.status !== 'Success') {
-        if (result && result.status !== 'Success')
-          lastResponse = { text: result.message }
-        result = { data: lastResponse }
-      }
+          if (result.data !== undefined) {
+            // Extract tool_calls, tool_images, and editImageId from result.data
+            const tool_calls = result.data.tool_calls
+            const editImageId = result.data.editImageId
+            let tool_images: string[] | undefined
+            if (tool_calls && Array.isArray(tool_calls)) {
+              // Extract image file names from tool_calls where type is 'image_generation'
+              tool_images = tool_calls
+                .filter((tool: any) => tool.type === 'image_generation' && tool.result)
+                .map((tool: any) => tool.result)
+            }
 
-      if (result.data === undefined)
-        // eslint-disable-next-line no-unsafe-finally
-        return
+            if (regenerate && message.options.messageId) {
+              const previousResponse = message.previousResponse || []
+              previousResponse.push({ response: message.response, options: message.options })
+              await updateChat(
+                message._id as unknown as string,
+                result.data.reasoning,
+                result.data.text,
+                result.data.id,
+                model,
+                result.data.detail?.usage as UsageResponse,
+                previousResponse as [],
+                tool_images,
+                tool_calls,
+                editImageId,
+              )
+            }
+            else {
+              await updateChat(
+                message._id as unknown as string,
+                result.data.reasoning,
+                result.data.text,
+                result.data.id,
+                model,
+                result.data.detail?.usage as UsageResponse,
+                undefined,
+                tool_images,
+                tool_calls,
+                editImageId,
+              )
+            }
 
-      // Extract tool_calls, tool_images, and editImageId from result.data
-      const tool_calls = result.data.tool_calls
-      const editImageId = result.data.editImageId
-      let tool_images: string[] | undefined
-      if (tool_calls && Array.isArray(tool_calls)) {
-        // Extract image file names from tool_calls where type is 'image_generation'
-        tool_images = tool_calls
-          .filter((tool: any) => tool.type === 'image_generation' && tool.result)
-          .map((tool: any) => tool.result)
+            if (result.data.detail?.usage) {
+              await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
+            }
+            // update personal useAmount moved here
+            // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
+            if (config.siteConfig?.usageCountLimit) {
+              if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
+                await updateAmountMinusOne(userId)
+            }
+          }
+          // 如果 result.data === undefined，什么也不做
+        }
       }
-
-      if (regenerate && message.options.messageId) {
-        const previousResponse = message.previousResponse || []
-        previousResponse.push({ response: message.response, options: message.options })
-        await updateChat(
-          message._id as unknown as string,
-          result.data.reasoning,
-          result.data.text,
-          result.data.id,
-          model,
-          result.data.detail?.usage as UsageResponse,
-          previousResponse as [],
-          tool_images,
-          tool_calls,
-          editImageId,
-        )
-      }
-      else {
-        await updateChat(
-          message._id as unknown as string,
-          result.data.reasoning,
-          result.data.text,
-          result.data.id,
-          model,
-          result.data.detail?.usage as UsageResponse,
-          undefined,
-          tool_images,
-          tool_calls,
-          editImageId,
-        )
-      }
-
-      if (result.data.detail?.usage) {
-        await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
-      }
-      // update personal useAmount moved here
-      // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
-      if (config.siteConfig?.usageCountLimit) {
-        if (userId !== '6406d8c50aedd633885fa16f' && user && user.useAmount && user.limit_switch)
-          await updateAmountMinusOne(userId)
-      }
+      // 如果 !message，什么也不做
     }
     catch (error) {
       globalThis.console.error(error)
