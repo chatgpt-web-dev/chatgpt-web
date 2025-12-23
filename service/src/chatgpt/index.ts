@@ -264,9 +264,14 @@ search result: <search_result>${searchResultContent}</search_result>`,
         reasoning = {}
       }
       if (options.room.toolsEnabled) {
-        reasoning = {
-          effort: 'high',
-          summary: 'detailed',
+        if (options.room.thinkEnabled) {
+          reasoning = {
+            effort: 'high',
+            summary: 'detailed',
+          }
+        }
+        else {
+          reasoning = {}
         }
       }
 
