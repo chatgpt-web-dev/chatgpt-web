@@ -13,8 +13,9 @@ import type {
 import * as process from 'node:process'
 import dayjs from 'dayjs'
 import { MongoClient, ObjectId } from 'mongodb'
+import { hasAnyRole } from '../utils/is'
 import { md5 } from '../utils/security'
-import { getCacheConfig } from './config'
+import { getCacheApiKeys, getCacheConfig } from './config'
 import { ChatInfo, ChatRoom, ChatUsage, Status, UserConfig, UserInfo, UserRole } from './model'
 
 let client: MongoClient
@@ -657,7 +658,32 @@ export async function createUser(email: string, password: string, roles?: UserRo
 
   // Use the first item from the globally available chatModel configuration as the default model for new users
   userInfo.config = new UserConfig()
-  userInfo.config.chatModel = config?.siteConfig?.chatModels.split(',')[0]
+  const defaultModelName = config?.siteConfig?.chatModels.split(',')[0]
+
+  // 根据用户角色和可用的 keys 选择合适的默认模型
+  if (defaultModelName && userInfo.roles && userInfo.roles.length > 0) {
+    try {
+      const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, userInfo.roles))
+      // 找到匹配默认模型的第一个 key
+      const matchingKey = keys.find(key => key.chatModel === defaultModelName)
+
+      if (matchingKey && (matchingKey.toolsEnabled || matchingKey.imageUploadEnabled)) {
+        // 如果 key 有特殊功能，使用 "modelName|keyId" 格式
+        userInfo.config.chatModel = `${defaultModelName}|${matchingKey._id.toString()}`
+      }
+      else {
+        // 否则使用简单的模型名称
+        userInfo.config.chatModel = defaultModelName
+      }
+    }
+    catch {
+      // 如果获取 keys 失败，使用默认模型名称
+      userInfo.config.chatModel = defaultModelName
+    }
+  }
+  else {
+    userInfo.config.chatModel = defaultModelName || ''
+  }
   userInfo.config.maxContextCount = 10
 
   await userCol.insertOne(userInfo)
