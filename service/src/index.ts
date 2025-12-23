@@ -190,7 +190,52 @@ router.post('/session', async (req, res) => {
         user.config = new UserConfig()
       }
       if (!user.config?.chatModel) {
-        user.config.chatModel = config?.siteConfig?.chatModels.split(',')[0]
+        const defaultModelName = config?.siteConfig?.chatModels.split(',')[0]
+        if (defaultModelName && user.roles && user.roles.length > 0) {
+          try {
+            const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+            const matchingKey = keys.find(key => key.chatModel === defaultModelName)
+
+            if (matchingKey && (matchingKey.toolsEnabled || matchingKey.imageUploadEnabled)) {
+              user.config.chatModel = `${defaultModelName}|${matchingKey._id.toString()}`
+            }
+            else {
+              user.config.chatModel = defaultModelName
+            }
+          }
+          catch {
+            user.config.chatModel = defaultModelName || ''
+          }
+        }
+        else {
+          user.config.chatModel = defaultModelName || ''
+        }
+      }
+      else if (user.config.chatModel.includes('|')) {
+        // 如果当前 chatModel 包含 | 符号，检查是否需要去除 keyId
+        const parts = user.config.chatModel.split('|')
+        const actualModelName = parts[0]
+        const specifiedKeyId = parts[1]
+
+        if (user.roles && user.roles.length > 0) {
+          try {
+            const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+            const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
+
+            // 如果 key 不存在或者没有特殊功能，去除 |keyId 部分
+            if (!specifiedKey || (!specifiedKey.toolsEnabled && !specifiedKey.imageUploadEnabled)) {
+              user.config.chatModel = actualModelName
+            }
+          }
+          catch {
+            // 如果获取 keys 失败，去除 |keyId 部分
+            user.config.chatModel = actualModelName
+          }
+        }
+        else {
+          // 如果没有角色信息，去除 |keyId 部分
+          user.config.chatModel = actualModelName
+        }
       }
       if (user.config?.maxContextCount === undefined) {
         user.config.maxContextCount = 10
