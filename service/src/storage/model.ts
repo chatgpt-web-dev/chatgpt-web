@@ -245,6 +245,14 @@ export class SiteConfig {
     public globalAmount?: number,
     public usageCountLimit?: boolean,
     public showWatermark?: boolean,
+    public s3Enabled?: boolean,
+    public s3AccessKeyId?: string,
+    public s3SecretAccessKey?: string,
+    public s3Region?: string,
+    public s3Bucket?: string,
+    public s3Endpoint?: string,
+    public s3PathPrefix?: string,
+    public s3CustomDomain?: string,
   ) { }
 }
 

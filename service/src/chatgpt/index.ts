@@ -264,7 +264,10 @@ search result: <search_result>${searchResultContent}</search_result>`,
         reasoning = {}
       }
       if (options.room.toolsEnabled) {
-        reasoning = {}
+        reasoning = {
+          effort: 'high',
+          summary: 'detailed',
+        }
       }
 
       const stream = await openai.responses.create(
@@ -326,19 +329,16 @@ search result: <search_result>${searchResultContent}</search_result>`,
             editImageId = responseId
             for (const output of resp.output) {
               if (output.type === 'image_generation_call' && output.result) {
-                // 将 base64 图片保存为本地文件
                 const base64Data = output.result
-                const fileName = await saveBase64ToFile(base64Data)
+                const fileIdentifier = await saveBase64ToFile(base64Data)
 
-                if (fileName) {
-                  // 使用本地文件名作为 result（用于显示）
+                if (fileIdentifier) {
                   toolCalls.push({
                     type: 'image_generation',
-                    result: fileName, // 使用本地文件名，前端通过 /uploads/filename 访问
+                    result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
                   })
                 }
                 else {
-                  // 如果保存文件失败，保留原始 base64 数据
                   toolCalls.push({
                     type: 'image_generation',
                     result: base64Data,

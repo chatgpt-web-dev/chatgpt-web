@@ -33,6 +33,14 @@ export class SiteConfig {
   globalAmount?: number
   usageCountLimit?: boolean
   showWatermark?: boolean
+  s3Enabled?: boolean
+  s3AccessKeyId?: string
+  s3SecretAccessKey?: string
+  s3Region?: string
+  s3Bucket?: string
+  s3Endpoint?: string
+  s3PathPrefix?: string
+  s3CustomDomain?: string
 }
 
 export class MailConfig {

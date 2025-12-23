@@ -75,7 +75,12 @@ function handleSubmit() {
   onConversation()
 }
 
-const uploadFileKeysRef = ref<string[]>([])
+// 存储上传的文件信息：fileKey用于后端，fileUrl用于前端显示
+interface UploadFileInfoItem {
+  fileKey: string
+  fileUrl?: string
+}
+const uploadFileKeysRef = ref<UploadFileInfoItem[]>([])
 
 async function onConversation() {
   let message = prompt.value
@@ -86,7 +91,7 @@ async function onConversation() {
   if (!message || message.trim() === '')
     return
 
-  const uploadFileKeys = uploadFileKeysRef.value
+  const uploadFileKeys = uploadFileKeysRef.value.map(item => item.fileUrl || item.fileKey)
   uploadFileKeysRef.value = []
 
   controller = new AbortController()
@@ -975,8 +980,37 @@ async function handleSyncMaxContextCount() {
 // https://github.com/tusen-ai/naive-ui/issues/4887
 function handleFinish(options: { file: UploadFileInfo, event?: ProgressEvent }) {
   if (options.file.status === 'finished') {
-    const response = (options.event?.target as XMLHttpRequest).response
-    uploadFileKeysRef.value.push(`${response.data.fileKey}`)
+    try {
+      let responseData: any
+      const file = options.file as any
+
+      if (file.response) {
+        responseData = file.response
+      }
+      else if (options.event?.target) {
+        const response = (options.event.target as XMLHttpRequest).response
+        responseData = typeof response === 'string' ? JSON.parse(response) : response
+      }
+      else {
+        console.error('无法获取上传响应数据')
+        return
+      }
+
+      // 检查响应数据结构
+      if (responseData && responseData.status === 'Success' && responseData.data?.fileKey) {
+        const fileInfo = {
+          fileKey: responseData.data.fileKey,
+          fileUrl: responseData.data.fileUrl,
+        }
+        uploadFileKeysRef.value.push(fileInfo)
+      }
+      else {
+        console.error('上传响应数据格式错误:', responseData)
+      }
+    }
+    catch (error) {
+      console.error('处理上传完成事件失败:', error)
+    }
   }
 }
 
@@ -1049,7 +1083,10 @@ async function handlePasteImage(event: ClipboardEvent) {
 
     const result = await response.json()
     if (result.status === 'Success' && result.data?.fileKey) {
-      uploadFileKeysRef.value.push(result.data.fileKey)
+      uploadFileKeysRef.value.push({
+        fileKey: result.data.fileKey,
+        fileUrl: result.data.fileUrl,
+      })
       ms.success(t('chat.imageUploadSuccess') || '图片上传成功', {
         duration: 1500,
       })
@@ -1163,7 +1200,14 @@ onUnmounted(() => {
         <NSpace vertical>
           <div v-if="uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
             <NSpace>
-              <img v-for="(v, i) of uploadFileKeysRef" :key="i" :src="`/uploads/${v}`" class="max-h-10">
+              <img
+                v-for="(v, i) of uploadFileKeysRef"
+                :key="i"
+                :src="v.fileUrl || `/uploads/${v.fileKey}`"
+                class="max-h-10"
+                :alt="`上传的图片 ${i + 1}`"
+                @error="(e) => { console.error('图片加载失败:', v.fileUrl || `/uploads/${v.fileKey}`, e); (e.target as HTMLImageElement).style.display = 'none' }"
+              >
               <HoverButton @click="handleDeleteUploadFile">
                 <span class="text-xl text-[#4f555e] dark:text-white">
                   <SvgIcon icon="ri:delete-back-2-fill" />

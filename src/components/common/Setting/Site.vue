@@ -156,6 +156,93 @@ onMounted(() => {
             />
           </div>
         </div>
+        <!-- S3存储配置 -->
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.s3Enabled') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false"
+              :value="config && config.s3Enabled"
+              @update:value="(val) => { if (config) config.s3Enabled = val }"
+            />
+          </div>
+        </div>
+        <div v-show="config && config.s3Enabled" class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3AccessKeyId') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3AccessKeyId"
+                :placeholder="t('setting.s3AccessKeyId')"
+                type="password"
+                show-password-on="click"
+                @input="(val) => { if (config) config.s3AccessKeyId = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3SecretAccessKey') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3SecretAccessKey"
+                :placeholder="t('setting.s3SecretAccessKey')"
+                type="password"
+                show-password-on="click"
+                @input="(val) => { if (config) config.s3SecretAccessKey = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3Region') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3Region"
+                :placeholder="t('setting.s3Region') || 'us-east-1'"
+                @input="(val) => { if (config) config.s3Region = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3Bucket') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3Bucket"
+                :placeholder="t('setting.s3Bucket')"
+                @input="(val) => { if (config) config.s3Bucket = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3Endpoint') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3Endpoint"
+                :placeholder="t('setting.s3EndpointTip') || '可选，用于MinIO等自定义端点'"
+                @input="(val) => { if (config) config.s3Endpoint = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3PathPrefix') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3PathPrefix"
+                :placeholder="t('setting.s3PathPrefixTip') || '可选，默认为 uploads/'"
+                @input="(val) => { if (config) config.s3PathPrefix = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.s3CustomDomain') }}</span>
+            <div class="flex-1">
+              <NInput
+                :value="config && config.s3CustomDomain"
+                :placeholder="t('setting.s3CustomDomainTip') || '可选，自定义域名（如：https://cdn.example.com）'"
+                @input="(val) => { if (config) config.s3CustomDomain = val }"
+              />
+            </div>
+          </div>
+        </div>
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]" />
           <NButton :loading="saving" type="primary" @click="updateSiteInfo(config)">

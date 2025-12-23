@@ -74,6 +74,11 @@ function getImageUrl(v: string): string {
   if (v.startsWith('data:image/')) {
     return v
   }
+  // 如果已经是完整的URL（http/https），直接返回
+  if (v.startsWith('http://') || v.startsWith('https://')) {
+    return v
+  }
+  // 否则使用本地路径
   return `/uploads/${v}`
 }
 
