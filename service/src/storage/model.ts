@@ -86,7 +86,9 @@ export class ChatRoom {
   chatModel: string
   searchEnabled: boolean
   thinkEnabled: boolean
-  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean) {
+  toolsEnabled?: boolean
+  imageUploadEnabled?: boolean
+  constructor(userId: string, title: string, roomId: number, chatModel: string, usingContext: boolean, maxContextCount: number, searchEnabled: boolean, thinkEnabled: boolean, toolsEnabled?: boolean, imageUploadEnabled?: boolean) {
     this.userId = userId
     this.title = title
     this.prompt = undefined
@@ -96,6 +98,8 @@ export class ChatRoom {
     this.chatModel = chatModel
     this.searchEnabled = searchEnabled
     this.thinkEnabled = thinkEnabled
+    this.toolsEnabled = toolsEnabled
+    this.imageUploadEnabled = imageUploadEnabled
   }
 }
 
@@ -139,6 +143,9 @@ export class ChatInfo {
   status: Status = Status.Normal
   options: ChatOptions
   previousResponse?: previousResponse[]
+  tool_images?: string[] // AI-generated image file names
+  tool_calls?: Array<{ type: string, result?: any }> // Tool calls from AI
+  editImageId?: string // Edit image ID for image generation
   constructor(roomId: number, uuid: number, prompt: string, images: string[], model: string, options: ChatOptions) {
     this.roomId = roomId
     this.model = model
@@ -238,6 +245,14 @@ export class SiteConfig {
     public globalAmount?: number,
     public usageCountLimit?: boolean,
     public showWatermark?: boolean,
+    public s3Enabled?: boolean,
+    public s3AccessKeyId?: string,
+    public s3SecretAccessKey?: string,
+    public s3Region?: string,
+    public s3Bucket?: string,
+    public s3Endpoint?: string,
+    public s3PathPrefix?: string,
+    public s3CustomDomain?: string,
   ) { }
 }
 
@@ -289,15 +304,18 @@ export class KeyConfig {
   _id: ObjectId
   key: string
   keyModel: APIMODEL
-  chatModels: string[]
+  chatModel: string
+  modelAlias?: string
   userRoles: UserRole[]
   status: Status
   remark: string
   baseUrl?: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
+  toolsEnabled?: boolean
+  imageUploadEnabled?: boolean
+  constructor(key: string, keyModel: APIMODEL, chatModel: string, userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
-    this.chatModels = chatModels
+    this.chatModel = chatModel
     this.userRoles = userRoles
     this.status = Status.Normal
     this.remark = remark

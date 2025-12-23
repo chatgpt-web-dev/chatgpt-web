@@ -209,27 +209,72 @@ router.post('/session', async (req, res) => {
 
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
 
-      const count: { key: string, count: number }[] = []
+      // 为每个 key 和模型的组合生成不同的选项
+      const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean, modelAlias?: string }>>()
       chatModelOptions.forEach((chatModel) => {
         keys.forEach((key) => {
-          if (key.chatModels.includes(chatModel.value)) {
-            if (count.filter(d => d.key === chatModel.value).length <= 0) {
-              count.push({ key: chatModel.value, count: 1 })
+          if (key.chatModel === chatModel.value) {
+            const keyId = key._id.toString()
+            if (!modelKeyMap.has(chatModel.value)) {
+              modelKeyMap.set(chatModel.value, [])
             }
-            else {
-              const thisCount = count.filter(d => d.key === chatModel.value)[0]
-              thisCount.count++
-            }
+            const configs = modelKeyMap.get(chatModel.value)!
+            configs.push({
+              keyId,
+              toolsEnabled: key.toolsEnabled || false,
+              imageUploadEnabled: key.imageUploadEnabled || false,
+              modelAlias: key.modelAlias,
+            })
           }
         })
       })
-      count.forEach((c) => {
-        const thisChatModel = chatModelOptions.filter(d => d.value === c.key)[0]
-        const suffix = c.count > 1 ? ` (${c.count})` : ''
-        chatModels.push({
-          label: `${thisChatModel.label}${suffix}`,
-          key: c.key,
-          value: c.key,
+
+      // 为每个配置组合生成唯一的选项
+      modelKeyMap.forEach((configs, modelValue) => {
+        const thisChatModel = chatModelOptions.find(d => d.value === modelValue)
+        if (!thisChatModel)
+          return
+
+        // 按照功能分组（toolsEnabled 和 imageUploadEnabled）
+        const configGroups = new Map<string, typeof configs>()
+        configs.forEach((config) => {
+          const groupKey = `${config.toolsEnabled}-${config.imageUploadEnabled}`
+          if (!configGroups.has(groupKey)) {
+            configGroups.set(groupKey, [])
+          }
+          configGroups.get(groupKey)!.push(config)
+        })
+
+        // 为每个功能组生成选项
+        configGroups.forEach((groupConfigs) => {
+          const config = groupConfigs[0] // 取第一个作为代表
+          const suffix = []
+          if (config.toolsEnabled) {
+            suffix.push('Tools')
+          }
+          if (config.imageUploadEnabled) {
+            suffix.push('Image')
+          }
+
+          // 使用模型别名或默认标签
+          const displayModalName = config.modelAlias || thisChatModel.label
+
+          // 构建选项
+          if (suffix.length === 0 && groupConfigs.length > 0) {
+            chatModels.push({
+              label: `${displayModalName}`,
+              key: modelValue,
+              value: modelValue,
+            })
+          }
+          else {
+            // 需要key来判断用走特殊逻辑
+            chatModels.push({
+              label: `${displayModalName}`,
+              key: `${modelValue}|${config.keyId}`,
+              value: `${modelValue}|${config.keyId}`,
+            })
+          }
         })
       })
 

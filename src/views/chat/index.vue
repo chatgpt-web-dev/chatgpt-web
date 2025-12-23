@@ -51,6 +51,9 @@ const loadingChatUuid = ref<number>(-1)
 
 const currentNavIndexRef = ref<number>(-1)
 
+// 存储上一次工具调用的响应ID，用于传递 previousResponseId
+const lastToolResponseId = ref<string>('')
+
 let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
@@ -72,7 +75,12 @@ function handleSubmit() {
   onConversation()
 }
 
-const uploadFileKeysRef = ref<string[]>([])
+// 存储上传的文件信息：fileKey用于后端，fileUrl用于前端显示
+interface UploadFileInfoItem {
+  fileKey: string
+  fileUrl?: string
+}
+const uploadFileKeysRef = ref<UploadFileInfoItem[]>([])
 
 async function onConversation() {
   let message = prompt.value
@@ -83,7 +91,7 @@ async function onConversation() {
   if (!message || message.trim() === '')
     return
 
-  const uploadFileKeys = uploadFileKeysRef.value
+  const uploadFileKeys = uploadFileKeysRef.value.map(item => item.fileUrl || item.fileKey)
   uploadFileKeysRef.value = []
 
   controller = new AbortController()
@@ -145,6 +153,8 @@ async function onConversation() {
         prompt: message,
         uploadFileKeys,
         options,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
+        previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {
         onSearching: (data) => {
@@ -173,6 +183,41 @@ async function onConversation() {
         onSearchResults: (data) => {
           searchResults = data.searchResults
           searchUsageTime = data.searchUsageTime
+        },
+        onToolCalls: async (data) => {
+          // Handle tool calls (e.g., image generation results)
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+
+          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          const editImageId = (data as any).editImageId
+          const responseId = (data as any).id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
+          if (imageToolCalls.length > 0) {
+            // Extract file IDs from tool calls (now stored as file IDs instead of base64)
+            const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+            // Get current chat to preserve existing fields
+            const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, dataSources.value.length - 1)
+            if (currentChat) {
+              await chatStore.updateChatMessage(
+                currentChatRoom.value!.roomId,
+                dataSources.value.length - 1,
+                {
+                  ...currentChat,
+                  tool_calls: toolCalls,
+                  tool_images: imageResults, // Store file IDs instead of base64
+                  editImageId: editImageId || undefined,
+                },
+              )
+            }
+          }
         },
         onDelta: async (delta) => {
           // Handle incremental data
@@ -240,6 +285,7 @@ async function onConversation() {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
 
@@ -263,6 +309,21 @@ async function onConversation() {
               }
             : undefined
 
+          // 处理 tool_calls 和 editImageId
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+          const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+          // 存储 editImageId（优先使用 editImageId，否则使用 response id）
+          const editImageId = data.editImageId
+          const responseId = data.id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
           await chatStore.updateChatMessage(
             currentChatRoom.value!.roomId,
             dataSources.value.length - 1,
@@ -280,6 +341,9 @@ async function onConversation() {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: toolCalls,
+              tool_images: imageResults.length > 0 ? imageResults : undefined,
+              editImageId: editImageId || undefined,
             },
           )
         },
@@ -406,6 +470,8 @@ async function onRegenerate(index: number) {
         regenerate: true,
         prompt: message,
         options,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
+        previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {
         onSearching: (data) => {
@@ -434,6 +500,41 @@ async function onRegenerate(index: number) {
         onSearchResults: (data) => {
           searchResults = data.searchResults
           searchUsageTime = data.searchUsageTime
+        },
+        onToolCalls: async (data) => {
+          // Handle tool calls (e.g., image generation results)
+          const toolCalls = data.tool_calls || []
+          const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
+
+          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          const editImageId = (data as any).editImageId
+          const responseId = (data as any).id
+          if (editImageId) {
+            lastToolResponseId.value = editImageId
+          }
+          else if (responseId) {
+            lastToolResponseId.value = responseId
+          }
+
+          if (imageToolCalls.length > 0) {
+            // Extract file IDs from tool calls (now stored as file IDs instead of base64)
+            const imageResults = imageToolCalls.map((tool: any) => tool.result)
+
+            // Get current chat to preserve existing fields
+            const currentChat = getChatByUuidAndIndex(currentChatRoom.value!.roomId, index)
+            if (currentChat) {
+              updateChat(
+                currentChatRoom.value!.roomId,
+                index,
+                {
+                  ...currentChat,
+                  tool_calls: toolCalls,
+                  tool_images: imageResults, // Store file IDs instead of base64
+                  editImageId: editImageId || undefined,
+                },
+              )
+            }
+          }
         },
         onDelta: async (delta) => {
           // 处理增量数据
@@ -504,6 +605,7 @@ async function onRegenerate(index: number) {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
 
@@ -545,6 +647,7 @@ async function onRegenerate(index: number) {
               conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
               requestOptions: { prompt: message, options: { ...options } },
               usage,
+              tool_calls: data.tool_calls,
             },
           )
         },
@@ -877,8 +980,37 @@ async function handleSyncMaxContextCount() {
 // https://github.com/tusen-ai/naive-ui/issues/4887
 function handleFinish(options: { file: UploadFileInfo, event?: ProgressEvent }) {
   if (options.file.status === 'finished') {
-    const response = (options.event?.target as XMLHttpRequest).response
-    uploadFileKeysRef.value.push(`${response.data.fileKey}`)
+    try {
+      let responseData: any
+      const file = options.file as any
+
+      if (file.response) {
+        responseData = file.response
+      }
+      else if (options.event?.target) {
+        const response = (options.event.target as XMLHttpRequest).response
+        responseData = typeof response === 'string' ? JSON.parse(response) : response
+      }
+      else {
+        console.error('无法获取上传响应数据')
+        return
+      }
+
+      // 检查响应数据结构
+      if (responseData && responseData.status === 'Success' && responseData.data?.fileKey) {
+        const fileInfo = {
+          fileKey: responseData.data.fileKey,
+          fileUrl: responseData.data.fileUrl,
+        }
+        uploadFileKeysRef.value.push(fileInfo)
+      }
+      else {
+        console.error('上传响应数据格式错误:', responseData)
+      }
+    }
+    catch (error) {
+      console.error('处理上传完成事件失败:', error)
+    }
   }
 }
 
@@ -892,6 +1024,86 @@ const uploadHeaders = computed(() => {
     Authorization: `Bearer ${token}`,
   }
 })
+
+// 支持的图片类型
+const VALID_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
+// 粘贴图片
+async function handlePasteImage(event: ClipboardEvent) {
+  // 检查图片上传功能是否开启
+  if (!currentChatRoom.value?.imageUploadEnabled) {
+    ms.warning(t('chat.imageUploadDisabled') || '图片上传功能已关闭', {
+      duration: 2000,
+    })
+    return
+  }
+
+  const items = event.clipboardData?.items
+  if (!items || items.length === 0)
+    return
+
+  // 查找图片类型的剪贴板项
+  const imageItem = Array.from(items).find(item => item.type.includes('image'))
+  if (!imageItem)
+    return
+
+  event.preventDefault() // 阻止默认粘贴行为
+
+  const file = imageItem.getAsFile()
+  if (!file) {
+    ms.warning(t('chat.imageUploadFailed') || '无法获取图片文件', {
+      duration: 2000,
+    })
+    return
+  }
+
+  // 检查文件类型
+  if (!VALID_IMAGE_TYPES.includes(file.type)) {
+    ms.warning(t('chat.invalidImageType') || '不支持的图片格式，仅支持 PNG、JPEG、WEBP', {
+      duration: 2000,
+    })
+    return
+  }
+
+  try {
+    // 创建 FormData
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 上传图片
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: uploadHeaders.value,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const result = await response.json()
+    if (result.status === 'Success' && result.data?.fileKey) {
+      uploadFileKeysRef.value.push({
+        fileKey: result.data.fileKey,
+        fileUrl: result.data.fileUrl,
+      })
+      ms.success(t('chat.imageUploadSuccess') || '图片上传成功', {
+        duration: 1500,
+      })
+    }
+    else {
+      ms.error(result.message || t('chat.imageUploadFailed') || '图片上传失败', {
+        duration: 2000,
+      })
+    }
+  }
+  catch (error) {
+    console.error('上传图片失败:', error)
+    ms.error(t('chat.imageUploadFailed') || '图片上传失败', {
+      duration: 2000,
+    })
+  }
+}
 
 onMounted(() => {
   firstLoading.value = true
@@ -958,6 +1170,7 @@ onUnmounted(() => {
                   :finish-reason="item?.finish_reason"
                   :text="item.text"
                   :images="item.images"
+                  :tool-images="item.tool_images"
                   :inversion="item.inversion"
                   :response-count="item.responseCount"
                   :usage="item && item.usage || undefined"
@@ -987,7 +1200,14 @@ onUnmounted(() => {
         <NSpace vertical>
           <div v-if="uploadFileKeysRef.length > 0" class="flex items-center space-x-2 h-10">
             <NSpace>
-              <img v-for="(v, i) of uploadFileKeysRef" :key="i" :src="`/uploads/${v}`" class="max-h-10">
+              <img
+                v-for="(v, i) of uploadFileKeysRef"
+                :key="i"
+                :src="v.fileUrl || `/uploads/${v.fileKey}`"
+                class="max-h-10"
+                :alt="`上传的图片 ${i + 1}`"
+                @error="(e) => { console.error('图片加载失败:', v.fileUrl || `/uploads/${v.fileKey}`, e); (e.target as HTMLImageElement).style.display = 'none' }"
+              >
               <HoverButton @click="handleDeleteUploadFile">
                 <span class="text-xl text-[#4f555e] dark:text-white">
                   <SvgIcon icon="ri:delete-back-2-fill" />
@@ -997,7 +1217,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center space-x-2">
-            <div>
+            <div v-if="currentChatRoom?.imageUploadEnabled">
               <NUpload
                 action="/api/upload-image"
                 list-type="image"
@@ -1099,6 +1319,7 @@ onUnmounted(() => {
                   @focus="handleFocus"
                   @blur="handleBlur"
                   @keypress="handleEnter"
+                  @paste="handlePasteImage"
                 />
               </template>
             </NAutoComplete>

@@ -12,6 +12,7 @@ export class ConfigState {
   auditConfig?: AuditConfig
   searchConfig?: SearchConfig
   announceConfig?: AnnounceConfig
+  toolsEnabled?: boolean
 }
 
 export class UserConfig {
@@ -32,6 +33,14 @@ export class SiteConfig {
   globalAmount?: number
   usageCountLimit?: boolean
   showWatermark?: boolean
+  s3Enabled?: boolean
+  s3AccessKeyId?: string
+  s3SecretAccessKey?: string
+  s3Region?: string
+  s3Bucket?: string
+  s3Endpoint?: string
+  s3PathPrefix?: string
+  s3CustomDomain?: string
 }
 
 export class MailConfig {
@@ -96,15 +105,18 @@ export class KeyConfig {
   _id?: string
   key: string
   keyModel: APIMODEL
-  chatModels: string[]
+  chatModel: string
+  modelAlias?: string
   userRoles: UserRole[]
   status: Status
   remark: string
   baseUrl?: string
-  constructor(key: string, keyModel: APIMODEL, chatModels: string[], userRoles: UserRole[], remark: string) {
+  toolsEnabled?: boolean
+  imageUploadEnabled?: boolean
+  constructor(key: string, keyModel: APIMODEL, chatModel: string, userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel
-    this.chatModels = chatModels
+    this.chatModel = chatModel
     this.userRoles = userRoles
     this.status = Status.Normal
     this.remark = remark

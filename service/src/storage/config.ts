@@ -146,7 +146,8 @@ export async function getApiKeys() {
   const result = await getKeys()
   const config = await getCacheConfig()
   if (result.keys.length <= 0) {
-    result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', [], [], '')))
+    const defaultModel = config.siteConfig.chatModels.split(',')[0] || ''
+    result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', defaultModel, [], '')))
     result.total++
   }
   result.keys.forEach((key) => {
@@ -155,10 +156,8 @@ export async function getApiKeys() {
       key.userRoles.push(UserRole.User)
       key.userRoles.push(UserRole.Guest)
     }
-    if (key.chatModels == null || key.chatModels.length <= 0) {
-      config.siteConfig.chatModels.split(',').forEach((chatModel) => {
-        key.chatModels.push(chatModel)
-      })
+    if (key.chatModel == null || key.chatModel === '') {
+      key.chatModel = config.siteConfig.chatModels.split(',')[0] || ''
     }
   })
   return result

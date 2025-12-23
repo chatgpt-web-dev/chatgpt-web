@@ -10,6 +10,7 @@ import {
   fetchUpdateChatRoomMaxContextCount,
   fetchUpdateChatRoomSearchEnabled,
   fetchUpdateChatRoomThinkEnabled,
+  fetchUpdateChatRoomToolsEnabled,
   fetchUpdateChatRoomUsingContext,
   fetchUpdateUserChatModel,
   fetchUpdateUserMaxContextCount,
@@ -59,6 +60,8 @@ export const useChatStore = defineStore('chat-store', () => {
       maxContextCount: result.data?.maxContextCount ?? 10,
       searchEnabled: result.data?.searchEnabled,
       thinkEnabled: result.data?.thinkEnabled,
+      toolsEnabled: result.data?.toolsEnabled,
+      imageUploadEnabled: result.data?.imageUploadEnabled,
     })
 
     state.chat.unshift({ roomId, data: [] })
@@ -149,19 +152,6 @@ export const useChatStore = defineStore('chat-store', () => {
     await fetchUpdateUserMaxContextCount(maxContextCount)
   }
 
-  const setChatModel = async (chatModel: string) => {
-    const index = findRoomIndex(state.active)
-    if (index === -1)
-      return
-
-    state.chatRooms[index].chatModel = chatModel
-    await fetchUpdateChatRoomChatModel(chatModel, state.active!)
-
-    const userStore = useUserStore()
-    userStore.userInfo.config.chatModel = chatModel
-    await fetchUpdateUserChatModel(chatModel)
-  }
-
   const setChatSearchEnabled = async (searchEnabled: boolean) => {
     const index = findRoomIndex(state.active)
     if (index === -1)
@@ -179,6 +169,46 @@ export const useChatStore = defineStore('chat-store', () => {
 
     state.chatRooms[index].thinkEnabled = thinkEnabled
     await fetchUpdateChatRoomThinkEnabled(thinkEnabled, state.active!)
+  }
+
+  const setChatModel = async (chatModel: string) => {
+    const index = findRoomIndex(state.active)
+    if (index === -1)
+      return
+
+    state.chatRooms[index].chatModel = chatModel
+    const result = await fetchUpdateChatRoomChatModel(chatModel, state.active!)
+
+    // 更新toolsEnabled状态（从接口返回）
+    if (result.data?.toolsEnabled !== undefined) {
+      state.chatRooms[index].toolsEnabled = result.data.toolsEnabled
+      // 如果toolsEnabled为true，需要同时关闭searchEnabled和thinkEnabled
+      if (result.data.toolsEnabled) {
+        if (state.chatRooms[index].searchEnabled) {
+          await setChatSearchEnabled(false)
+        }
+        if (state.chatRooms[index].thinkEnabled) {
+          await setChatThinkEnabled(false)
+        }
+      }
+    }
+    // 更新imageUploadEnabled状态（从接口返回）
+    if (result.data?.imageUploadEnabled !== undefined) {
+      state.chatRooms[index].imageUploadEnabled = result.data.imageUploadEnabled
+    }
+
+    const userStore = useUserStore()
+    userStore.userInfo.config.chatModel = chatModel
+    await fetchUpdateUserChatModel(chatModel)
+  }
+
+  const setChatToolsEnabled = async (toolsEnabled: boolean) => {
+    const index = findRoomIndex(state.active)
+    if (index === -1)
+      return
+
+    state.chatRooms[index].toolsEnabled = toolsEnabled
+    await fetchUpdateChatRoomToolsEnabled(toolsEnabled, state.active!)
   }
 
   const deleteChatRoom = async (index: number) => {
@@ -270,6 +300,7 @@ export const useChatStore = defineStore('chat-store', () => {
     setChatModel,
     setChatSearchEnabled,
     setChatThinkEnabled,
+    setChatToolsEnabled,
     addNewChatRoom,
     deleteChatRoom,
     setActive,

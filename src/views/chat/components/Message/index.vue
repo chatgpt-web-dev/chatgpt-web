@@ -30,6 +30,7 @@ interface Props {
   finishReason?: string
   text?: string
   images?: string[]
+  toolImages?: string[] // Base64 image data from AI-generated images
   isRecord?: boolean
   inversion?: boolean
   error?: boolean
@@ -254,6 +255,7 @@ function isEventTargetValid(event: any) {
           :error="error"
           :text="text"
           :images="images"
+          :tool-images="toolImages"
           :loading="loading"
           :as-raw-text="asRawText"
         />

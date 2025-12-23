@@ -24,6 +24,7 @@ interface SSEEventHandlers {
   onGenerating?: (data: { generating: boolean }) => void
   onSearchQuery?: (data: { searchQuery: string }) => void
   onSearchResults?: (data: { searchResults: any[], searchUsageTime: number }) => void
+  onToolCalls?: (data: { tool_calls?: Array<{ type: string, result?: string }> }) => void
   onComplete?: (data: any) => void
   onError?: (error: string) => void
   onEnd?: () => void
@@ -38,6 +39,8 @@ export function fetchChatAPIProcessSSE(
     prompt: string
     uploadFileKeys?: string[]
     options?: { conversationId?: string, parentMessageId?: string }
+    tools?: Array<{ type: 'image_generation' }>
+    previousResponseId?: string
     signal?: AbortSignal
   },
   handlers: SSEEventHandlers,
@@ -56,7 +59,16 @@ export function fetchChatAPIProcessSSE(
     top_p: userStore.userInfo.advanced.top_p,
   }
 
+  if (params.tools && params.tools.length > 0) {
+    data.tools = params.tools
+  }
+  if (params.previousResponseId) {
+    data.previousResponseId = params.previousResponseId
+  }
+
   return new Promise((resolve, reject) => {
+    let currentEventType: string | null = null
+
     fetchService.postStream(
       {
         url: '/chat-process',
@@ -69,21 +81,31 @@ export function fetchChatAPIProcessSSE(
             return
 
           if (line.startsWith('event: ')) {
-            // const _eventType = line.substring(7).trim()
+            currentEventType = line.substring(7).trim()
             return
           }
 
           if (line.startsWith('data: ')) {
-            const data = line.substring(6).trim()
+            const dataStr = line.substring(6).trim()
 
-            if (data === '[DONE]') {
+            if (dataStr === '[DONE]') {
               handlers.onEnd?.()
               resolve()
               return
             }
 
             try {
-              const jsonData = JSON.parse(data)
+              if (currentEventType === 'error') {
+                const errorDataStr = JSON.parse(dataStr)
+                const errorData = JSON.parse(errorDataStr)
+                if (errorData.message) {
+                  handlers.onError?.(errorData.message)
+                }
+                currentEventType = null
+                return
+              }
+
+              const jsonData = JSON.parse(dataStr)
 
               // Dispatch to different handlers based on data type
               if (jsonData.message) {
@@ -101,15 +123,22 @@ export function fetchChatAPIProcessSSE(
               else if (jsonData.searchResults) {
                 handlers.onSearchResults?.(jsonData)
               }
+              else if (jsonData.tool_calls) {
+                handlers.onToolCalls?.(jsonData)
+              }
               else if (jsonData.m) {
                 handlers.onDelta?.(jsonData.m)
               }
               else {
                 handlers.onMessage?.(jsonData)
               }
+
+              // 重置事件类型
+              currentEventType = null
             }
             catch (e) {
-              console.error('Failed to parse SSE data:', data, e)
+              console.error('Failed to parse SSE data:', dataStr, e)
+              currentEventType = null
             }
           }
         },
@@ -366,6 +395,13 @@ export function fetchUpdateChatRoomThinkEnabled<T = any>(thinkEnabled: boolean, 
   return post<T>({
     url: '/room-think-enabled',
     data: { thinkEnabled, roomId },
+  })
+}
+
+export function fetchUpdateChatRoomToolsEnabled<T = any>(toolsEnabled: boolean, roomId: number) {
+  return post<T>({
+    url: '/room-tools-enabled',
+    data: { toolsEnabled, roomId },
   })
 }
 

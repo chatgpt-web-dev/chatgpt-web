@@ -11,7 +11,7 @@ import { getCacheApiKeys, getCacheConfig, getOriginConfig } from '../storage/con
 import { Status, UsageResponse } from '../storage/model'
 import { getChatByMessageId, updateChatSearchQuery, updateChatSearchResult } from '../storage/mongo'
 import { sendResponse } from '../utils'
-import { convertImageUrl } from '../utils/image'
+import { convertImageUrl, saveBase64ToFile } from '../utils/image'
 import { hasAnyRole, isNotEmptyString } from '../utils/is'
 import { textAuditServices } from '../utils/textAudit'
 
@@ -58,16 +58,18 @@ const processThreads: { userId: string, chatUuid: number, abort: AbortController
 
 async function chatReplyProcess(options: RequestOptions) {
   const globalConfig = await getCacheConfig()
-  const model = options.room.chatModel
+  const chatModelWithKeyId = options.room.chatModel
+  // 解析模型名称，支持格式 "modelName|keyId"，提取实际的模型名称用于 API 调用
+  const model = chatModelWithKeyId.includes('|') ? chatModelWithKeyId.split('|')[0] : chatModelWithKeyId
   const searchEnabled = options.room.searchEnabled
-  const key = await getRandomApiKey(options.user, model)
+  const key = await getRandomApiKey(options.user, chatModelWithKeyId)
   const userId = options.user._id.toString()
   const maxContextCount = options.room.maxContextCount ?? 10
   const messageId = options.messageId
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  const { message, uploadFileKeys, parentMessageId, process, systemMessage, temperature, top_p, chatUuid } = options
+  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, systemMessage, temperature, top_p, chatUuid } = options
   let instructions = systemMessage
 
   try {
@@ -261,6 +263,17 @@ search result: <search_result>${searchResultContent}</search_result>`,
       if (model.startsWith('gpt') && model.endsWith('chat-latest')) {
         reasoning = {}
       }
+      if (options.room.toolsEnabled) {
+        if (options.room.thinkEnabled) {
+          reasoning = {
+            effort: 'high',
+            summary: 'detailed',
+          }
+        }
+        else {
+          reasoning = {}
+        }
+      }
 
       const stream = await openai.responses.create(
         {
@@ -268,8 +281,11 @@ search result: <search_result>${searchResultContent}</search_result>`,
           instructions,
           input: messages as OpenAI.Responses.ResponseInput,
           reasoning,
-          store: false,
+          store: options.room.toolsEnabled,
           stream: true,
+          ...(tools && tools.length > 0 && { tools: tools as any }),
+          // 如果有图片代表是编辑当前图片，不传递该参数，否则传递该参数
+          ...(previousResponseId && uploadFileKeys.length === 0 && { previous_response_id: previousResponseId }),
         },
         {
           signal: abort.signal,
@@ -281,6 +297,8 @@ search result: <search_result>${searchResultContent}</search_result>`,
       let responseText = ''
       let responseId = ''
       const usage = new UsageResponse()
+      const toolCalls: Array<{ type: string, result?: any }> = []
+      let editImageId: string | undefined
 
       for await (const event of stream) {
         if (event.type === 'response.reasoning_summary_text.delta') {
@@ -310,6 +328,30 @@ search result: <search_result>${searchResultContent}</search_result>`,
           usage.prompt_tokens = resp.usage.input_tokens
           usage.completion_tokens = resp.usage.output_tokens
           usage.total_tokens = resp.usage.total_tokens
+
+          // Extract tool calls from response
+          if (resp.output && Array.isArray(resp.output)) {
+            editImageId = responseId
+            for (const output of resp.output) {
+              if (output.type === 'image_generation_call' && output.result) {
+                const base64Data = output.result
+                const fileIdentifier = await saveBase64ToFile(base64Data)
+
+                if (fileIdentifier) {
+                  toolCalls.push({
+                    type: 'image_generation',
+                    result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
+                  })
+                }
+                else {
+                  toolCalls.push({
+                    type: 'image_generation',
+                    result: base64Data,
+                  })
+                }
+              }
+            }
+          }
         }
       }
 
@@ -319,6 +361,8 @@ search result: <search_result>${searchResultContent}</search_result>`,
         text: responseText,
         role: 'assistant',
         detail: { usage },
+        ...(toolCalls.length > 0 && { tool_calls: toolCalls }),
+        ...(editImageId && { editImageId }),
       }
       return sendResponse({ type: 'Success', data: response })
     }
@@ -523,7 +567,22 @@ async function randomKeyConfig(keys: KeyConfig[]): Promise<KeyConfig | null> {
 }
 
 async function getRandomApiKey(user: UserInfo, chatModel: string): Promise<KeyConfig | undefined> {
-  const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModels.includes(chatModel))
+  // 解析模型名称，支持格式 "modelName|keyId"
+  let actualModelName = chatModel
+  let specifiedKeyId: string | undefined
+  if (chatModel.includes('|')) {
+    const parts = chatModel.split('|')
+    actualModelName = parts[0]
+    specifiedKeyId = parts[1]
+  }
+
+  let keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles)).filter(d => d.chatModel === actualModelName)
+
+  // 如果指定了 keyId，只返回匹配的 key
+  if (specifiedKeyId) {
+    keys = keys.filter(key => key._id.toString() === specifiedKeyId)
+    return keys.length > 0 ? keys[0] : undefined
+  }
 
   return randomKeyConfig(keys)
 }

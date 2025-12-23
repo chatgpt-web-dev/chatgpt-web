@@ -255,9 +255,20 @@ export async function getChatByMessageId(messageId: string) {
   return await chatCol.findOne({ 'options.messageId': messageId })
 }
 
-export async function updateChat(chatId: string, reasoning: string, response: string, messageId: string, model: string, usage: UsageResponse, previousResponse?: []) {
+export async function updateChat(
+  chatId: string,
+  reasoning: string,
+  response: string,
+  messageId: string,
+  model: string,
+  usage: UsageResponse,
+  previousResponse?: [],
+  tool_images?: string[],
+  tool_calls?: Array<{ type: string, result?: any }>,
+  editImageId?: string,
+) {
   const query = { _id: new ObjectId(chatId) }
-  const update = {
+  const update: any = {
     $set: {
       'reasoning': reasoning,
       'response': response,
@@ -271,8 +282,16 @@ export async function updateChat(chatId: string, reasoning: string, response: st
   }
 
   if (previousResponse)
-  // @ts-expect-error https://jira.mongodb.org/browse/NODE-5214
     update.$set.previousResponse = previousResponse
+
+  if (tool_images)
+    update.$set.tool_images = tool_images
+
+  if (tool_calls)
+    update.$set.tool_calls = tool_calls
+
+  if (editImageId)
+    update.$set.editImageId = editImageId
 
   await chatCol.updateOne(query, update)
 }
@@ -314,7 +333,10 @@ export async function createChatRoom(userId: string, title: string, roomId: numb
   if (maxContextCount === undefined) {
     maxContextCount = 10
   }
-  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false)
+  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false, false)
+  // 创建房间后，需要根据chatModel判断并设置imageUploadEnabled
+  // 这里先设置为false，后续在room-create接口中会根据chatModel动态判断
+  room.imageUploadEnabled = false
   await roomCol.insertOne(room)
   return room
 }
@@ -385,6 +407,28 @@ export async function updateRoomThinkEnabled(userId: string, roomId: number, thi
   const update = {
     $set: {
       thinkEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomToolsEnabled(userId: string, roomId: number, toolsEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      toolsEnabled,
+    },
+  }
+  const result = await roomCol.updateOne(query, update)
+  return result.modifiedCount > 0
+}
+
+export async function updateRoomImageUploadEnabled(userId: string, roomId: number, imageUploadEnabled: boolean) {
+  const query = { userId, roomId }
+  const update = {
+    $set: {
+      imageUploadEnabled,
     },
   }
   const result = await roomCol.updateOne(query, update)

@@ -27,12 +27,21 @@ export interface ResponseChunk {
     reasoning?: string
     text?: string
   }
+  // 工具调用结果
+  tool_calls?: Array<{
+    type: string
+    result?: any
+  }>
+  // 编辑图片时使用的文件 ID（用于后续作为 previousResponseId）
+  editImageId?: string
 }
 
 export interface RequestOptions {
   message: string
   uploadFileKeys?: string[]
   parentMessageId?: string
+  previousResponseId?: string
+  tools?: Array<{ type: 'image_generation' }>
   process?: (chunk: ResponseChunk) => void
   systemMessage?: string
   temperature?: number
