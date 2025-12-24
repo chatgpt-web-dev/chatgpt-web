@@ -67,7 +67,8 @@ router.get('/chat-history', auth, async (req, res) => {
         result.push({
           uuid: c.uuid,
           model: c.model,
-          dateTime: new Date(c.dateTime),
+          // 用户消息使用 promptDateTime（如果存在），否则使用 dateTime（兼容旧数据）
+          dateTime: new Date(c.promptDateTime || c.dateTime),
           text: c.prompt,
           images: c.images,
           inversion: true,
@@ -92,6 +93,7 @@ router.get('/chat-history', auth, async (req, res) => {
         // Build response object with tool-related fields
         const responseObj: any = {
           uuid: c.uuid,
+          // AI回复使用 dateTime（AI回复完成时间）
           dateTime: new Date(c.dateTime),
           searchQuery: c.searchQuery,
           searchResults: c.searchResults,
@@ -411,6 +413,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   .map((tool: any) => tool.result)
               }
 
+              // 判断是否是生图请求（有 tool_images 或 tool_calls 中包含 image_generation）
+              const isImageGeneration = tool_images && tool_images.length > 0
+
               if (regenerate && message.options.messageId) {
                 const previousResponse = message.previousResponse || []
                 previousResponse.push({ response: message.response, options: message.options })
@@ -425,6 +430,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   tool_images,
                   tool_calls,
                   editImageId,
+                  isImageGeneration, // 生图时更新完成时间
                 )
               }
               else {
@@ -439,6 +445,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   tool_images,
                   tool_calls,
                   editImageId,
+                  isImageGeneration, // 生图时更新完成时间
                 )
               }
 

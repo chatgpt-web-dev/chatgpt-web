@@ -300,58 +300,79 @@ search result: <search_result>${searchResultContent}</search_result>`,
       const toolCalls: Array<{ type: string, result?: any }> = []
       let editImageId: string | undefined
 
-      for await (const event of stream) {
-        if (event.type === 'response.reasoning_summary_text.delta') {
-          const delta: string = event.delta || ''
-          responseReasoning += delta
-          process?.({
-            delta: { reasoning: delta },
-          })
-        }
-        else if (event.type === 'response.reasoning_summary_text.done') {
-          responseReasoning += '\n'
-          process?.({
-            delta: { reasoning: '\n' },
-          })
-        }
-        else if (event.type === 'response.output_text.delta') {
-          const delta: string = event.delta || ''
-          responseText += delta
-          process?.({
-            text: responseText,
-            delta: { text: delta },
-          })
-        }
-        else if (event.type === 'response.completed') {
-          const resp = event.response
-          responseId = resp.id
-          usage.prompt_tokens = resp.usage.input_tokens
-          usage.completion_tokens = resp.usage.output_tokens
-          usage.total_tokens = resp.usage.total_tokens
+      // 心跳机制：防止生图等长时间操作时连接超时
+      let heartbeatInterval: NodeJS.Timeout | null = null
+      const HEARTBEAT_INTERVAL = 30000 // 30秒发送一次心跳
 
-          // Extract tool calls from response
-          if (resp.output && Array.isArray(resp.output)) {
-            editImageId = responseId
-            for (const output of resp.output) {
-              if (output.type === 'image_generation_call' && output.result) {
-                const base64Data = output.result
-                const fileIdentifier = await saveBase64ToFile(base64Data)
+      // 启动心跳定时器
+      heartbeatInterval = setInterval(() => {
+        // 发送心跳数据，保持连接活跃
+        process?.({
+          delta: { heartbeat: true },
+        })
+      }, HEARTBEAT_INTERVAL)
 
-                if (fileIdentifier) {
-                  toolCalls.push({
-                    type: 'image_generation',
-                    result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
-                  })
-                }
-                else {
-                  toolCalls.push({
-                    type: 'image_generation',
-                    result: base64Data,
-                  })
+      try {
+        for await (const event of stream) {
+          if (event.type === 'response.reasoning_summary_text.delta') {
+            const delta: string = event.delta || ''
+            responseReasoning += delta
+            process?.({
+              delta: { reasoning: delta },
+            })
+          }
+          else if (event.type === 'response.reasoning_summary_text.done') {
+            responseReasoning += '\n'
+            process?.({
+              delta: { reasoning: '\n' },
+            })
+          }
+          else if (event.type === 'response.output_text.delta') {
+            const delta: string = event.delta || ''
+            responseText += delta
+            process?.({
+              text: responseText,
+              delta: { text: delta },
+            })
+          }
+          else if (event.type === 'response.completed') {
+            const resp = event.response
+            responseId = resp.id
+            usage.prompt_tokens = resp.usage.input_tokens
+            usage.completion_tokens = resp.usage.output_tokens
+            usage.total_tokens = resp.usage.total_tokens
+
+            // Extract tool calls from response
+            if (resp.output && Array.isArray(resp.output)) {
+              editImageId = responseId
+              for (const output of resp.output) {
+                if (output.type === 'image_generation_call' && output.result) {
+                  const base64Data = output.result
+                  const fileIdentifier = await saveBase64ToFile(base64Data)
+
+                  if (fileIdentifier) {
+                    toolCalls.push({
+                      type: 'image_generation',
+                      result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
+                    })
+                  }
+                  else {
+                    toolCalls.push({
+                      type: 'image_generation',
+                      result: base64Data,
+                    })
+                  }
                 }
               }
             }
           }
+        }
+      }
+      finally {
+        // 清除心跳定时器
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval)
+          heartbeatInterval = null
         }
       }
 

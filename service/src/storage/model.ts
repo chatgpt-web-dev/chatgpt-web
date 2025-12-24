@@ -133,6 +133,7 @@ export class ChatInfo {
   model: string
   uuid: number
   dateTime: number
+  promptDateTime?: number // 用户消息的创建时间
   prompt: string
   images?: string[]
   searchQuery?: string
@@ -153,7 +154,9 @@ export class ChatInfo {
     this.prompt = prompt
     this.images = images
     this.options = options
-    this.dateTime = new Date().getTime()
+    const now = new Date().getTime()
+    this.dateTime = now
+    this.promptDateTime = now // 保存用户消息的创建时间
   }
 }
 

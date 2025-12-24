@@ -267,6 +267,7 @@ export async function updateChat(
   tool_images?: string[],
   tool_calls?: Array<{ type: string, result?: any }>,
   editImageId?: string,
+  updateDateTime?: boolean,
 ) {
   const query = { _id: new ObjectId(chatId) }
   const update: any = {
@@ -293,6 +294,9 @@ export async function updateChat(
 
   if (editImageId)
     update.$set.editImageId = editImageId
+
+  if (updateDateTime || (response && response.trim().length > 0))
+    update.$set.dateTime = new Date().getTime()
 
   await chatCol.updateOne(query, update)
 }
