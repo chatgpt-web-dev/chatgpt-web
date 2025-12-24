@@ -295,8 +295,7 @@ export async function updateChat(
   if (editImageId)
     update.$set.editImageId = editImageId
 
-  // 如果是生图完成，更新完成时间
-  if (updateDateTime)
+  if (updateDateTime || (response && response.trim().length > 0))
     update.$set.dateTime = new Date().getTime()
 
   await chatCol.updateOne(query, update)

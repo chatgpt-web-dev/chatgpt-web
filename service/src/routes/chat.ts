@@ -67,7 +67,8 @@ router.get('/chat-history', auth, async (req, res) => {
         result.push({
           uuid: c.uuid,
           model: c.model,
-          dateTime: new Date(c.dateTime),
+          // 用户消息使用 promptDateTime（如果存在），否则使用 dateTime（兼容旧数据）
+          dateTime: new Date(c.promptDateTime || c.dateTime),
           text: c.prompt,
           images: c.images,
           inversion: true,
@@ -92,6 +93,7 @@ router.get('/chat-history', auth, async (req, res) => {
         // Build response object with tool-related fields
         const responseObj: any = {
           uuid: c.uuid,
+          // AI回复使用 dateTime（AI回复完成时间）
           dateTime: new Date(c.dateTime),
           searchQuery: c.searchQuery,
           searchResults: c.searchResults,
