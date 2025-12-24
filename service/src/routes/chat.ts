@@ -67,7 +67,7 @@ router.get('/chat-history', auth, async (req, res) => {
         result.push({
           uuid: c.uuid,
           model: c.model,
-          dateTime: new Date(c.dateTime).toLocaleString(),
+          dateTime: new Date(c.dateTime),
           text: c.prompt,
           images: c.images,
           inversion: true,
@@ -92,7 +92,7 @@ router.get('/chat-history', auth, async (req, res) => {
         // Build response object with tool-related fields
         const responseObj: any = {
           uuid: c.uuid,
-          dateTime: new Date(c.dateTime).toLocaleString(),
+          dateTime: new Date(c.dateTime),
           searchQuery: c.searchQuery,
           searchResults: c.searchResults,
           searchUsageTime: c.searchUsageTime,
@@ -166,7 +166,7 @@ router.get('/chat-response-history', auth, async (req, res) => {
       message: null,
       data: {
         uuid: chat.uuid,
-        dateTime: new Date(chat.dateTime).toLocaleString(),
+        dateTime: new Date(chat.dateTime),
         reasoning: chat.reasoning,
         text: response.response,
         inversion: false,
