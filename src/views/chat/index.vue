@@ -54,6 +54,30 @@ const currentNavIndexRef = ref<number>(-1)
 // 存储上一次工具调用的响应ID，用于传递 previousResponseId
 const lastToolResponseId = ref<string>('')
 
+// 从历史记录中初始化 lastToolResponseId
+function initLastToolResponseId() {
+  // 遍历历史记录，找到最后一个有 editImageId 的消息
+  for (let i = dataSources.value.length - 1; i >= 0; i--) {
+    const chat = dataSources.value[i]
+    if (!chat.inversion && chat.editImageId) {
+      lastToolResponseId.value = chat.editImageId
+      return
+    }
+  }
+  // 如果没有找到 editImageId，尝试使用最后一个 assistant 消息的 conversationOptions.parentMessageId
+  // 只有当 parentMessageId 以 resp_ 开头时才使用
+  for (let i = dataSources.value.length - 1; i >= 0; i--) {
+    const chat = dataSources.value[i]
+    const parentMessageId = chat.conversationOptions?.parentMessageId
+    if (!chat.inversion && parentMessageId && parentMessageId.startsWith('resp_')) {
+      lastToolResponseId.value = parentMessageId
+      return
+    }
+  }
+  // 如果都没有，清空
+  lastToolResponseId.value = ''
+}
+
 let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
@@ -842,6 +866,8 @@ async function loadMoreMessage(event: any) {
   const lastId = chatStore.chat[chatIndex].data[0].uuid
   await chatStore.syncChat({ roomId: currentChatRoom.value!.roomId } as Chat.ChatRoom, lastId, () => {
     loadingms && loadingms.destroy()
+    // 加载更多消息后，重新初始化 lastToolResponseId
+    initLastToolResponseId()
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
     loadingms = ms.loading(
@@ -864,6 +890,8 @@ const handleSyncChat
     // 直接刷 极小概率不请求
     chatStore.syncChat({ roomId: Number(uuid) } as Chat.ChatRoom, undefined, () => {
       firstLoading.value = false
+      // 初始化 lastToolResponseId 从历史记录中
+      initLastToolResponseId()
       const scrollRef = document.querySelector('#scrollRef')
       if (scrollRef)
         nextTick(() => scrollRef.scrollTop = scrollRef.scrollHeight)
@@ -1118,6 +1146,15 @@ onMounted(() => {
 
 watch(() => chatStore.active, () => {
   handleSyncChat()
+})
+
+// 监听 dataSources 变化，自动更新 lastToolResponseId
+// 使用 immediate: false 避免初始化时重复调用（handleSyncChat 回调中已调用）
+watch(() => dataSources.value.length, () => {
+  // 只在数据源长度变化时更新（历史记录加载完成）
+  nextTick(() => {
+    initLastToolResponseId()
+  })
 })
 
 onUnmounted(() => {

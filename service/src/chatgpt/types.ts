@@ -26,6 +26,7 @@ export interface ResponseChunk {
   delta?: {
     reasoning?: string
     text?: string
+    heartbeat?: boolean
   }
   // 工具调用结果
   tool_calls?: Array<{
