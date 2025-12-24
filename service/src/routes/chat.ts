@@ -411,6 +411,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   .map((tool: any) => tool.result)
               }
 
+              // 判断是否是生图请求（有 tool_images 或 tool_calls 中包含 image_generation）
+              const isImageGeneration = tool_images && tool_images.length > 0
+
               if (regenerate && message.options.messageId) {
                 const previousResponse = message.previousResponse || []
                 previousResponse.push({ response: message.response, options: message.options })
@@ -425,6 +428,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   tool_images,
                   tool_calls,
                   editImageId,
+                  isImageGeneration, // 生图时更新完成时间
                 )
               }
               else {
@@ -439,6 +443,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   tool_images,
                   tool_calls,
                   editImageId,
+                  isImageGeneration, // 生图时更新完成时间
                 )
               }
 
