@@ -65,16 +65,6 @@ function initLastToolResponseId() {
       return
     }
   }
-  // 如果没有找到 editImageId，尝试使用最后一个 assistant 消息的 conversationOptions.parentMessageId
-  // 只有当 parentMessageId 以 resp_ 开头时才使用
-  for (let i = dataSources.value.length - 1; i >= 0; i--) {
-    const chat = dataSources.value[i]
-    const parentMessageId = chat.conversationOptions?.parentMessageId
-    if (!chat.inversion && parentMessageId && parentMessageId.startsWith('resp_')) {
-      lastToolResponseId.value = parentMessageId
-      return
-    }
-  }
   // 如果都没有，清空
   lastToolResponseId.value = ''
 }
@@ -145,8 +135,13 @@ async function onConversation() {
   let options: Chat.ConversationRequest = {}
   const lastContext = conversationList.value[conversationList.value.length - 1]?.conversationOptions
 
-  if (lastContext && currentChatRoom.value?.usingContext)
+  if (lastContext && currentChatRoom.value?.usingContext) {
     options = { ...lastContext }
+  }
+  else {
+    // 如果当前对话没有使用上下文（新对话），清空 lastToolResponseId
+    lastToolResponseId.value = ''
+  }
 
   await chatStore.addChatMessage(
     currentChatRoom.value!.roomId,
@@ -1032,6 +1027,7 @@ function renderChatModelLabel(option: { label: string, value: string }, _selecte
 }
 
 async function handleSyncChatModel(chatModel: string) {
+  // Check if it's an external chat site, open in new tab if so
   if (isExternalModel(chatModel)) {
     const url = getExternalModelUrl(chatModel)
     if (url) {
@@ -1041,7 +1037,57 @@ async function handleSyncChatModel(chatModel: string) {
     }
     return
   }
+
+  // Save previous model and toolsEnabled state before switching
+  const previousModel = currentChatRoom.value?.chatModel
+  const previousToolsEnabled = currentChatRoom.value?.toolsEnabled ?? false
+
   await chatStore.setChatModel(chatModel)
+  const newToolsEnabled = currentChatRoom.value?.toolsEnabled ?? false
+  if (previousToolsEnabled !== newToolsEnabled) {
+    // 检查当前房间是否有历史对话
+    const hasHistory = dataSources.value.length > 0
+
+    // 如果没有历史对话，不弹窗提示，直接清空 lastToolResponseId
+    if (!hasHistory) {
+      lastToolResponseId.value = ''
+      return
+    }
+
+    // 有历史对话，弹出对话框询问是否新开会话
+    const d = dialog.warning({
+      title: '切换模型提示',
+      content: '检测到工具调用功能状态已变化，为避免混用，是否新开一个会话？',
+      positiveText: t('common.yes'),
+      negativeText: t('common.no'),
+      closable: false,
+      maskClosable: false,
+      onPositiveClick: async () => {
+        try {
+          if (previousModel) {
+            await chatStore.setChatModel(previousModel)
+          }
+          await chatStore.addNewChatRoom()
+          await chatStore.setChatModel(chatModel)
+          lastToolResponseId.value = ''
+        }
+        finally {
+          d.destroy()
+        }
+      },
+      onNegativeClick: async () => {
+        try {
+          // 用户选择不切换模型，回退到之前的模型
+          if (previousModel) {
+            await chatStore.setChatModel(previousModel)
+          }
+        }
+        finally {
+          d.destroy()
+        }
+      },
+    })
+  }
 }
 
 function handleUpdateMaxContextCount(maxContextCount: number) {
