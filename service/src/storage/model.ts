@@ -256,6 +256,7 @@ export class SiteConfig {
     public s3Endpoint?: string,
     public s3PathPrefix?: string,
     public s3CustomDomain?: string,
+    public externalChatSites?: Array<{ name: string, url: string }>,
   ) { }
 }
 

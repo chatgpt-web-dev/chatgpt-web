@@ -41,6 +41,7 @@ export class SiteConfig {
   s3Endpoint?: string
   s3PathPrefix?: string
   s3CustomDomain?: string
+  externalChatSites?: Array<{ name: string, url: string }>
 }
 
 export class MailConfig {

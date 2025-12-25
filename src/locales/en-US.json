@@ -173,6 +173,8 @@
     "smtpFrom": "From",
     "siteTitle": "Title",
     "siteDomain": "Domain",
+    "externalChatSites": "External Chat Sites",
+    "externalModelName": "Site Name",
     "registerEnabled": "Register Enabled",
     "registerReview": "Register Review",
     "registerMails": "Register Mails",

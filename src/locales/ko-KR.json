@@ -173,6 +173,8 @@
     "smtpFrom": "발신자 이메일",
     "siteTitle": "제목",
     "siteDomain": "도메인",
+    "externalChatSites": "외부 채팅 사이트",
+    "externalModelName": "사이트 이름",
     "registerEnabled": "등록 활성화",
     "registerReview": "등록 리뷰",
     "registerMails": "메일 등록",

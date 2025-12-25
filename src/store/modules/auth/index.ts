@@ -22,6 +22,7 @@ interface SessionResponse {
     key: string
     value: string
   }[]
+  externalChatSites?: Array<{ name: string, url: string }>
   usageCountLimit: boolean
   showWatermark: boolean
   adminViewChatHistoryEnabled?: boolean
