@@ -165,6 +165,9 @@ router.post('/session', async (req, res) => {
       }
     })
 
+    // Parse external chat sites list
+    const externalChatSites: Array<{ name: string, url: string }> = config.siteConfig.externalChatSites || []
+
     let userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, roles: UserRole[], config: UserConfig, advanced: AdvancedConfig }
     if (userId != null) {
       const user = await getUserById(userId)
@@ -177,8 +180,9 @@ router.post('/session', async (req, res) => {
             auth: hasAuth,
             allowRegister,
             title: config.siteConfig.siteTitle,
-            chatModels,
+            chatModels: chatModelOptions,
             allChatModels: chatModelOptions,
+            externalChatSites,
             showWatermark: config.siteConfig?.showWatermark,
             adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
           },
@@ -333,6 +337,7 @@ router.post('/session', async (req, res) => {
           title: config.siteConfig.siteTitle,
           chatModels,
           allChatModels: chatModelOptions,
+          externalChatSites,
           usageCountLimit: config.siteConfig?.usageCountLimit,
           showWatermark: config.siteConfig?.showWatermark,
           adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
@@ -352,6 +357,7 @@ router.post('/session', async (req, res) => {
         title: config.siteConfig.siteTitle,
         chatModels: chatModelOptions,
         allChatModels: chatModelOptions,
+        externalChatSites,
         showWatermark: config.siteConfig?.showWatermark,
         adminViewChatHistoryEnabled: process.env.ADMIN_VIEW_CHAT_HISTORY_ENABLED === 'true',
         userInfo,

@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import type { MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
+import { h } from 'vue'
 import {
   fetchChatAPIProcessSSE,
   fetchChatResponseoHistory,
@@ -983,8 +984,61 @@ const footerClass = computed(() => {
   return classes
 })
 
+// Check if it's an external chat site (format: external:name:url)
+function isExternalModel(value: string): boolean {
+  return value.startsWith('external:')
+}
+
+// Extract URL from external chat site value
+function getExternalModelUrl(value: string): string | null {
+  if (!isExternalModel(value))
+    return null
+  const parts = value.split(':')
+  if (parts.length >= 3)
+    return parts.slice(2).join(':') // Handle URLs that may contain : symbol
+  return null
+}
+
+const chatModelOptions = computed(() => {
+  const baseModels = authStore.session?.chatModels ?? []
+  const externalSites = authStore.session?.externalChatSites ?? []
+
+  // Convert external chat sites to model options format
+  const externalOptions = externalSites.map(site => ({
+    label: site.name,
+    key: `external:${site.name}`,
+    value: `external:${site.name}:${site.url}`,
+  }))
+
+  return [...baseModels, ...externalOptions]
+})
+
+function renderChatModelLabel(option: { label: string, value: string }, _selected: boolean) {
+  if (isExternalModel(option.value)) {
+    return h('span', { style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
+      option.label,
+      h(SvgIcon, {
+        icon: 'ri:external-link-line',
+        style: { fontSize: '14px', color: 'var(--n-text-color-secondary)' },
+      }),
+    ])
+  }
+  return option.label
+}
+
 async function handleSyncChatModel(chatModel: string) {
-  // 保存切换前的模型和 toolsEnabled 状态
+  // Check if it's an external chat site, open in new tab if so
+  if (isExternalModel(chatModel)) {
+    const url = getExternalModelUrl(chatModel)
+    if (url) {
+      const w = window.open(url, '_blank', 'noopener,noreferrer')
+      if (w)
+        w.opener = null
+    }
+    return
+  }
+
+  // Save previous model and toolsEnabled state before switching
   const previousModel = currentChatRoom.value?.chatModel
   const previousToolsEnabled = currentChatRoom.value?.toolsEnabled ?? false
 
@@ -1334,8 +1388,9 @@ onUnmounted(() => {
             <NSelect
               style="width: 250px"
               :value="currentChatRoom?.chatModel"
-              :options="authStore.session?.chatModels"
+              :options="chatModelOptions"
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
+              :render-label="renderChatModelLabel"
               @update:value="handleSyncChatModel"
             />
             <HoverButton

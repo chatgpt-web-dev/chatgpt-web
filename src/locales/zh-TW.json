@@ -173,6 +173,8 @@
     "smtpFrom": "发件人邮箱",
     "siteTitle": "网站标题",
     "siteDomain": "域名 不含/",
+    "externalChatSites": "外部會話站點",
+    "externalModelName": "站點名稱",
     "registerEnabled": "新用户",
     "registerReview": "新用户审核",
     "registerMails": "后缀",

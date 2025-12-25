@@ -12,25 +12,67 @@ const saving = ref(false)
 
 const config = ref(new SiteConfig())
 
+interface ExternalChatSite {
+  name: string
+  url: string
+}
+
+const externalChatSite = ref<ExternalChatSite[]>([])
+
 async function fetchConfig() {
   try {
     loading.value = true
     const { data } = await fetchChatConfig<ConfigState>()
     config.value = data.siteConfig ? data.siteConfig : new SiteConfig()
+
+    // Parse external chat sites list
+    if (config.value.externalChatSites && Array.isArray(config.value.externalChatSites)) {
+      externalChatSite.value = config.value.externalChatSites.map((item: any) => ({
+        name: item.name || '',
+        url: item.url || '',
+      }))
+    }
+    else {
+      externalChatSite.value = []
+    }
   }
   finally {
     loading.value = false
   }
 }
 
+function addExternalChatSite() {
+  externalChatSite.value.push({ name: '', url: '' })
+}
+
+function removeExternalChatSite(index: number) {
+  externalChatSite.value.splice(index, 1)
+}
+
 async function updateSiteInfo(site?: SiteConfig) {
   if (!site)
     return
+
+  // Set external chat sites list
+  const validSites = externalChatSite.value.filter(m => m.name && m.url)
+  site.externalChatSites = validSites.length > 0 ? validSites : undefined
 
   saving.value = true
   try {
     const { data } = await fetchUpdateSite(site)
     config.value = data
+
+    // Update external chat sites list display
+    if (data.externalChatSites && Array.isArray(data.externalChatSites)) {
+      externalChatSite.value = data.externalChatSites.map((item: any) => ({
+        name: item.name || '',
+        url: item.url || '',
+      }))
+    }
+    else {
+      externalChatSite.value = []
+    }
+
     ms.success(t('common.success'))
   }
   catch (error: any) {
@@ -125,6 +167,31 @@ onMounted(() => {
               :autosize="{ minRows: 1, maxRows: 4 }"
               @input="(val) => { if (config) config.chatModels = val }"
             />
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.externalChatSites') }}</span>
+            <div class="flex-1">
+              <NButton size="small" @click="addExternalChatSite">
+                {{ t('common.add') }}
+              </NButton>
+            </div>
+          </div>
+          <div v-for="(model, index) in externalChatSite" :key="index" class="flex items-center space-x-2 pl-[100px]">
+            <NInput
+              v-model:value="model.name"
+              :placeholder="t('setting.externalModelName')"
+              style="flex: 1;"
+            />
+            <NInput
+              v-model:value="model.url"
+              placeholder="URL"
+              style="flex: 2;"
+            />
+            <NButton size="small" type="error" @click="removeExternalChatSite(index)">
+              {{ t('common.delete') }}
+            </NButton>
           </div>
         </div>
         <!-- 增加新注册用户的全局数量设置 -->
