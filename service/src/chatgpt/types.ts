@@ -1,5 +1,5 @@
 import type OpenAI from 'openai'
-import type { ChatRoom, SearchResult, UserInfo } from 'src/storage/model'
+import type { ChatRoom, ImageUsageItem, SearchResult, UserInfo } from 'src/storage/model'
 import type { ImageGenerationTool } from '../types'
 
 export interface ChatMessage {
@@ -36,6 +36,7 @@ export interface ResponseChunk {
   }>
   // 编辑图片时使用的文件 ID（用于后续作为 previousResponseId）
   editImageId?: string
+  image_usage?: ImageUsageItem[]
 }
 
 export interface RequestOptions {

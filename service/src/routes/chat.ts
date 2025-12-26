@@ -1,5 +1,5 @@
 import type { ResponseChunk } from '../chatgpt/types'
-import type { ChatInfo, ChatOptions, UsageResponse, UserInfo } from '../storage/model'
+import type { ChatInfo, ChatOptions, ImageUsageItem, UsageResponse, UserInfo } from '../storage/model'
 import type { RequestProps } from '../types'
 import * as console from 'node:console'
 import * as process from 'node:process'
@@ -450,7 +450,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
               }
 
               if (result.data.detail?.usage) {
-                await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse)
+                const imageUsage = result.data.image_usage as ImageUsageItem[] | undefined
+                await insertChatUsage(new ObjectId(req.headers.userId), roomId, message._id, result.data.id, model, result.data.detail?.usage as UsageResponse, imageUsage)
               }
               // update personal useAmount moved here
               // if not fakeuserid, and has valid user info and valid useAmount set by admin nut null and limit is enabled
