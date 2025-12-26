@@ -1,3 +1,4 @@
+import type { ImageGenerationTool } from '../../service/src/types'
 import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
 import { useUserStore } from '@/store'
@@ -39,7 +40,7 @@ export function fetchChatAPIProcessSSE(
     prompt: string
     uploadFileKeys?: string[]
     options?: { conversationId?: string, parentMessageId?: string }
-    tools?: Array<{ type: 'image_generation' }>
+    tools?: Array<ImageGenerationTool>
     previousResponseId?: string
     signal?: AbortSignal
   },

@@ -1,5 +1,12 @@
 import type { JwtPayload } from 'jsonwebtoken'
 
+export interface ImageGenerationTool {
+  type: 'image_generation'
+  input_fidelity?: 'low' | 'medium' | 'high'
+  quality?: 'low' | 'medium' | 'high'
+  model?: 'gpt-image-1' | 'gpt-image-1.5'
+}
+
 export interface RequestProps {
   roomId: number
   uuid: number
@@ -10,7 +17,7 @@ export interface RequestProps {
   systemMessage: string
   temperature?: number
   top_p?: number
-  tools?: Array<{ type: 'image_generation' }>
+  tools?: ImageGenerationTool[]
   previousResponseId?: string
 }
 

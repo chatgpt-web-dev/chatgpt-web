@@ -1,5 +1,6 @@
 import type OpenAI from 'openai'
 import type { ChatRoom, SearchResult, UserInfo } from 'src/storage/model'
+import type { ImageGenerationTool } from '../types'
 
 export interface ChatMessage {
   id: string
@@ -42,7 +43,7 @@ export interface RequestOptions {
   uploadFileKeys?: string[]
   parentMessageId?: string
   previousResponseId?: string
-  tools?: Array<{ type: 'image_generation' }>
+  tools?: Array<ImageGenerationTool>
   process?: (chunk: ResponseChunk) => void
   systemMessage?: string
   temperature?: number
