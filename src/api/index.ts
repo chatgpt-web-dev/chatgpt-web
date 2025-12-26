@@ -39,7 +39,7 @@ export function fetchChatAPIProcessSSE(
     prompt: string
     uploadFileKeys?: string[]
     options?: { conversationId?: string, parentMessageId?: string }
-    tools?: Array<{ type: 'image_generation' }>
+    tools?: Array<Chat.ImageGenerationTool>
     previousResponseId?: string
     signal?: AbortSignal
   },

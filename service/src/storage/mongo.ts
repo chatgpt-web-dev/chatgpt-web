@@ -5,6 +5,7 @@ import type {
   ChatOptions,
   Config,
   GiftCard,
+  ImageUsageItem,
   KeyConfig,
   SearchResult,
   UsageResponse,
@@ -324,8 +325,8 @@ export async function updateChatSearchResult(chatId: string, searchResults: Sear
   return result.modifiedCount > 0
 }
 
-export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, model: string, usage: UsageResponse) {
-  const chatUsage = new ChatUsage(userId, roomId, chatId, messageId, model, usage)
+export async function insertChatUsage(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, model: string, usage: UsageResponse, imageUsage?: ImageUsageItem[]) {
+  const chatUsage = new ChatUsage(userId, roomId, chatId, messageId, model, usage, imageUsage)
   await usageCol.insertOne(chatUsage)
   return chatUsage
 }
