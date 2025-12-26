@@ -529,6 +529,13 @@ export function fetchUserStatistics<T = any>(userId: string, start: number, end:
   })
 }
 
+export function fetchUserStatisticsByModel<T = any>(start?: number, end?: number) {
+  return post<T>({
+    url: '/statistics/by-model',
+    data: { start, end },
+  })
+}
+
 export function fetchGetKeys<T = any>(page: number, size: number) {
   return get<T>({
     url: '/setting-keys',

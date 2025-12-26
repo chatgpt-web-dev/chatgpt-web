@@ -883,6 +883,235 @@ export async function getUserStatisticsByDay(userId: ObjectId, start: number, en
   return result
 }
 
+export async function getUserStatisticsByModel(start?: number, end?: number): Promise<any> {
+  const enabledKeys = await keyCol.find({ status: Status.Normal }).toArray()
+  const matchCondition: any = {}
+  if (start !== undefined && end !== undefined) {
+    matchCondition.dateTime = {
+      $gte: start,
+      $lte: end,
+    }
+  }
+
+  const pipeline = [
+    {
+      $match: matchCondition,
+    },
+    {
+      $lookup: {
+        from: 'chat',
+        localField: 'chatId',
+        foreignField: '_id',
+        as: 'chatInfo',
+      },
+    },
+    {
+      $unwind: {
+        path: '$chatInfo',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        imageCount: {
+          $cond: {
+            if: { $isArray: '$chatInfo.tool_images' },
+            then: { $size: '$chatInfo.tool_images' },
+            else: 0,
+          },
+        },
+        // 添加日期字段
+        date: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: {
+              $toDate: '$dateTime',
+            },
+          },
+        },
+      },
+    },
+    {
+      // 按 userId、model 和 date 分组
+      $group: {
+        _id: {
+          userId: '$userId',
+          model: '$model',
+          date: '$date',
+        },
+        promptTokens: {
+          $sum: '$promptTokens',
+        },
+        completionTokens: {
+          $sum: '$completionTokens',
+        },
+        totalTokens: {
+          $sum: '$totalTokens',
+        },
+        imageCount: {
+          $sum: '$imageCount',
+        },
+        usageCount: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      // 关联 user 表获取用户信息
+      $lookup: {
+        from: 'user',
+        localField: '_id.userId',
+        foreignField: '_id',
+        as: 'userInfo',
+      },
+    },
+    {
+      // 展开 userInfo 数组
+      $unwind: {
+        path: '$userInfo',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      // 整理输出字段
+      $project: {
+        _id: 0,
+        userId: { $toString: '$_id.userId' },
+        modelKey: '$_id.model',
+        date: '$_id.date',
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 1,
+        imageCount: 1,
+        usageCount: 1,
+        userEmail: '$userInfo.email',
+        userName: '$userInfo.name',
+      },
+    },
+    {
+      // 按日期排序
+      $sort: {
+        date: 1,
+      },
+    },
+  ]
+
+  const aggResults = await usageCol.aggregate(pipeline).toArray()
+
+  // 使用嵌套的 Map 结构：userId -> modelKey -> date -> data
+  const resultMap = new Map<string, Map<string, Map<string, any>>>()
+
+  for (const item of aggResults) {
+    const userId = item.userId
+    const modelKey = item.modelKey
+    const date = item.date
+
+    let matchedKey: KeyConfig | undefined
+    if (modelKey.includes('|')) {
+      // 格式：modelName|keyId
+      const [modelName, keyId] = modelKey.split('|')
+      matchedKey = enabledKeys.find(key => key._id.toString() === keyId && key.chatModel === modelName)
+    }
+    else {
+      // 格式：modelName
+      matchedKey = enabledKeys.find(key => key.chatModel === modelKey)
+    }
+
+    // 如果找不到匹配的 key 或者 key 未启用，跳过
+    if (!matchedKey || matchedKey.status !== Status.Normal) {
+      continue
+    }
+
+    // 初始化嵌套结构
+    if (!resultMap.has(userId)) {
+      resultMap.set(userId, new Map())
+    }
+    const userModelMap = resultMap.get(userId)!
+
+    if (!userModelMap.has(modelKey)) {
+      userModelMap.set(modelKey, new Map())
+    }
+    const modelDateMap = userModelMap.get(modelKey)!
+
+    // 按日期存储数据
+    if (!modelDateMap.has(date)) {
+      modelDateMap.set(date, {
+        date,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        imageCount: 0,
+        usageCount: 0,
+      })
+    }
+
+    const dateData = modelDateMap.get(date)!
+    dateData.promptTokens += item.promptTokens
+    dateData.completionTokens += item.completionTokens
+    dateData.totalTokens += item.totalTokens
+    dateData.imageCount += item.imageCount
+    dateData.usageCount += item.usageCount
+  }
+
+  // 转换为最终格式：按用户 -> 模型 -> 日期分组
+  const result: any[] = []
+  resultMap.forEach((userModelMap, userId) => {
+    // 获取第一个 item 来获取用户信息（所有日期都有相同的用户信息）
+    const firstItem = aggResults.find(item => item.userId === userId)
+    const userData: any = {
+      userId,
+      userEmail: firstItem?.userEmail || '',
+      userName: firstItem?.userName || '',
+      models: [],
+    }
+
+    userModelMap.forEach((modelDateMap, modelKey) => {
+      let matchedKey: KeyConfig | undefined
+      if (modelKey.includes('|')) {
+        const [modelName, keyId] = modelKey.split('|')
+        matchedKey = enabledKeys.find(key => key._id.toString() === keyId && key.chatModel === modelName)
+      }
+      else {
+        matchedKey = enabledKeys.find(key => key.chatModel === modelKey)
+      }
+
+      if (!matchedKey || matchedKey.status !== Status.Normal) {
+        return
+      }
+
+      const displayModelName = matchedKey.modelAlias || matchedKey.chatModel
+
+      // 将日期数据转换为数组并按日期排序
+      const dates = Array.from(modelDateMap.values()).sort((a, b) => a.date.localeCompare(b.date))
+
+      // 计算总计
+      const totalPromptTokens = dates.reduce((sum, d) => sum + d.promptTokens, 0)
+      const totalCompletionTokens = dates.reduce((sum, d) => sum + d.completionTokens, 0)
+      const totalTotalTokens = dates.reduce((sum, d) => sum + d.totalTokens, 0)
+      const totalImageCount = dates.reduce((sum, d) => sum + d.imageCount, 0)
+      const totalUsageCount = dates.reduce((sum, d) => sum + d.usageCount, 0)
+
+      userData.models.push({
+        modelKey,
+        modelName: displayModelName,
+        promptTokens: totalPromptTokens,
+        completionTokens: totalCompletionTokens,
+        totalTokens: totalTotalTokens,
+        imageCount: totalImageCount,
+        usageCount: totalUsageCount,
+        dates, // 添加按日期分组的数据
+      })
+    })
+
+    result.push(userData)
+  })
+
+  // 按 userId 排序
+  result.sort((a, b) => a.userId.localeCompare(b.userId))
+
+  return result
+}
+
 export async function getKeys(): Promise<{ keys: KeyConfig[], total: number }> {
   const query = { status: { $ne: Status.Disabled } }
   const cursor = keyCol.find(query)
