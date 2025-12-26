@@ -204,7 +204,7 @@ async function exportUsageStatistics() {
     }
     const csvRows = []
     // CSV 头部：包含日期列
-    csvRows.push(['User Email', 'Model Name', 'Model Key', 'Date', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens', 'Image Count', 'Usage Count'].join(','))
+    csvRows.push(['User Email', 'Model Name', 'Model Key', 'Date', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens', 'Image Count', 'Image OutPutTokens', 'Usage Count'].join(','))
 
     // 数据行：遍历每个用户、每个模型和每个日期
     data.forEach((userData: any) => {
@@ -221,6 +221,7 @@ async function exportUsageStatistics() {
               dateData.completionTokens || 0,
               dateData.totalTokens || 0,
               dateData.imageCount || 0,
+              dateData.imageOutputTokens || 0,
               dateData.usageCount || 0,
             ].join(','))
           })
@@ -236,6 +237,7 @@ async function exportUsageStatistics() {
             model.completionTokens || 0,
             model.totalTokens || 0,
             model.imageCount || 0,
+            model.imageOutputTokens || 0,
             model.usageCount || 0,
           ].join(','))
         }

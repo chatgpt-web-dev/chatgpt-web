@@ -921,6 +921,22 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
             else: 0,
           },
         },
+        // 计算图片token 总数
+        imageOutputTokens: {
+          $cond: {
+            if: { $isArray: '$imageUsage' },
+            then: {
+              $sum: {
+                $map: {
+                  input: '$imageUsage',
+                  as: 'img',
+                  in: { $ifNull: ['$$img.tokens', 0] },
+                },
+              },
+            },
+            else: 0,
+          },
+        },
         // 添加日期字段
         date: {
           $dateToString: {
@@ -951,6 +967,9 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
         },
         imageCount: {
           $sum: '$imageCount',
+        },
+        imageOutputTokens: {
+          $sum: '$imageOutputTokens',
         },
         usageCount: {
           $sum: 1,
@@ -984,6 +1003,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
         completionTokens: 1,
         totalTokens: 1,
         imageCount: 1,
+        imageOutputTokens: 1,
         usageCount: 1,
         userEmail: '$userInfo.email',
         userName: '$userInfo.name',
@@ -1042,6 +1062,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
         completionTokens: 0,
         totalTokens: 0,
         imageCount: 0,
+        imageOutputTokens: 0,
         usageCount: 0,
       })
     }
@@ -1051,6 +1072,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
     dateData.completionTokens += item.completionTokens
     dateData.totalTokens += item.totalTokens
     dateData.imageCount += item.imageCount
+    dateData.imageOutputTokens += item.imageOutputTokens
     dateData.usageCount += item.usageCount
   }
 
@@ -1090,6 +1112,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
       const totalCompletionTokens = dates.reduce((sum, d) => sum + d.completionTokens, 0)
       const totalTotalTokens = dates.reduce((sum, d) => sum + d.totalTokens, 0)
       const totalImageCount = dates.reduce((sum, d) => sum + d.imageCount, 0)
+      const totalImageTokens = dates.reduce((sum, d) => sum + d.imageTokens, 0)
       const totalUsageCount = dates.reduce((sum, d) => sum + d.usageCount, 0)
 
       userData.models.push({
@@ -1099,6 +1122,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
         completionTokens: totalCompletionTokens,
         totalTokens: totalTotalTokens,
         imageCount: totalImageCount,
+        imageTokens: totalImageTokens,
         usageCount: totalUsageCount,
         dates, // 添加按日期分组的数据
       })
