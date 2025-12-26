@@ -1,4 +1,11 @@
 declare namespace Chat {
+  interface ImageGenerationTool {
+    type: 'image_generation'
+    input_fidelity?: 'low' | 'medium' | 'high'
+    quality?: 'low' | 'medium' | 'high'
+    model?: 'gpt-image-1' | 'gpt-image-1.5'
+  }
+
   interface SearchResult {
     title: string
     url: string

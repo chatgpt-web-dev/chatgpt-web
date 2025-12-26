@@ -167,6 +167,15 @@ export class UsageResponse {
   estimated: boolean
 }
 
+export interface ImageUsageItem {
+  size?: string
+  quality?: string
+  model?: string
+  mainModel?: string
+  tokens?: number
+  data_type?: string
+}
+
 export class ChatUsage {
   _id: ObjectId
   userId: ObjectId
@@ -179,7 +188,8 @@ export class ChatUsage {
   totalTokens: number
   estimated: boolean
   dateTime: number
-  constructor(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, model: string, usage?: UsageResponse) {
+  imageUsage?: ImageUsageItem[]
+  constructor(userId: ObjectId, roomId: number, chatId: ObjectId, messageId: string, model: string, usage?: UsageResponse, imageUsage?: ImageUsageItem[]) {
     this.userId = userId
     this.roomId = roomId
     this.chatId = chatId
@@ -190,6 +200,9 @@ export class ChatUsage {
       this.completionTokens = usage.completion_tokens
       this.totalTokens = usage.total_tokens
       this.estimated = usage.estimated
+    }
+    if (imageUsage && imageUsage.length > 0) {
+      this.imageUsage = imageUsage
     }
     this.dateTime = new Date().getTime()
   }
