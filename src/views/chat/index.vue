@@ -173,7 +173,7 @@ async function onConversation() {
         prompt: message,
         uploadFileKeys,
         options,
-        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation', input_fidelity: 'high', quality: 'high', model: 'gpt-image-1.5' }] : undefined,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
         previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {
@@ -490,7 +490,7 @@ async function onRegenerate(index: number) {
         regenerate: true,
         prompt: message,
         options,
-        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation', input_fidelity: 'high', quality: 'high', model: 'gpt-image-1.5' }] : undefined,
+        tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
         previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
         signal: controller.signal,
       }, {

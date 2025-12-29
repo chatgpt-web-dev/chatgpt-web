@@ -328,6 +328,27 @@ search result: <search_result>${searchResultContent}</search_result>`,
         }
       }
 
+      // 如果 tools 中有 image_generation，并且 keyConfig 中有配置，则使用 keyConfig 中的配置
+      let finalTools = tools
+      if (tools && tools.length > 0) {
+        finalTools = tools.map((tool: any) => {
+          if (tool.type === 'image_generation') {
+            // 从 keyConfig 读取配置，如果不存在则使用默认值
+            const inputFidelity = key.inputFidelity || tool.input_fidelity || 'high'
+            const quality = key.quality || tool.quality || 'high'
+            const model = key.imageModel || tool.model || 'gpt-image-1.5'
+
+            return {
+              type: 'image_generation',
+              input_fidelity: inputFidelity,
+              quality,
+              model,
+            }
+          }
+          return tool
+        })
+      }
+
       const stream = await openai.responses.create(
         {
           model,
@@ -336,7 +357,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
           reasoning,
           store: options.room.toolsEnabled,
           stream: true,
-          ...(tools && tools.length > 0 && { tools: tools as any }),
+          ...(finalTools && finalTools.length > 0 && { tools: finalTools as any }),
           // 如果有图片代表是编辑当前图片，不传递该参数，否则传递该参数
           ...(previousResponseId && uploadFileKeys.length === 0 && { previous_response_id: previousResponseId }),
         },
