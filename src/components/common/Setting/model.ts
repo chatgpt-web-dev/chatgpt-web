@@ -114,6 +114,9 @@ export class KeyConfig {
   baseUrl?: string
   toolsEnabled?: boolean
   imageUploadEnabled?: boolean
+  inputFidelity?: 'low' | 'medium' | 'high'
+  quality?: 'low' | 'medium' | 'high'
+  imageModel?: 'gpt-image-1' | 'gpt-image-1.5'
   constructor(key: string, keyModel: APIMODEL, chatModel: string, userRoles: UserRole[], remark: string) {
     this.key = key
     this.keyModel = keyModel

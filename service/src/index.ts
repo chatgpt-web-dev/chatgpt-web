@@ -25,6 +25,7 @@ import {
   getUserById,
   getUsers,
   getUserStatisticsByDay,
+  getUserStatisticsByModel,
   initializeMongoDB,
   updateApiKeyStatus,
   updateConfig,
@@ -1077,6 +1078,22 @@ router.post('/statistics/by-day', auth, async (req, res) => {
       throw new Error('无权限 | No permission')
 
     const data = await getUserStatisticsByDay(new ObjectId(userId as string), start, end)
+    res.send({ status: 'Success', message: '', data })
+  }
+  catch (error) {
+    res.send(error)
+  }
+})
+
+router.post('/statistics/by-model', auth, async (req, res) => {
+  try {
+    const { start, end } = req.body as { start?: number, end?: number }
+
+    // 只有管理员可以查看所有用户的统计
+    if (!isAdmin(req.headers.userId as string))
+      throw new Error('无权限 | No permission')
+
+    const data = await getUserStatisticsByModel(start, end)
     res.send({ status: 'Success', message: '', data })
   }
   catch (error) {

@@ -1,6 +1,6 @@
 import type { ClientOptions } from 'openai'
 import type { RequestInit } from 'undici'
-import type { APIMODEL, AuditConfig, Config, KeyConfig, SearchResult, UserInfo } from '../storage/model'
+import type { APIMODEL, AuditConfig, Config, ImageUsageItem, KeyConfig, SearchResult, UserInfo } from '../storage/model'
 import type { TextAuditService } from '../utils/textAudit'
 import type { ChatMessage, RequestOptions } from './types'
 import { tavily } from '@tavily/core'
@@ -17,6 +17,59 @@ import { textAuditServices } from '../utils/textAudit'
 
 function renderSystemMessage(template: string, currentTime: string): string {
   return template.replace(/\{current_time\}/g, currentTime)
+}
+
+/**
+ * 根据图片的size和quality计算token
+ * @param size 图片尺寸，如 '1024x1024', '1024x1536', '1536x1024'
+ * @param quality 图片质量，如 'low', 'medium', 'high'
+ * @returns token数量，如果无法匹配则返回0
+ */
+function calculateImageTokens(size: string | undefined, quality: string | undefined): number {
+  if (!size || !quality) {
+    return 0
+  }
+
+  // 标准化quality
+  const normalizedQuality = quality.toLowerCase()
+  // 标准化size，判断是square、portrait还是landscape
+  const sizeLower = size.toLowerCase()
+  let sizeType: 'square' | 'portrait' | 'landscape' | null = null
+
+  if (sizeLower === '1024x1024') {
+    sizeType = 'square'
+  }
+  else if (sizeLower === '1024x1536') {
+    sizeType = 'portrait'
+  }
+  else if (sizeLower === '1536x1024') {
+    sizeType = 'landscape'
+  }
+
+  if (!sizeType) {
+    return 0
+  }
+
+  // Token计算表
+  const tokenMap: Record<string, Record<string, number>> = {
+    low: {
+      square: 272,
+      portrait: 408,
+      landscape: 400,
+    },
+    medium: {
+      square: 1056,
+      portrait: 1584,
+      landscape: 1568,
+    },
+    high: {
+      square: 4160,
+      portrait: 6240,
+      landscape: 6208,
+    },
+  }
+
+  return tokenMap[normalizedQuality]?.[sizeType] || 0
 }
 
 const ErrorCodeMessage: Record<string, string> = {
@@ -275,6 +328,27 @@ search result: <search_result>${searchResultContent}</search_result>`,
         }
       }
 
+      // 如果 tools 中有 image_generation，并且 keyConfig 中有配置，则使用 keyConfig 中的配置
+      let finalTools = tools
+      if (tools && tools.length > 0) {
+        finalTools = tools.map((tool: any) => {
+          if (tool.type === 'image_generation') {
+            // 从 keyConfig 读取配置，如果不存在则使用默认值
+            const inputFidelity = key.inputFidelity || tool.input_fidelity || 'high'
+            const quality = key.quality || tool.quality || 'high'
+            const model = key.imageModel || tool.model || 'gpt-image-1.5'
+
+            return {
+              type: 'image_generation',
+              input_fidelity: inputFidelity,
+              quality,
+              model,
+            }
+          }
+          return tool
+        })
+      }
+
       const stream = await openai.responses.create(
         {
           model,
@@ -283,7 +357,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
           reasoning,
           store: options.room.toolsEnabled,
           stream: true,
-          ...(tools && tools.length > 0 && { tools: tools as any }),
+          ...(finalTools && finalTools.length > 0 && { tools: finalTools as any }),
           // 如果有图片代表是编辑当前图片，不传递该参数，否则传递该参数
           ...(previousResponseId && uploadFileKeys.length === 0 && { previous_response_id: previousResponseId }),
         },
@@ -299,6 +373,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
       const usage = new UsageResponse()
       const toolCalls: Array<{ type: string, result?: any }> = []
       let editImageId: string | undefined
+      let imageUsageList: ImageUsageItem[] = []
 
       // 心跳机制：防止生图等长时间操作时连接超时
       let heartbeatInterval: NodeJS.Timeout | null = null
@@ -341,26 +416,52 @@ search result: <search_result>${searchResultContent}</search_result>`,
             usage.prompt_tokens = resp.usage.input_tokens
             usage.completion_tokens = resp.usage.output_tokens
             usage.total_tokens = resp.usage.total_tokens
+            // 重置图片使用列表
+            imageUsageList = []
+
+            // 获取主模型和图片生成模型
+            const mainModel = resp.model
+            const imageModel = resp.tools && Array.isArray(resp.tools) && resp.tools.length > 0
+              ? (resp.tools.find((tool: any) => tool.type === 'image_generation') as any)?.model
+              : undefined
 
             // Extract tool calls from response
             if (resp.output && Array.isArray(resp.output)) {
               editImageId = responseId
               for (const output of resp.output) {
-                if (output.type === 'image_generation_call' && output.result) {
-                  const base64Data = output.result
-                  const fileIdentifier = await saveBase64ToFile(base64Data)
+                if (output.type === 'image_generation_call') {
+                  // 记录图片使用信息：size、quality、模型
+                  const imageOutput = output as any
+                  const imageSize = imageOutput.size
+                  const imageQuality = imageOutput.quality
+                  const imageTokens = calculateImageTokens(imageSize, imageQuality)
 
-                  if (fileIdentifier) {
-                    toolCalls.push({
-                      type: 'image_generation',
-                      result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
-                    })
-                  }
-                  else {
-                    toolCalls.push({
-                      type: 'image_generation',
-                      result: base64Data,
-                    })
+                  imageUsageList.push({
+                    size: imageSize,
+                    quality: imageQuality,
+                    model: imageModel,
+                    mainModel,
+                    tokens: imageTokens,
+                    data_type: 'output',
+                  })
+
+                  // 处理图片结果
+                  if (output.result) {
+                    const base64Data = output.result
+                    const fileIdentifier = await saveBase64ToFile(base64Data)
+
+                    if (fileIdentifier) {
+                      toolCalls.push({
+                        type: 'image_generation',
+                        result: fileIdentifier, // 文件名或S3 URL，前端会自动处理
+                      })
+                    }
+                    else {
+                      toolCalls.push({
+                        type: 'image_generation',
+                        result: base64Data,
+                      })
+                    }
                   }
                 }
               }
@@ -384,6 +485,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
         detail: { usage },
         ...(toolCalls.length > 0 && { tool_calls: toolCalls }),
         ...(editImageId && { editImageId }),
+        ...(imageUsageList.length > 0 && { image_usage: imageUsageList }),
       }
       return sendResponse({ type: 'Success', data: response })
     }

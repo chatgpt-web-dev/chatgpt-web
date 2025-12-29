@@ -320,6 +320,52 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+        <div v-if="keyConfig.toolsEnabled" class="grid grid-cols-2 gap-4">
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.inputFidelity') }}</span>
+            <div class="flex-1">
+              <NSelect
+                style="width: 100%"
+                :value="keyConfig.inputFidelity || 'high'"
+                :options="[
+                  { label: t('setting.low'), value: 'low' },
+                  { label: t('setting.medium'), value: 'medium' },
+                  { label: t('setting.high'), value: 'high' },
+                ]"
+                @update-value="value => keyConfig.inputFidelity = value"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.quality') }}</span>
+            <div class="flex-1">
+              <NSelect
+                style="width: 100%"
+                :value="keyConfig.quality || 'high'"
+                :options="[
+                  { label: t('setting.low'), value: 'low' },
+                  { label: t('setting.medium'), value: 'medium' },
+                  { label: t('setting.high'), value: 'high' },
+                ]"
+                @update-value="value => keyConfig.quality = value"
+              />
+            </div>
+          </div>
+        </div>
+        <div v-if="keyConfig.toolsEnabled" class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.imageModel') }}</span>
+          <div class="flex-1">
+            <NSelect
+              style="width: 100%"
+              :value="keyConfig.imageModel || 'gpt-image-1.5'"
+              :options="[
+                { label: 'gpt-image-1', value: 'gpt-image-1' },
+                { label: 'gpt-image-1.5', value: 'gpt-image-1.5' },
+              ]"
+              @update-value="value => keyConfig.imageModel = value"
+            />
+          </div>
+        </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="flex items-center space-x-4">
             <span class="shrink-0 w-[100px]">{{ t('setting.imageUpload') }}</span>

@@ -39,7 +39,7 @@ export function fetchChatAPIProcessSSE(
     prompt: string
     uploadFileKeys?: string[]
     options?: { conversationId?: string, parentMessageId?: string }
-    tools?: Array<{ type: 'image_generation' }>
+    tools?: Array<Chat.ImageGenerationTool>
     previousResponseId?: string
     signal?: AbortSignal
   },
@@ -526,6 +526,13 @@ export function fetchUserStatistics<T = any>(userId: string, start: number, end:
   return post<T>({
     url: '/statistics/by-day',
     data: { userId, start, end },
+  })
+}
+
+export function fetchUserStatisticsByModel<T = any>(start?: number, end?: number) {
+  return post<T>({
+    url: '/statistics/by-model',
+    data: { start, end },
   })
 }
 
