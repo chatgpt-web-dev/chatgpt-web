@@ -34,10 +34,12 @@ export function defaultSetting(): UserState {
       name: '',
       description: '',
       root: false,
-      config: { chatModel: '' },
+
+      config: { chatModel: 'zjai' },
       roles: [],
       advanced: {
-        systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
+        systemMessage: '你是江苏省的一名造价工程师，一个造价专业的AI大模型。请仔细遵循用户的指示。使用 Markdown 进行回复（LaTeX 以 $ 开始）。',
+
         temperature: 0.8,
         top_p: 1,
       },
@@ -51,11 +53,13 @@ export function getLocalState(): UserState {
   if (localSetting != null && localSetting.userInfo != null) {
     if (localSetting.userInfo.config == null) {
       localSetting.userInfo.config = new UserConfig()
-      localSetting.userInfo.config.chatModel = ''
+
+      localSetting.userInfo.config.chatModel = 'zjai'
     }
     if (!localSetting.userInfo.advanced) {
       localSetting.userInfo.advanced = {
-        systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
+        systemMessage: '你是江苏省的一名造价工程师，一个造价专业的AI大模型。请仔细遵循用户的指示。使用 Markdown 进行回复（LaTeX 以 $ 开始）。',
+
         temperature: 0.8,
         top_p: 1,
       }

@@ -76,7 +76,9 @@ export async function getOriginConfig() {
 
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
-      'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
+
+      '你是江苏省的一名造价工程师，一个造价专业的AI大模型。请仔细遵循用户的指示。使用 Markdown 进行回复（LaTeX 以 $ 开始）。',
+
       0.8,
       1,
     )
@@ -89,11 +91,10 @@ export async function getOriginConfig() {
     )
   }
 
-  if (!config.searchConfig) {
-    config.searchConfig = new SearchConfig()
-    config.searchConfig.enabled = false
-    config.searchConfig.options = { apiKey: '', maxResults: 10, includeRawContent: false }
-  }
+
+  if (!isNotEmptyString(config.siteConfig.chatModels))
+    config.siteConfig.chatModels = 'zjai'
+
 
   if (!isNotEmptyString(config.siteConfig.chatModels))
     config.siteConfig.chatModels = 'gpt-5.2,gpt-5-mini,gpt-5-nano'
