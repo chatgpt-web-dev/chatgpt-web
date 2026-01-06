@@ -8,14 +8,14 @@ let s3Client: S3Client | null = null
 let configHash: string | null = null
 
 /**
- * 生成配置哈希用于比较
+ * Generate a config hash for comparison.
  */
 function getConfigHash(config: SiteConfig): string {
   return `${config.s3Enabled}-${config.s3AccessKeyId}-${config.s3Region}-${config.s3Bucket}-${config.s3Endpoint}-${config.s3CustomDomain}`
 }
 
 /**
- * 初始化S3客户端
+ * Initialize the S3 client.
  */
 function initS3Client(config: SiteConfig): S3Client | null {
   if (!config.s3Enabled || !config.s3AccessKeyId || !config.s3SecretAccessKey || !config.s3Bucket) {
@@ -30,7 +30,7 @@ function initS3Client(config: SiteConfig): S3Client | null {
     region: config.s3Region || 'us-east-1',
   }
 
-  // 如果配置了自定义端点（如MinIO），使用自定义端点
+  // If a custom endpoint is configured (e.g., MinIO), use it.
   if (config.s3Endpoint) {
     clientConfig.endpoint = config.s3Endpoint
     clientConfig.forcePathStyle = true // MinIO需要这个选项
@@ -40,7 +40,7 @@ function initS3Client(config: SiteConfig): S3Client | null {
 }
 
 /**
- * 获取S3客户端实例
+ * Get the S3 client instance.
  */
 export async function getS3Client(): Promise<S3Client | null> {
   const config = await getCacheConfig()
@@ -50,33 +50,33 @@ export async function getS3Client(): Promise<S3Client | null> {
     return null
   }
 
-  // 检查配置是否有效
+  // Validate the configuration.
   if (!siteConfig.s3Enabled || !siteConfig.s3AccessKeyId || !siteConfig.s3SecretAccessKey || !siteConfig.s3Bucket) {
     s3Client = null
     configHash = null
     return null
   }
 
-  // 生成新的配置哈希
+  // Generate a new config hash.
   const newConfigHash = getConfigHash(siteConfig)
 
-  // 如果配置没有变化，返回缓存的客户端
+  // Return the cached client if config has not changed.
   if (s3Client && configHash === newConfigHash) {
     return s3Client
   }
 
-  // 初始化新的客户端
+  // Initialize a new client.
   s3Client = initS3Client(siteConfig)
   configHash = newConfigHash
   return s3Client
 }
 
 /**
- * 上传文件到S3
- * @param fileBuffer 文件缓冲区
- * @param fileName 文件名
- * @param contentType MIME类型
- * @returns 文件的S3 key或null（如果上传失败）
+ * Upload a file to S3.
+ * @param fileBuffer File buffer
+ * @param fileName File name
+ * @param contentType MIME type
+ * @returns S3 key or null when upload fails
  */
 export async function uploadToS3(fileBuffer: Buffer, fileName: string, contentType: string): Promise<string | null> {
   try {
@@ -91,11 +91,11 @@ export async function uploadToS3(fileBuffer: Buffer, fileName: string, contentTy
       return null
     }
 
-    // 构建文件路径
+    // Build the object key.
     const pathPrefix = siteConfig.s3PathPrefix || 'uploads/'
     const key = `${pathPrefix}${fileName}`
 
-    // 上传文件
+    // Upload the file.
     const command = new PutObjectCommand({
       Bucket: siteConfig.s3Bucket,
       Key: key,
@@ -114,10 +114,10 @@ export async function uploadToS3(fileBuffer: Buffer, fileName: string, contentTy
 }
 
 /**
- * 获取S3文件的访问URL
- * @param key S3文件key
- * @param expiresIn URL过期时间（秒），默认1小时（仅在使用预签名URL时有效）
- * @returns 文件的访问URL或null
+ * Get the access URL for an S3 file.
+ * @param key S3 object key
+ * @param expiresIn URL expiration time (seconds), default 1 hour (pre-signed URL only)
+ * @returns File URL or null
  */
 export async function getS3FileUrl(key: string, expiresIn: number = 3600): Promise<string | null> {
   try {
@@ -127,21 +127,21 @@ export async function getS3FileUrl(key: string, expiresIn: number = 3600): Promi
       return null
     }
 
-    // 如果配置了自定义域名，直接使用自定义域名构建URL
+    // If a custom domain is configured, build the URL from it.
     if (siteConfig.s3CustomDomain) {
       try {
         const customDomain = siteConfig.s3CustomDomain.trim()
-        // 确保自定义域名以 / 结尾（如果key不以/开头）
+        // Ensure the custom domain ends with / (if key does not start with /).
         const origin = new URL(customDomain).origin
         return `${origin}/${key}`
       }
       catch (error) {
         globalThis.console.error('Invalid custom domain format:', error)
-        // 如果自定义域名格式错误，回退到预签名URL
+        // If custom domain is invalid, fall back to a pre-signed URL.
       }
     }
 
-    // 如果没有配置自定义域名，使用预签名URL
+    // If no custom domain is configured, use a pre-signed URL.
     const client = await getS3Client()
     if (!client) {
       return null
@@ -162,7 +162,7 @@ export async function getS3FileUrl(key: string, expiresIn: number = 3600): Promi
 }
 
 /**
- * 检查是否启用了S3存储
+ * Check whether S3 storage is enabled.
  */
 export async function isS3Enabled(): Promise<boolean> {
   const config = await getCacheConfig()

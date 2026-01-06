@@ -67,7 +67,7 @@ router.get('/chat-history', auth, async (req, res) => {
         result.push({
           uuid: c.uuid,
           model: c.model,
-          // 用户消息使用 promptDateTime（如果存在），否则使用 dateTime（兼容旧数据）
+          // Use promptDateTime for user messages when present; otherwise use dateTime for legacy data.
           dateTime: new Date(c.promptDateTime || c.dateTime),
           text: c.prompt,
           images: c.images,
@@ -93,7 +93,7 @@ router.get('/chat-history', auth, async (req, res) => {
         // Build response object with tool-related fields
         const responseObj: any = {
           uuid: c.uuid,
-          // AI回复使用 dateTime（AI回复完成时间）
+          // Use dateTime for AI replies (completion time).
           dateTime: new Date(c.dateTime),
           searchQuery: c.searchQuery,
           searchResults: c.searchResults,
@@ -359,7 +359,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
         chatUuid: uuid,
       })
 
-      // 发送最终完成数据
+      // Send the final completion payload.
       if (result && result.status === 'Success') {
         sendSSEData('complete', result.data)
       }
@@ -376,9 +376,9 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
     res.end()
     if (!shouldEarlyExit) {
       try {
-        // 如果 message 未创建，无法保存错误信息
+        // If the message is not created, error details cannot be saved.
         if (message) {
-          // 如果发生错误（catch 块中的错误或 result.status !== 'Success'），需要保存错误信息
+          // Save error details if a failure occurs (catch error or result.status !== 'Success').
           const finalErrorMessage = errorMessage || (result && result.status !== 'Success' ? result.message : null)
 
           if (finalErrorMessage) {
@@ -411,7 +411,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   .map((tool: any) => tool.result)
               }
 
-              // 判断是否是生图请求（有 tool_images 或 tool_calls 中包含 image_generation）
+              // Detect image generation requests (tool_images or tool_calls includes image_generation).
               const isImageGeneration = tool_images && tool_images.length > 0
 
               if (regenerate && message.options.messageId) {
@@ -458,10 +458,10 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
                   await updateAmountMinusOne(userId)
               }
             }
-            // 如果 result.data === undefined，什么也不做
+            // If result.data === undefined, do nothing.
           }
         }
-        // 如果 !message，什么也不做
+        // If !message, do nothing.
       }
       catch (error) {
         globalThis.console.error(error)

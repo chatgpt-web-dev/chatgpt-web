@@ -17,7 +17,7 @@ router.get('/prompt-list', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
 
-    // 获取用户自定义提示词
+    // Fetch user-defined prompts.
     const userPrompts = await getUserPromptList(userId)
     const userResult = []
     userPrompts.data.forEach((p) => {
@@ -29,7 +29,7 @@ router.get('/prompt-list', auth, async (req, res) => {
       })
     })
 
-    // 获取平台预置提示词
+    // Fetch built-in prompts.
     const builtInPrompts = await getBuiltInPromptList()
     const builtInResult = []
     builtInPrompts.data.forEach((p) => {
@@ -41,7 +41,7 @@ router.get('/prompt-list', auth, async (req, res) => {
       })
     })
 
-    // 合并两种类型的提示词
+    // Merge user and built-in prompts.
     const allPrompts = [...userResult, ...builtInResult]
     const totalCount = userPrompts.total + builtInPrompts.total
 

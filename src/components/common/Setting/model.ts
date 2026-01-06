@@ -163,7 +163,7 @@ export class UserInfo {
   roles: UserRole[]
   remark?: string
   useAmount?: number
-  // 配合改造，增加额度信息 and it's switch
+  // Add usage info and its switch for the refactor.
   limit_switch?: boolean
   constructor(roles: UserRole[]) {
     this.roles = roles

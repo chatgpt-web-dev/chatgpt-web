@@ -93,9 +93,9 @@ router.post('/room-create', auth, async (req, res) => {
     const user = await getUserById(userId)
     const { title, roomId } = req.body as { title: string, roomId: number }
     const room = await createChatRoom(userId, title, roomId, user.config?.chatModel, user.config?.maxContextCount)
-    // 根据chatModel判断并设置imageUploadEnabled
+    // Set imageUploadEnabled based on chatModel.
     if (user && room.chatModel) {
-      // 解析模型名称，支持格式 "modelName|keyId"
+      // Parse model name, supporting "modelName|keyId".
       let actualModelName = room.chatModel
       let specifiedKeyId: string | undefined
       if (room.chatModel.includes('|')) {
@@ -108,7 +108,7 @@ router.post('/room-create', auth, async (req, res) => {
       let imageUploadEnabled = false
       let toolsEnabled = false
       if (specifiedKeyId) {
-        // 如果指定了 keyId，使用该 key 的配置
+        // Use the specified keyId configuration.
         const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
         if (specifiedKey) {
           imageUploadEnabled = specifiedKey.imageUploadEnabled || false
@@ -116,7 +116,7 @@ router.post('/room-create', auth, async (req, res) => {
         }
       }
       else {
-        // 如果没有指定 keyId，使用原有逻辑
+        // Fall back to the default logic when keyId is not specified.
         imageUploadEnabled = false
         toolsEnabled = false
       }
@@ -179,10 +179,10 @@ router.post('/room-chatmodel', auth, async (req, res) => {
     const success = await updateRoomChatModel(userId, roomId, chatModel)
 
     if (success) {
-      // 根据新选择的chatModel，动态判断toolsEnabled
+      // Determine toolsEnabled based on the newly selected chatModel.
       const user = await getUserById(userId)
       if (user) {
-        // 解析模型名称，支持格式 "modelName|keyId"
+        // Parse model name, supporting "modelName|keyId".
         let actualModelName = chatModel
         let specifiedKeyId: string | undefined
         if (chatModel.includes('|')) {
@@ -197,7 +197,7 @@ router.post('/room-chatmodel', auth, async (req, res) => {
         let imageUploadEnabled = false
 
         if (specifiedKeyId) {
-          // 如果指定了 keyId，使用该 key 的配置
+          // Use the specified keyId configuration.
           const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
           if (specifiedKey) {
             toolsEnabled = specifiedKey.toolsEnabled || false
@@ -209,9 +209,9 @@ router.post('/room-chatmodel', auth, async (req, res) => {
           imageUploadEnabled = false
         }
 
-        // 更新房间的toolsEnabled状态
+        // Update the room's toolsEnabled state.
         await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
-        // 更新房间的imageUploadEnabled状态
+        // Update the room's imageUploadEnabled state.
         await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
 
         res.send({

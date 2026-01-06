@@ -18,32 +18,32 @@ const emit = defineEmits<{
 
 const { isMobile: _isMobile } = useBasicLayout()
 
-// 图片缩放状态
+// Image zoom state.
 const imageScale = ref(1)
 const minScale = 0.2
 const maxScale = 5
 
-// 缩略图容器引用
+// Thumbnail container ref.
 const thumbnailContainerRef = ref<HTMLElement | null>(null)
-// 图片加载状态
+// Image loading state.
 const imageLoaded = ref(false)
 const imageLoading = ref(false)
-// 是否需要显示滚动条
+// Whether scrollbars are needed.
 const needsScrollbar = ref(false)
-// 窗口大小变化监听器
+// Window resize listener.
 const resizeObserver = ref<ResizeObserver | null>(null)
 
 const totalImages = computed(() => props.images.length)
 const currentImageUrl = computed(() => props.images[props.currentIndex] || '')
 const currentImageName = computed(() => props.imageNames[props.currentIndex] || 'image.png')
 
-// 关闭预览
+// Close preview.
 function closePreview() {
   emit('update:visible', false)
   emit('close')
 }
 
-// 键盘事件处理
+// Keyboard event handler.
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     closePreview()
@@ -58,7 +58,7 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-// 滚轮缩放处理
+// Mouse wheel zoom handler.
 function handleWheel(event: WheelEvent) {
   if (!props.visible)
     return
@@ -69,20 +69,20 @@ function handleWheel(event: WheelEvent) {
   const zoomStep = 0.1
 
   if (delta < 0) {
-    // 向上滚动，放大
+    // Scroll up to zoom in.
     if (imageScale.value < maxScale) {
       imageScale.value = Math.min(imageScale.value + zoomStep, maxScale)
     }
   }
   else {
-    // 向下滚动，缩小
+    // Scroll down to zoom out.
     if (imageScale.value > minScale) {
       imageScale.value = Math.max(imageScale.value - zoomStep, minScale)
     }
   }
 }
 
-// 缩放控制
+// Zoom controls.
 function zoomIn() {
   if (imageScale.value < maxScale) {
     imageScale.value = Math.min(imageScale.value + 0.2, maxScale)
@@ -99,7 +99,7 @@ function resetZoom() {
   imageScale.value = 1
 }
 
-// 预加载图片
+// Preload images.
 function preloadImage(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -109,7 +109,7 @@ function preloadImage(url: string): Promise<void> {
   })
 }
 
-// 预加载相邻图片
+// Preload adjacent images.
 async function preloadAdjacentImages() {
   if (totalImages.value <= 1)
     return
@@ -117,30 +117,30 @@ async function preloadAdjacentImages() {
   const preloadPromises: Promise<void>[] = []
   const current = props.currentIndex
 
-  // 预加载前一张
+  // Preload previous image.
   if (current > 0) {
     preloadPromises.push(preloadImage(props.images[current - 1]))
   }
   else if (totalImages.value > 1) {
-    // 如果是第一张，预加载最后一张
+    // If first, preload the last image.
     preloadPromises.push(preloadImage(props.images[totalImages.value - 1]))
   }
 
-  // 预加载后一张
+  // Preload next image.
   if (current < totalImages.value - 1) {
     preloadPromises.push(preloadImage(props.images[current + 1]))
   }
   else if (totalImages.value > 1) {
-    // 如果是最后一张，预加载第一张
+    // If last, preload the first image.
     preloadPromises.push(preloadImage(props.images[0]))
   }
 
   await Promise.all(preloadPromises).catch(() => {
-    // 忽略预加载错误
+    // Ignore preload errors.
   })
 }
 
-// 检查是否需要滚动条
+// Check whether scrollbars are needed.
 function checkScrollbarNeeded() {
   nextTick(() => {
     if (!thumbnailContainerRef.value)
@@ -151,7 +151,7 @@ function checkScrollbarNeeded() {
   })
 }
 
-// 滚动缩略图到可见位置
+// Scroll thumbnails into view.
 function scrollThumbnailIntoView(index: number) {
   nextTick(() => {
     if (!thumbnailContainerRef.value)
@@ -168,14 +168,14 @@ function scrollThumbnailIntoView(index: number) {
       const thumbnailLeft = thumbnailRect.left - containerRect.left + scrollLeft
       const thumbnailWidth = thumbnailRect.width
       const containerWidth = containerRect.width
-      // 为边框和缩放效果留出额外空间（约12px）
+      // Leave room for border and zoom effects (~12px).
       const padding = 12
 
-      // 如果缩略图在左侧不可见
+      // If the thumbnail is hidden on the left.
       if (thumbnailLeft < scrollLeft + padding) {
         container.scrollTo({ left: thumbnailLeft - padding, behavior: 'smooth' })
       }
-      // 如果缩略图在右侧不可见
+      // If the thumbnail is hidden on the right.
       else if (thumbnailLeft + thumbnailWidth > scrollLeft + containerWidth - padding) {
         container.scrollTo({
           left: thumbnailLeft + thumbnailWidth - containerWidth + padding,
@@ -186,7 +186,7 @@ function scrollThumbnailIntoView(index: number) {
   })
 }
 
-// 切换图片的通用逻辑
+// Shared image switching logic.
 async function switchImage(newIndex: number) {
   if (newIndex < 0 || newIndex >= totalImages.value)
     return
@@ -199,7 +199,7 @@ async function switchImage(newIndex: number) {
   scrollThumbnailIntoView(newIndex)
 }
 
-// 图片导航
+// Image navigation.
 function prevImage() {
   if (totalImages.value <= 1)
     return
@@ -220,12 +220,12 @@ function nextImage() {
   switchImage(newIndex)
 }
 
-// 直接跳转到指定图片
+// Jump directly to the specified image.
 function goToImage(index: number) {
   switchImage(index)
 }
 
-// 图片加载完成处理
+// Image load completion handler.
 function handleImageLoad() {
   imageLoaded.value = true
   imageLoading.value = false
@@ -236,7 +236,7 @@ function handleImageError() {
   imageLoading.value = false
 }
 
-// 下载图片
+// Download image.
 function downloadImage(url: string, name: string) {
   const link = document.createElement('a')
   link.href = url
@@ -246,7 +246,7 @@ function downloadImage(url: string, name: string) {
   document.body.removeChild(link)
 }
 
-// 添加/移除键盘事件监听器
+// Add/remove keyboard event listeners.
 function addKeyListener() {
   document.addEventListener('keydown', handleKeyDown)
 }
@@ -255,7 +255,7 @@ function removeKeyListener() {
   document.removeEventListener('keydown', handleKeyDown)
 }
 
-// 监听visible变化
+// Watch visible changes.
 watch(() => props.visible, async (newVal) => {
   if (newVal) {
     addKeyListener()
@@ -278,7 +278,7 @@ watch(() => props.visible, async (newVal) => {
   }
 })
 
-// 监听currentIndex变化
+// Watch currentIndex changes.
 watch(() => props.currentIndex, () => {
   if (props.visible) {
     preloadAdjacentImages()
@@ -286,14 +286,14 @@ watch(() => props.currentIndex, () => {
   }
 })
 
-// 监听图片数量变化，检查是否需要滚动条
+// Watch image count changes and update scrollbars.
 watch(() => props.images.length, () => {
   if (props.visible) {
     checkScrollbarNeeded()
   }
 })
 
-// 设置窗口大小变化监听
+// Set up window resize listener.
 function setupResizeObserver() {
   if (resizeObserver.value) {
     resizeObserver.value.disconnect()
@@ -310,7 +310,7 @@ function setupResizeObserver() {
   })
 }
 
-// 组件卸载时清理
+// Cleanup on unmount.
 onUnmounted(() => {
   removeKeyListener()
   if (resizeObserver.value) {
@@ -455,12 +455,12 @@ onUnmounted(() => {
 </template>
 
 <style lang="less" scoped>
-// 图片预览相关样式
+// Image preview styles.
 .cursor-zoom-in {
   cursor: zoom-in;
 }
 
-// 当图片放大时改变光标
+// Change cursor on zoomed images.
 img[style*="scale"] {
   cursor: grab;
 }
@@ -469,14 +469,14 @@ img[style*="scale"]:active {
   cursor: grabbing;
 }
 
-// 缩略图容器 - 确保有足够空间显示边框和缩放效果
+// Thumbnail container - ensure space for border and zoom effects.
 .thumbnail-container {
-  min-height: 80px; // 确保有足够高度显示缩放和边框
-  padding: 8px 4px; // 上下留空间，左右留空间给边框和缩放
+  min-height: 80px; // Ensure enough height for zoom and border.
+  padding: 8px 4px; // Space for borders and zoom effects.
   align-items: center;
 }
 
-// 缩略图滚动条 - 默认隐藏，只在需要时显示
+// Thumbnail scrollbar - hidden by default, shown when needed.
 .thumbnail-scrollbar {
   scrollbar-width: none; // Firefox
   -ms-overflow-style: none; // IE and Edge
@@ -485,21 +485,21 @@ img[style*="scale"]:active {
     display: none; // Chrome, Safari, Opera
   }
 
-  // 只在需要滚动且悬停时显示滚动条
+  // Show scrollbar only when needed and hovered.
   &.show-scrollbar:hover {
     scrollbar-width: thin; // Firefox
 
     &::-webkit-scrollbar {
       display: block;
-      height: 2px; // 更细的滚动条
+      height: 2px; // Thinner scrollbar.
     }
 
     &::-webkit-scrollbar-track {
-      background: transparent; // 透明轨道
+      background: transparent; // Transparent track.
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2); // 更不明显的滚动条
+      background: rgba(255, 255, 255, 0.2); // Subtle scrollbar.
       border-radius: 1px;
     }
 
@@ -509,7 +509,7 @@ img[style*="scale"]:active {
   }
 }
 
-// 当前激活的缩略图样式 - 更明显的标识
+// Active thumbnail style - more visible.
 .thumbnail-active {
   border: 3px solid #ffffff !important;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -517,11 +517,11 @@ img[style*="scale"]:active {
   opacity: 1 !important;
   z-index: 10;
   background: rgba(255, 255, 255, 0.1);
-  // 确保边框和缩放效果完整显示
-  margin: 0 2px; // 左右留空间，避免被裁剪
+  // Ensure border and zoom effects are fully visible.
+  margin: 0 2px; // Prevent clipping.
 }
 
-// 非激活的缩略图样式
+// Inactive thumbnail style.
 .thumbnail-inactive {
   border: 1px solid rgba(255, 255, 255, 0.3);
   opacity: 0.6;

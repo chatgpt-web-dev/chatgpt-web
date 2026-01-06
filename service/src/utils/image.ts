@@ -16,7 +16,7 @@ fs.mkdir('uploads').then(() => {
 })
 
 export async function convertImageUrl(uploadFileKey: string): Promise<string | undefined> {
-  // 如果已经是完整的URL（S3 URL或自定义域名），直接返回
+  // If already a full URL (S3 or custom domain), return as-is.
   if (uploadFileKey.startsWith('http://') || uploadFileKey.startsWith('https://')) {
     return uploadFileKey
   }
@@ -67,36 +67,36 @@ export async function convertImageUrl(uploadFileKey: string): Promise<string | u
     }
   }
   else {
-    // 从本地文件系统读取
+    // Read from local filesystem.
     return await readFromLocal(uploadFileKey)
   }
 
-  // 判断文件格式
+  // Detect file format.
   const imageType = await fileType.fileTypeFromBuffer(imageData)
   if (!imageType) {
     globalThis.console.error(`Cannot determine file type for ${uploadFileKey}`)
     return undefined
   }
   const mimeType = imageType.mime
-  // 将图片数据转换为 Base64 编码的字符串
+  // Convert image data to a Base64-encoded string.
   const base64Image = imageData.toString('base64')
   return `data:${mimeType};base64,${base64Image}`
 }
 
 /**
- * 从本地文件系统读取图片
+ * Read an image from the local filesystem.
  */
 async function readFromLocal(uploadFileKey: string): Promise<string | undefined> {
   try {
     const imageData = await fs.readFile(`uploads/${uploadFileKey}`)
-    // 判断文件格式
+    // Detect file format.
     const imageType = await fileType.fileTypeFromBuffer(imageData)
     if (!imageType) {
       globalThis.console.error(`Cannot determine file type for ${uploadFileKey}`)
       return undefined
     }
     const mimeType = imageType.mime
-    // 将图片数据转换为 Base64 编码的字符串
+    // Convert image data to a Base64-encoded string.
     const base64Image = imageData.toString('base64')
     return `data:${mimeType};base64,${base64Image}`
   }
@@ -107,46 +107,46 @@ async function readFromLocal(uploadFileKey: string): Promise<string | undefined>
 }
 
 /**
- * 将 base64 图片数据保存为文件（本地或S3）
- * @param base64Data base64 图片数据（可能包含 data:image/png;base64, 前缀）
- * @returns 文件名或S3 URL（用于显示）
+ * Save base64 image data to a file (local or S3).
+ * @param base64Data base64 image data (may include data:image/png;base64, prefix)
+ * @returns File name or S3 URL (for display)
  */
 export async function saveBase64ToFile(base64Data: string): Promise<string | undefined> {
   try {
-    // 移除 data:image/png;base64, 前缀（如果存在）
+    // Remove data:image/png;base64, prefix if present.
     const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data
     const imageBuffer = Buffer.from(base64String, 'base64')
 
-    // 生成文件名
+    // Generate filename.
     const timestamp = Date.now()
     const randomStr = Math.random().toString(36).substring(2, 15)
     const fileName = `image-${timestamp}-${randomStr}.png`
 
-    // 检查是否使用S3存储
+    // Check whether S3 storage is enabled.
     const useS3 = await isS3Enabled()
 
     if (useS3) {
-      // 上传到S3
+      // Upload to S3.
       const { uploadToS3, getS3FileUrl } = await import('./s3')
       const s3Key = await uploadToS3(imageBuffer, fileName, 'image/png')
 
       if (s3Key) {
-        // 获取S3文件的访问URL
+        // Get the S3 file URL.
         const fileUrl = await getS3FileUrl(s3Key)
-        // 返回S3 URL，如果没有URL则返回S3 key
+        // Return S3 URL or fall back to the S3 key.
         return fileUrl || s3Key
       }
       else {
-        // S3上传失败，回退到本地存储
+        // S3 upload failed; fall back to local storage.
         globalThis.console.warn('S3 upload failed, falling back to local storage')
       }
     }
 
-    // 保存文件到本地
+    // Save file locally.
     const filePath = `uploads/${fileName}`
     await fs.writeFile(filePath, imageBuffer)
 
-    // 返回文件名（用于 URL，如 /uploads/filename.png）
+    // Return filename for URL usage (e.g., /uploads/filename.png).
     return fileName
   }
   catch (e) {

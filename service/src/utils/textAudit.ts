@@ -31,13 +31,13 @@ export class BaiduTextAuditService implements TextAuditService {
     if (data.error_msg)
       throw new Error(data.error_msg)
 
-    // 审核结果类型，可取值1、2、3、4，分别代表1：合规，2：不合规，3：疑似，4：审核失败
+    // Audit result values: 1 compliant, 2 non-compliant, 3 suspected, 4 failed.
     if (data.conclusionType === 1)
       return false
 
     // https://ai.baidu.com/ai-doc/ANTIPORN/Nk3h6xbb2#%E7%BB%86%E5%88%86%E6%A0%87%E7%AD%BE%E5%AF%B9%E7%85%A7%E8%A1%A8
 
-    // 3 仅政治
+    // 3 means political only.
     const sensitive = data.data.filter(d => d.subType === 3).length > 0
     if (sensitive || !this.options.label)
       return sensitive

@@ -5,20 +5,20 @@ import { getS3FileUrl, isS3Enabled, uploadToS3 } from '../utils/s3'
 
 export const router = Router()
 
-// 配置multer的存储选项（本地存储）
+// Configure Multer storage options (local storage).
 const diskStorage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, 'uploads/') // 确保这个文件夹存在
+    cb(null, 'uploads/') // Ensure this folder exists.
   },
   filename(req, file, cb) {
     cb(null, `${file.fieldname}-${Date.now()}`)
   },
 })
 
-// 内存存储（用于S3上传）
+// Memory storage (for S3 uploads).
 const memoryStorage = multer.memoryStorage()
 
-// 根据配置选择存储方式
+// Select storage mode based on configuration.
 const upload = multer({ storage: diskStorage })
 const uploadMemory = multer({ storage: memoryStorage })
 
@@ -27,7 +27,7 @@ router.post('/upload-image', auth, async (req, res) => {
     const useS3 = await isS3Enabled()
 
     if (useS3) {
-      // 使用S3存储
+      // Use S3 storage.
       uploadMemory.single('file')(req, res, async (err) => {
         if (err) {
           res.send({ status: 'Fail', message: '文件上传失败', data: null })
@@ -46,7 +46,7 @@ router.post('/upload-image', auth, async (req, res) => {
           const ext = originalName.includes('.') ? originalName.split('.').pop() : 'jpg'
           const fileName = `file-${timestamp}-${randomStr}.${ext}`
 
-          // 上传到S3
+          // Upload to S3.
           const s3Key = await uploadToS3(req.file.buffer, fileName, req.file.mimetype)
 
           if (!s3Key) {
@@ -54,7 +54,7 @@ router.post('/upload-image', auth, async (req, res) => {
             return
           }
 
-          // 获取S3文件的访问URL
+          // Get the S3 file URL.
           const fileUrl = await getS3FileUrl(s3Key)
 
           const data = {
@@ -71,7 +71,7 @@ router.post('/upload-image', auth, async (req, res) => {
       })
     }
     else {
-      // 使用本地存储
+      // Use local storage.
       upload.single('file')(req, res, async (err) => {
         if (err) {
           res.send({ status: 'Fail', message: '文件上传失败', data: null })
@@ -86,7 +86,7 @@ router.post('/upload-image', auth, async (req, res) => {
         const data = {
           fileKey: req.file.filename,
         }
-        // 文件已上传
+        // File uploaded.
         res.send({ status: 'Success', message: '文件上传成功', data })
       })
     }

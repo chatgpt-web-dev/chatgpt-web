@@ -131,7 +131,7 @@ export function fetchChatAPIProcessSSE(
                 handlers.onMessage?.(jsonData)
               }
 
-              // 重置事件类型
+              // Reset event type.
               currentEventType = null
             }
             catch (e) {
@@ -229,20 +229,20 @@ export function fetchUpdateUserInfo<T = any>(name: string, avatar: string, descr
   })
 }
 
-// 提交用户兑换后额度
+// Submit usage after redeeming.
 export function fetchUpdateUserAmt<T = any>(useAmount: number) {
   return post<T>({
     url: '/user-updateamtinfo',
     data: { useAmount },
   })
 }
-// 获取用户目前额度（因为兑换加总在前端完成，因此先查询一次实际额度）
+// Get current usage (redeem totals are summed in the frontend, so fetch the actual value once).
 export function fetchUserAmt<T = any>() {
   return get<T>({
     url: '/user-getamtinfo',
   })
 }
-// 获取兑换码对应的额度
+// Get usage amount for the redeem code.
 export function decode_redeemcard<T = any>(redeemCardNo: string) {
   return post<T>({
     url: '/redeem-card',
@@ -312,7 +312,7 @@ export function fetchUpdateUserStatus<T = any>(userId: string, status: Status) {
   })
 }
 
-// 增加useAmount信息 limit_switch
+// Add useAmount with limit_switch.
 export function fetchUpdateUser<T = any>(userInfo: UserInfo) {
   return post<T>({
     url: '/user-edit',

@@ -9,7 +9,7 @@ export function md5(input: string) {
   return md5.digest('hex')
 }
 
-// 可以换 aes 等方式
+// You can switch to AES or other methods.
 export async function getUserVerifyUrl(username: string) {
   const sign = getUserVerify(username)
   const config = await getCacheConfig()
@@ -31,7 +31,7 @@ function checkVerify(verify: string) {
   const expired = vs[vs.length - 2]
   vs.splice(vs.length - 2, 2)
   const prefix = vs.join('-')
-  // 简单点没校验有效期
+  // Simplified: no expiration validation.
   if (sign === md5(`${prefix}-${expired}`))
     return prefix.split('|')[0]
   throw new Error('Verify failed')
@@ -41,7 +41,7 @@ export function checkUserVerify(verify: string) {
   return checkVerify(verify)
 }
 
-// 可以换 aes 等方式
+// You can switch to AES or other methods.
 export async function getUserVerifyUrlAdmin(username: string) {
   const sign = getUserVerifyAdmin(username)
   const config = await getCacheConfig()

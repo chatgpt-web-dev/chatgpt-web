@@ -23,18 +23,18 @@ export interface ResponseChunk {
   reasoning?: string
   role?: string
   finish_reason?: string
-  // 支持增量响应
+  // Support streaming responses.
   delta?: {
     reasoning?: string
     text?: string
     heartbeat?: boolean
   }
-  // 工具调用结果
+  // Tool call result.
   tool_calls?: Array<{
     type: string
     result?: any
   }>
-  // 编辑图片时使用的文件 ID（用于后续作为 previousResponseId）
+  // File ID used for image edits (stored as previousResponseId).
   editImageId?: string
   image_usage?: ImageUsageItem[]
 }

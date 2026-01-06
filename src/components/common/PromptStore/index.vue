@@ -47,26 +47,26 @@ const authStore = useAuthStoreWithout()
 
 const promptStore = usePromptStore()
 
-// 移动端自适应相关
+// Mobile responsiveness.
 const { isMobile } = useBasicLayout()
 
-// Prompt在线导入推荐List,根据部署者喜好进行修改(assets/recommend.json)
+// Recommended prompt list for online import; customize via assets/recommend.json.
 const promptRecommendList = PromptRecommend
 // const promptList = ref<UserPrompt[]>([])
 
 const promptList = ref<any>(promptStore.promptList)
 
-// 用于添加修改的临时prompt参数
+// Temporary prompt params for add/edit.
 const tempPromptKey = ref('')
 const tempPromptValue = ref('')
 
-// Modal模式，根据不同模式渲染不同的Modal内容
+// Modal mode; render different content per mode.
 const modalMode = ref('')
 
-// 这个是为了后期的修改Prompt内容考虑，因为要针对无uuid的list进行修改，且考虑到不能出现标题和内容的冲突，所以就需要一个临时item来记录一下
+// Track a temporary item for editing lists without UUIDs and avoiding title/content conflicts.
 const tempModifiedItem = ref<any>({})
 
-// 添加修改导入都使用一个Modal, 临时修改内容占用tempPromptKey,切换状态前先将内容都清楚
+// Add/edit/import share one modal; tempPromptKey holds edits and is cleared on mode switch.
 function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected?: DataProps) {
   if (mode === 'add') {
     tempPromptKey.value = ''
@@ -85,17 +85,17 @@ function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected?: Dat
   modalMode.value = mode
 }
 
-// 在线导入相关
+// Online import.
 const downloadURL = ref('')
 const downloadDisabled = computed(() => downloadURL.value.trim().length < 1)
 function setDownloadURL(url: string) {
   downloadURL.value = url
 }
 
-// 控制 input 按钮
+// Control input button state.
 const inputStatus = computed (() => tempPromptKey.value.trim().length < 1 || tempPromptValue.value.trim().length < 1)
 
-// Prompt模板相关操作
+// Prompt template operations.
 async function addPromptTemplate() {
   for (const i of promptList.value) {
     if (i.title === tempPromptKey.value) {
@@ -117,7 +117,7 @@ async function addPromptTemplate() {
 async function modifyPromptTemplate() {
   let index = 0
 
-  // 通过临时索引把待修改项摘出来
+  // Extract the item to edit by temporary index.
   for (const i of promptList.value) {
     if (i.title === tempModifiedItem.value.title && i.value === tempModifiedItem.value.value)
       break
@@ -126,7 +126,7 @@ async function modifyPromptTemplate() {
 
   const tempList = promptList.value.filter((_: any, i: number) => i !== index)
 
-  // 搜索有冲突的部分
+  // Find conflicting entries.
   for (const i of tempList) {
     if (i.title === tempPromptKey.value) {
       message.error(t('store.editRepeatTitleTips'))
@@ -169,7 +169,7 @@ async function importPromptTemplate(from = 'online') {
     const jsonData = JSON.parse(tempPromptValue.value)
     let title = ''
     let value = ''
-    // 可以扩展加入更多模板字典的key
+    // Extend with more template dictionary keys if needed.
     if ('key' in jsonData[0]) {
       title = 'key'
       value = 'value'
@@ -183,7 +183,7 @@ async function importPromptTemplate(from = 'online') {
       value = 'prompt'
     }
     else {
-      // 不支持的字典的key防止导入 以免破坏prompt商店打开
+      // Block unsupported dictionary keys to avoid breaking the prompt store.
       message.warning('prompt key not supported.')
       throw new Error('prompt key not supported.')
     }
@@ -224,7 +224,7 @@ async function importPromptTemplate(from = 'online') {
     showModal.value = !showModal.value
 }
 
-// 模板导出
+// Template export.
 function exportPromptTemplate() {
   exportLoading.value = true
   const exportData = promptList.value.map((item: UserPrompt) => {
@@ -244,7 +244,7 @@ function exportPromptTemplate() {
   exportLoading.value = false
 }
 
-// 模板在线导入
+// Template online import.
 async function downloadPromptTemplate() {
   try {
     importLoading.value = true
@@ -273,7 +273,7 @@ async function downloadPromptTemplate() {
   }
 }
 
-// 移动端自适应相关
+// Mobile responsiveness.
 function renderTemplate() {
   return promptList.value.map((item: UserPrompt) => {
     return {
@@ -293,7 +293,7 @@ const pagination = computed(() => {
   }
 })
 
-// table相关
+// Table-related.
 function createColumns(): DataTableColumns<DataProps> {
   return [
     {

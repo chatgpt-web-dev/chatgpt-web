@@ -217,7 +217,7 @@ router.post('/session', async (req, res) => {
         }
       }
       else if (user.config.chatModel.includes('|')) {
-        // 如果当前 chatModel 包含 | 符号，检查是否需要去除 keyId
+        // If chatModel contains "|", check whether keyId should be removed.
         const parts = user.config.chatModel.split('|')
         const actualModelName = parts[0]
         const specifiedKeyId = parts[1]
@@ -227,18 +227,18 @@ router.post('/session', async (req, res) => {
             const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
             const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
 
-            // 如果 key 不存在或者没有特殊功能，去除 |keyId 部分
+            // Remove "|keyId" when the key is missing or has no special features.
             if (!specifiedKey || (!specifiedKey.toolsEnabled && !specifiedKey.imageUploadEnabled)) {
               user.config.chatModel = actualModelName
             }
           }
           catch {
-            // 如果获取 keys 失败，去除 |keyId 部分
+            // Remove "|keyId" if keys retrieval fails.
             user.config.chatModel = actualModelName
           }
         }
         else {
-          // 如果没有角色信息，去除 |keyId 部分
+          // Remove "|keyId" if no role info is found.
           user.config.chatModel = actualModelName
         }
       }
@@ -259,7 +259,7 @@ router.post('/session', async (req, res) => {
 
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
 
-      // 为每个 key 和模型的组合生成不同的选项
+      // Create distinct options for each key-model combination.
       const modelKeyMap = new Map<string, Array<{ keyId: string, toolsEnabled: boolean, imageUploadEnabled: boolean, modelAlias?: string }>>()
       chatModelOptions.forEach((chatModel) => {
         keys.forEach((key) => {
@@ -279,13 +279,13 @@ router.post('/session', async (req, res) => {
         })
       })
 
-      // 为每个配置组合生成唯一的选项
+      // Generate unique options for each config combination.
       modelKeyMap.forEach((configs, modelValue) => {
         const thisChatModel = chatModelOptions.find(d => d.value === modelValue)
         if (!thisChatModel)
           return
 
-        // 按照功能分组（toolsEnabled 和 imageUploadEnabled）
+        // Group by feature (toolsEnabled and imageUploadEnabled).
         const configGroups = new Map<string, typeof configs>()
         configs.forEach((config) => {
           const groupKey = `${config.toolsEnabled}-${config.imageUploadEnabled}`
@@ -295,9 +295,9 @@ router.post('/session', async (req, res) => {
           configGroups.get(groupKey)!.push(config)
         })
 
-        // 为每个功能组生成选项
+        // Build options for each feature group.
         configGroups.forEach((groupConfigs) => {
-          const config = groupConfigs[0] // 取第一个作为代表
+          const config = groupConfigs[0] // Use the first as representative.
           const suffix = []
           if (config.toolsEnabled) {
             suffix.push('Tools')
@@ -306,10 +306,10 @@ router.post('/session', async (req, res) => {
             suffix.push('Image')
           }
 
-          // 使用模型别名或默认标签
+          // Use the model alias or a default label.
           const displayModalName = config.modelAlias || thisChatModel.label
 
-          // 构建选项
+          // Build the option.
           if (suffix.length === 0 && groupConfigs.length > 0) {
             chatModels.push({
               label: `${displayModalName}`,
@@ -318,7 +318,7 @@ router.post('/session', async (req, res) => {
             })
           }
           else {
-            // 需要key来判断用走特殊逻辑
+            // A key is required to determine special handling.
             chatModels.push({
               label: `${displayModalName}`,
               key: `${modelValue}|${config.keyId}`,
@@ -474,7 +474,7 @@ router.post('/user-info', auth, async (req, res) => {
   }
 })
 
-// 使用兑换码后更新用户用量
+// Update user usage after redeeming a code.
 router.post('/user-updateamtinfo', auth, async (req, res) => {
   try {
     const { useAmount } = req.body as { useAmount: number }
@@ -491,7 +491,7 @@ router.post('/user-updateamtinfo', auth, async (req, res) => {
   }
 })
 
-// 获取用户对话额度
+// Get user chat usage.
 router.get('/user-getamtinfo', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
@@ -508,7 +508,7 @@ router.get('/user-getamtinfo', auth, async (req, res) => {
   }
 })
 
-// 兑换对话额度
+// Redeem chat usage.
 router.post('/redeem-card', auth, async (req, res) => {
   try {
     const { redeemCardNo } = req.body as { redeemCardNo: string }
@@ -606,7 +606,7 @@ router.post('/user-status', rootAuth, async (req, res) => {
   }
 })
 
-// 函数中加入useAmount limit_switch
+// Add useAmount with limit_switch in this function.
 router.post('/user-edit', rootAuth, async (req, res) => {
   try {
     const { userId, email, password, roles, remark, useAmount, limit_switch } = req.body as { userId?: string, email: string, password: string, roles: UserRole[], remark?: string, useAmount?: number, limit_switch?: boolean }
@@ -1083,7 +1083,7 @@ router.post('/statistics/by-model', auth, async (req, res) => {
   try {
     const { start, end } = req.body as { start?: number, end?: number }
 
-    // 只有管理员可以查看所有用户的统计
+    // Only admins can view all user statistics.
     if (!isAdmin(req.headers.userId as string))
       throw new Error('无权限 | No permission')
 
