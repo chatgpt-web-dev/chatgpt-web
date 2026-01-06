@@ -55,8 +55,6 @@ export function fetchChatAPIProcessSSE(
     uploadFileKeys: params.uploadFileKeys,
     options: params.options,
     systemMessage: userStore.userInfo.advanced.systemMessage,
-    temperature: userStore.userInfo.advanced.temperature,
-    top_p: userStore.userInfo.advanced.top_p,
   }
 
   if (params.tools && params.tools.length > 0) {

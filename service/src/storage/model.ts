@@ -305,8 +305,6 @@ export class AuditConfig {
 export class AdvancedConfig {
   constructor(
     public systemMessage: string,
-    public temperature: number,
-    public top_p: number,
   ) { }
 }
 

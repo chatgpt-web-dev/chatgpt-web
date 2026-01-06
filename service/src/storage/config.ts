@@ -77,8 +77,6 @@ export async function getOriginConfig() {
   if (!config.advancedConfig) {
     config.advancedConfig = new AdvancedConfig(
       'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
-      0.8,
-      1,
     )
   }
 
