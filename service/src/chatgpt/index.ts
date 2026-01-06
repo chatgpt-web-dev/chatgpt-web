@@ -412,6 +412,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
           }
           else if (event.type === 'response.completed') {
             const resp = event.response
+            globalThis.console.log('resp:', resp)
             responseId = resp.id
             usage.prompt_tokens = resp.usage.input_tokens
             usage.completion_tokens = resp.usage.output_tokens
