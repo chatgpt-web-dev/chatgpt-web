@@ -146,8 +146,6 @@
     "description": "설명",
     "saveUserInfo": "사용자 정보 저장",
     "role": "역할",
-    "temperature": "Temperature",
-    "top_p": "Top_p",
     "chatHistory": "채팅 기록",
     "theme": "테마",
     "language": "언어",

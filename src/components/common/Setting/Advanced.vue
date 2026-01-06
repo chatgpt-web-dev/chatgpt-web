@@ -29,20 +29,6 @@ function handleReset() {
         </div>
       </div>
       <div class="flex items-center space-x-4">
-        <span class="shrink-0 w-[120px]">{{ t('setting.temperature') }} </span>
-        <div class="flex-1">
-          <NSlider v-model:value="userStore.userInfo.advanced.temperature" :max="1" :min="0" :step="0.1" />
-        </div>
-        <span>{{ userStore.userInfo.advanced.temperature }}</span>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="shrink-0 w-[120px]">{{ t('setting.top_p') }} </span>
-        <div class="flex-1">
-          <NSlider v-model:value="userStore.userInfo.advanced.top_p" :max="1" :min="0" :step="0.1" />
-        </div>
-        <span>{{ userStore.userInfo.advanced.top_p }}</span>
-      </div>
-      <div class="flex items-center space-x-4">
         <span class="shrink-0 w-[120px]">&nbsp;</span>
         <NButton type="primary" @click="updateSettings(false)">
           {{ t('common.save') }}

@@ -47,8 +47,6 @@ export interface RequestOptions {
   tools?: Array<ImageGenerationTool>
   process?: (chunk: ResponseChunk) => void
   systemMessage?: string
-  temperature?: number
-  top_p?: number
   user: UserInfo
   messageId: string
   room: ChatRoom

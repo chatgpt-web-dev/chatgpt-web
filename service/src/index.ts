@@ -991,8 +991,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
   try {
     const config = req.body as {
       systemMessage: string
-      temperature: number
-      top_p: number
       sync: boolean
     }
     if (config.sync) {
@@ -1003,8 +1001,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
       const thisConfig = await getOriginConfig()
       thisConfig.advancedConfig = new AdvancedConfig(
         config.systemMessage,
-        config.temperature,
-        config.top_p,
       )
       await updateConfig(thisConfig)
       clearConfigCache()
@@ -1012,8 +1008,6 @@ router.post('/setting-advanced', auth, async (req, res) => {
     const userId = req.headers.userId.toString()
     await updateUserAdvancedConfig(userId, new AdvancedConfig(
       config.systemMessage,
-      config.temperature,
-      config.top_p,
     ))
     res.send({ status: 'Success', message: '操作成功 | Successfully' })
   }

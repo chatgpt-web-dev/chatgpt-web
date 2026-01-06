@@ -122,7 +122,7 @@ async function chatReplyProcess(options: RequestOptions) {
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, systemMessage, temperature, top_p, chatUuid } = options
+  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, systemMessage, chatUuid } = options
   let instructions = systemMessage
 
   try {
@@ -494,8 +494,6 @@ search result: <search_result>${searchResultContent}</search_result>`,
     const chatCompletionCreateBody: OpenAI.ChatCompletionCreateParamsStreaming = {
       model,
       messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
-      temperature: temperature ?? undefined,
-      top_p: top_p ?? undefined,
       stream: true,
       stream_options: {
         include_usage: true,

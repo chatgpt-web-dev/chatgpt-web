@@ -15,8 +15,6 @@ export interface RequestProps {
   uploadFileKeys?: string[]
   options?: ChatContext
   systemMessage: string
-  temperature?: number
-  top_p?: number
   tools?: ImageGenerationTool[]
   previousResponseId?: string
 }
