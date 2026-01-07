@@ -54,7 +54,7 @@ const range: any = ref([
   dayjs().endOf('day').valueOf(),
 ])
 
-// 导出选项
+// Export options.
 const exportOptions = computed(() => [
   {
     label: t('setting.exportByDate') || '按日期导出',
@@ -148,17 +148,17 @@ function filter(pattern: string, option: object): boolean {
   return !a.filter ? false : a.filter.includes(pattern)
 }
 
-// 按日期统计导出（原来的数据导出）
+// Export by date (legacy export).
 function exportStatisticsByDate() {
   if (!chartData.labels || chartData.labels.length === 0) {
     return
   }
 
-  // 准备 CSV 数据
+  // Prepare CSV data.
   const csvRows = []
-  // CSV 头部（使用英文列名以确保兼容性）
+  // CSV header (use English column names for compatibility).
   csvRows.push(['Date', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens'].join(','))
-  // 数据行
+  // Data rows.
   if (chartData.labels && Array.isArray(chartData.labels)) {
     chartData.labels.forEach((label: any, index: number) => {
       const promptTokens = chartData.datasets[0].data[index] || 0
@@ -167,18 +167,18 @@ function exportStatisticsByDate() {
       csvRows.push([String(label), promptTokens, completionTokens, totalTokens].join(','))
     })
   }
-  // 汇总行
+  // Summary row.
   csvRows.push(['Total', summary.value.promptTokens, summary.value.completionTokens, summary.value.totalTokens].join(','))
-  // 创建 CSV 内容
+  // Build CSV content.
   const csvContent = csvRows.join('\n')
-  // 添加 BOM 以支持中文
+  // Add BOM for UTF-8 compatibility.
   const BOM = '\uFEFF'
   const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
-  // 创建下载链接
+  // Create download link.
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  // 生成文件名
+  // Generate filename.
   const startDate = dayjs(range.value[0]).format('YYYY-MM-DD')
   const endDate = dayjs(range.value[1]).format('YYYY-MM-DD')
   const fileName = `statistics_by_date_${startDate}_${endDate}.csv`
@@ -187,11 +187,11 @@ function exportStatisticsByDate() {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-  // 清理 URL 对象
+  // Clean up the URL object.
   URL.revokeObjectURL(url)
 }
 
-// 用量导出（按模型统计，包含工具调用次数，分key，按日期分组）
+// Usage export (by model, includes tool calls, grouped by key and date).
 async function exportUsageStatistics() {
   try {
     loading.value = true
@@ -203,13 +203,13 @@ async function exportUsageStatistics() {
       return
     }
     const csvRows = []
-    // CSV 头部：包含日期列
+    // CSV header with date column.
     csvRows.push(['User Email', 'Model Name', 'Model Key', 'Date', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens', 'Image Count', 'Image OutPutTokens', 'Usage Count'].join(','))
 
-    // 数据行：遍历每个用户、每个模型和每个日期
+    // Data rows: iterate each user, model, and date.
     data.forEach((userData: any) => {
       userData.models.forEach((model: any) => {
-        // 如果有日期分组数据，导出每天的详细数据
+        // If date groups exist, export daily details.
         if (model.dates && Array.isArray(model.dates) && model.dates.length > 0) {
           model.dates.forEach((dateData: any) => {
             csvRows.push([
@@ -227,7 +227,7 @@ async function exportUsageStatistics() {
           })
         }
         else {
-          // 如果没有日期分组数据，导出总计数据（兼容旧数据）
+          // If no date groups, export totals (legacy compatibility).
           csvRows.push([
             userData.userEmail || '',
             model.modelName || model.modelKey,
@@ -244,19 +244,19 @@ async function exportUsageStatistics() {
       })
     })
 
-    // 创建 CSV 内容
+    // Build CSV content.
     const csvContent = csvRows.join('\n')
 
-    // 添加 BOM 以支持中文
+    // Add BOM for UTF-8 compatibility.
     const BOM = '\uFEFF'
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
 
-    // 创建下载链接
+    // Create download link.
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
 
-    // 生成文件名
+    // Generate filename.
     const startDate = dayjs(range.value[0]).format('YYYY-MM-DD')
     const endDate = dayjs(range.value[1]).format('YYYY-MM-DD')
     const fileName = `usage_statistics_${startDate}_${endDate}.csv`
@@ -267,7 +267,7 @@ async function exportUsageStatistics() {
     link.click()
     document.body.removeChild(link)
 
-    // 清理 URL 对象
+    // Clean up the URL object.
     URL.revokeObjectURL(url)
   }
   catch (error) {

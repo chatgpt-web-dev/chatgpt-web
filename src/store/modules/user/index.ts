@@ -10,7 +10,7 @@ export const useUserStore = defineStore('user-store', {
       this.recordState()
       if (update) {
         await fetchUpdateUserInfo(userInfo.name ?? '', userInfo.avatar ?? '', userInfo.description ?? '')
-        // 更新用户信息和额度写一起了，如果传了额度则更新
+        // Update user info and usage together; update usage if provided.
         if (userInfo.useAmount)
           await fetchUpdateUserAmt(userInfo.useAmount)
       }
@@ -19,7 +19,7 @@ export const useUserStore = defineStore('user-store', {
       await fetchUpdateAdvanced(sync, this.userInfo.advanced)
       this.recordState()
     },
-    // 对应页面加载时的读取，为空送10个
+    // Read on page load; default to 10 when empty.
     async readUserAmt() {
       const data = (await fetchUserAmt()).data
       this.userInfo.limit = data?.limit

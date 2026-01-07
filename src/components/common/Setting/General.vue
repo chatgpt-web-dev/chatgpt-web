@@ -14,7 +14,7 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 
-// 页面加载时读取后端额度（因为扣减计算在后端完成，前端信息滞后）
+// Fetch usage on page load (deductions happen on the backend).
 onMounted(() => {
   userStore.readUserAmt()
 })
@@ -33,7 +33,7 @@ const name = ref(userInfo.value.name ?? '')
 
 const description = ref(userInfo.value.description ?? '')
 
-// 新创建额度和兑换相关响应式变量，为null的话默认送10次
+// Reactive usage/redeem state; default to 10 when null.
 const useAmount = computed(() => userStore.userInfo.useAmount ?? 10)
 const redeemCardNo = ref('')
 
@@ -69,13 +69,14 @@ const languageOptions: { label: string, key: Language, value: Language }[] = [
   { label: '繁體中文', key: 'zh-TW', value: 'zh-TW' },
   { label: 'English', key: 'en-US', value: 'en-US' },
   { label: '한국어', key: 'ko-KR', value: 'ko-KR' },
+  { label: '日本語', key: 'ja-JP', value: 'ja-JP' },
 ]
 
 async function updateUserInfo(options: Partial<UserInfo>) {
   await userStore.updateUserInfo(true, options)
   ms.success(`更新个人信息 ${t('common.success')}`)
 }
-// 更新并兑换，这里图页面设计方便暂时先放一起了，下方页面新增了两个输入框
+// Update and redeem are grouped here for UI convenience; inputs are added below.
 async function redeemandupdateUserInfo(options: { avatar: string, name: string, description: string, useAmount: number, redeemCardNo: string }) {
   const { avatar, name, description, useAmount, redeemCardNo } = options
   let add_amt = 0

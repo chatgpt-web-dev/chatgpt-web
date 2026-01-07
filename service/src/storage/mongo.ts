@@ -208,25 +208,25 @@ export async function initializeMongoDB() {
 }
 
 /**
- * 插入聊天信息
+ * Insert chat message.
  * @param uuid
- * @param text 内容 prompt or response
+ * @param text Prompt or response content
  * @param roomId
  * @param options
  * @returns model
  */
 
-// 获取、比对兑换券号码
+// Fetch and compare redeem codes.
 export async function getAmtByCardNo(redeemCardNo: string) {
   // const chatInfo = new ChatInfo(roomId, uuid, text, options)
   const amt_isused = await redeemCol.findOne({ cardno: redeemCardNo.trim() }) as GiftCard
   return amt_isused
 }
-// 兑换后更新兑换券信息
+// Update redeem code info after redemption.
 export async function updateGiftCard(redeemCardNo: string, userId: string) {
   return await redeemCol.updateOne({ cardno: redeemCardNo.trim() }, { $set: { redeemed: 1, redeemed_date: new Date().toLocaleString(), redeemed_by: userId } })
 }
-// 使用对话后更新用户额度
+// Update user usage after a chat is used.
 export async function updateAmountMinusOne(userId: string) {
   const result = await userCol.updateOne({ _id: new ObjectId(userId) }, { $inc: { useAmount: -1 } })
   return result.modifiedCount > 0
@@ -340,8 +340,8 @@ export async function createChatRoom(userId: string, title: string, roomId: numb
     maxContextCount = 10
   }
   const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, false, false)
-  // 创建房间后，需要根据chatModel判断并设置imageUploadEnabled
-  // 这里先设置为false，后续在room-create接口中会根据chatModel动态判断
+  // After room creation, set imageUploadEnabled based on chatModel.
+  // Initialize as false here; the room-create API will set it dynamically.
   room.imageUploadEnabled = false
   await roomCol.insertOne(room)
   return room
@@ -638,7 +638,7 @@ export async function deleteChat(roomId: number, uuid: number, inversion: boolea
   await chatCol.updateOne(query, update)
 }
 
-// createUser、updateUserInfo中加入useAmount limit_switch
+// Add useAmount and limit_switch in createUser/updateUserInfo.
 export async function createUser(email: string, password: string, roles?: UserRole[], status?: Status, remark?: string, useAmount?: number, limit_switch?: boolean): Promise<UserInfo> {
   email = email.toLowerCase()
   const userInfo = new UserInfo(email, password)
@@ -665,24 +665,24 @@ export async function createUser(email: string, password: string, roles?: UserRo
   userInfo.config = new UserConfig()
   const defaultModelName = config?.siteConfig?.chatModels.split(',')[0]
 
-  // 根据用户角色和可用的 keys 选择合适的默认模型
+  // Choose a default model based on user role and available keys.
   if (defaultModelName && userInfo.roles && userInfo.roles.length > 0) {
     try {
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, userInfo.roles))
-      // 找到匹配默认模型的第一个 key
+      // Find the first key matching the default model.
       const matchingKey = keys.find(key => key.chatModel === defaultModelName)
 
       if (matchingKey && (matchingKey.toolsEnabled || matchingKey.imageUploadEnabled)) {
-        // 如果 key 有特殊功能，使用 "modelName|keyId" 格式
+        // Use "modelName|keyId" format when the key has special features.
         userInfo.config.chatModel = `${defaultModelName}|${matchingKey._id.toString()}`
       }
       else {
-        // 否则使用简单的模型名称
+        // Otherwise use the plain model name.
         userInfo.config.chatModel = defaultModelName
       }
     }
     catch {
-      // 如果获取 keys 失败，使用默认模型名称
+      // If keys retrieval fails, use the default model name.
       userInfo.config.chatModel = defaultModelName
     }
   }
@@ -699,7 +699,7 @@ export async function updateUserInfo(userId: string, user: UserInfo) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { name: user.name, description: user.description, avatar: user.avatar, useAmount: user.useAmount } })
 }
 
-// 兑换后更新用户对话额度（兑换计算目前在前端完成，将总数报给后端）
+// Update user chat usage after redemption (totals are calculated in the frontend).
 export async function updateUserAmount(userId: string, amt: number) {
   return userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { useAmount: amt } })
 }
@@ -790,7 +790,7 @@ export async function updateUserStatus(userId: string, status: Status) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { status, verifyTime: new Date().toLocaleString() } })
 }
 
-// 增加了useAmount信息 and limit_switch
+// Added useAmount and limit_switch.
 export async function updateUser(userId: string, roles: UserRole[], password: string, remark?: string, useAmount?: number, limit_switch?: boolean) {
   const user = await getUserById(userId)
   const query = { _id: new ObjectId(userId) }
@@ -921,7 +921,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
             else: 0,
           },
         },
-        // 计算图片token 总数
+        // Calculate total image tokens.
         imageOutputTokens: {
           $cond: {
             if: { $isArray: '$imageUsage' },
@@ -937,7 +937,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
             else: 0,
           },
         },
-        // 添加日期字段
+        // Add date fields.
         date: {
           $dateToString: {
             format: '%Y-%m-%d',
@@ -949,7 +949,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
       },
     },
     {
-      // 按 userId、model 和 date 分组
+      // Group by userId, model, and date.
       $group: {
         _id: {
           userId: '$userId',
@@ -977,7 +977,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
       },
     },
     {
-      // 关联 user 表获取用户信息
+      // Join the user collection to get user details.
       $lookup: {
         from: 'user',
         localField: '_id.userId',
@@ -986,14 +986,14 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
       },
     },
     {
-      // 展开 userInfo 数组
+      // Unwind userInfo array.
       $unwind: {
         path: '$userInfo',
         preserveNullAndEmptyArrays: true,
       },
     },
     {
-      // 整理输出字段
+      // Shape output fields.
       $project: {
         _id: 0,
         userId: { $toString: '$_id.userId' },
@@ -1010,7 +1010,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
       },
     },
     {
-      // 按日期排序
+      // Sort by date.
       $sort: {
         date: 1,
       },
@@ -1019,7 +1019,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
 
   const aggResults = await usageCol.aggregate(pipeline).toArray()
 
-  // 使用嵌套的 Map 结构：userId -> modelKey -> date -> data
+  // Use nested maps: userId -> modelKey -> date -> data.
   const resultMap = new Map<string, Map<string, Map<string, any>>>()
 
   for (const item of aggResults) {
@@ -1029,21 +1029,21 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
 
     let matchedKey: KeyConfig | undefined
     if (modelKey.includes('|')) {
-      // 格式：modelName|keyId
+      // Format: modelName|keyId.
       const [modelName, keyId] = modelKey.split('|')
       matchedKey = enabledKeys.find(key => key._id.toString() === keyId && key.chatModel === modelName)
     }
     else {
-      // 格式：modelName
+      // Format: modelName.
       matchedKey = enabledKeys.find(key => key.chatModel === modelKey)
     }
 
-    // 如果找不到匹配的 key 或者 key 未启用，跳过
+    // Skip when no matching key is found or the key is disabled.
     if (!matchedKey || matchedKey.status !== Status.Normal) {
       continue
     }
 
-    // 初始化嵌套结构
+    // Initialize the nested structure.
     if (!resultMap.has(userId)) {
       resultMap.set(userId, new Map())
     }
@@ -1054,7 +1054,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
     }
     const modelDateMap = userModelMap.get(modelKey)!
 
-    // 按日期存储数据
+    // Store data by date.
     if (!modelDateMap.has(date)) {
       modelDateMap.set(date, {
         date,
@@ -1076,10 +1076,10 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
     dateData.usageCount += item.usageCount
   }
 
-  // 转换为最终格式：按用户 -> 模型 -> 日期分组
+  // Convert to final format: user -> model -> date.
   const result: any[] = []
   resultMap.forEach((userModelMap, userId) => {
-    // 获取第一个 item 来获取用户信息（所有日期都有相同的用户信息）
+    // Use the first item to get user info (shared across dates).
     const firstItem = aggResults.find(item => item.userId === userId)
     const userData: any = {
       userId,
@@ -1104,10 +1104,10 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
 
       const displayModelName = matchedKey.modelAlias || matchedKey.chatModel
 
-      // 将日期数据转换为数组并按日期排序
+      // Convert date map to an array and sort by date.
       const dates = Array.from(modelDateMap.values()).sort((a, b) => a.date.localeCompare(b.date))
 
-      // 计算总计
+      // Calculate totals.
       const totalPromptTokens = dates.reduce((sum, d) => sum + d.promptTokens, 0)
       const totalCompletionTokens = dates.reduce((sum, d) => sum + d.completionTokens, 0)
       const totalTotalTokens = dates.reduce((sum, d) => sum + d.totalTokens, 0)
@@ -1131,7 +1131,7 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
     result.push(userData)
   })
 
-  // 按 userId 排序
+  // Sort by userId.
   result.sort((a, b) => a.userId.localeCompare(b.userId))
 
   return result

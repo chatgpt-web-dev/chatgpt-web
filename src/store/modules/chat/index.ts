@@ -179,10 +179,10 @@ export const useChatStore = defineStore('chat-store', () => {
     state.chatRooms[index].chatModel = chatModel
     const result = await fetchUpdateChatRoomChatModel(chatModel, state.active!)
 
-    // 更新toolsEnabled状态（从接口返回）
+    // Update toolsEnabled state (from API).
     if (result.data?.toolsEnabled !== undefined) {
       state.chatRooms[index].toolsEnabled = result.data.toolsEnabled
-      // 如果toolsEnabled为true，需要同时关闭searchEnabled和thinkEnabled
+      // If toolsEnabled is true, disable searchEnabled and thinkEnabled.
       if (result.data.toolsEnabled) {
         if (state.chatRooms[index].searchEnabled) {
           await setChatSearchEnabled(false)
@@ -192,7 +192,7 @@ export const useChatStore = defineStore('chat-store', () => {
         }
       }
     }
-    // 更新imageUploadEnabled状态（从接口返回）
+    // Update imageUploadEnabled state (from API).
     if (result.data?.imageUploadEnabled !== undefined) {
       state.chatRooms[index].imageUploadEnabled = result.data.imageUploadEnabled
     }

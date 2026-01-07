@@ -98,7 +98,7 @@ function createColumns(): DataTableColumns {
         return h('div', row.limit_switch ? 'True' : 'False')
       },
     },
-    // 新增额度信息
+    // Additional usage info.
     {
       title: t('setting.user.amounts'),
       key: 'useAmount',

@@ -83,7 +83,7 @@ function checkDoNotShowToday() {
 
 async function fetchAnnounce() {
   try {
-    // 从数据库获取公告配置
+    // Load announcement config from the database.
     const { data } = await fetchAnnouncement()
     config.value = data
     if (config.value) {

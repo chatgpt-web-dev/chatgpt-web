@@ -52,12 +52,12 @@ const loadingChatUuid = ref<number>(-1)
 
 const currentNavIndexRef = ref<number>(-1)
 
-// 存储上一次工具调用的响应ID，用于传递 previousResponseId
+// Store the previous tool-call response ID for previousResponseId.
 const lastToolResponseId = ref<string>('')
 
-// 从历史记录中初始化 lastToolResponseId
+// Initialize lastToolResponseId from history.
 function initLastToolResponseId() {
-  // 遍历历史记录，找到最后一个有 editImageId 的消息
+  // Traverse history to find the last message with editImageId.
   for (let i = dataSources.value.length - 1; i >= 0; i--) {
     const chat = dataSources.value[i]
     if (!chat.inversion && chat.editImageId) {
@@ -65,7 +65,7 @@ function initLastToolResponseId() {
       return
     }
   }
-  // 如果都没有，清空
+  // Clear if none are found.
   lastToolResponseId.value = ''
 }
 
@@ -73,14 +73,14 @@ let loadingms: MessageReactive
 let allmsg: MessageReactive
 let prevScrollTop: number
 
-// 添加PromptStore
+// Add PromptStore.
 const promptStore = usePromptStore()
 
-// 使用storeToRefs，保证store修改后，联想部分能够重新渲染
+// Use storeToRefs so suggestions re-render after store updates.
 // @ts-expect-error TS2339: Property 'promptList' does not exist on type 'StoreToRefs<any>'.
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
 
-// 未知原因刷新页面，loading 状态不会重置，手动重置
+// Reset loading manually; it may not reset on page refresh.
 dataSources.value.forEach((item, index) => {
   if (item.loading)
     updateChatSome(+uuid, index, { loading: false })
@@ -90,7 +90,7 @@ function handleSubmit() {
   onConversation()
 }
 
-// 存储上传的文件信息：fileKey用于后端，fileUrl用于前端显示
+// Store uploaded file info: fileKey for backend, fileUrl for UI.
 interface UploadFileInfoItem {
   fileKey: string
   fileUrl?: string
@@ -139,7 +139,7 @@ async function onConversation() {
     options = { ...lastContext }
   }
   else {
-    // 如果当前对话没有使用上下文（新对话），清空 lastToolResponseId
+    // Clear lastToolResponseId for new chats without context.
     lastToolResponseId.value = ''
   }
 
@@ -209,7 +209,7 @@ async function onConversation() {
           const toolCalls = data.tool_calls || []
           const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
 
-          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          // Store previousResponseId (prefer editImageId, else response id).
           const editImageId = (data as any).editImageId
           const responseId = (data as any).id
           if (editImageId) {
@@ -329,12 +329,12 @@ async function onConversation() {
               }
             : undefined
 
-          // 处理 tool_calls 和 editImageId
+          // Handle tool_calls and editImageId.
           const toolCalls = data.tool_calls || []
           const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
           const imageResults = imageToolCalls.map((tool: any) => tool.result)
 
-          // 存储 editImageId（优先使用 editImageId，否则使用 response id）
+          // Store editImageId (prefer editImageId, else response id).
           const editImageId = data.editImageId
           const responseId = data.id
           if (editImageId) {
@@ -526,7 +526,7 @@ async function onRegenerate(index: number) {
           const toolCalls = data.tool_calls || []
           const imageToolCalls = toolCalls.filter((tool: any) => tool.type === 'image_generation' && tool.result)
 
-          // 存储 previousResponseId（优先使用 editImageId，否则使用 response id）
+          // Store previousResponseId (prefer editImageId, else response id).
           const editImageId = (data as any).editImageId
           const responseId = (data as any).id
           if (editImageId) {
@@ -557,7 +557,7 @@ async function onRegenerate(index: number) {
           }
         },
         onDelta: async (delta) => {
-          // 处理增量数据
+          // Handle incremental data.
           if (delta.text) {
             lastText += delta.text
           }
@@ -639,7 +639,7 @@ async function onRegenerate(index: number) {
           scrollToBottomIfAtBottom()
         },
         onComplete: async (data) => {
-          // 处理完成事件
+          // Handle completion event.
           const usage = (data.detail && data.detail.usage)
             ? {
                 completion_tokens: data.detail.usage.completion_tokens || null,
@@ -862,7 +862,7 @@ async function loadMoreMessage(event: any) {
   const lastId = chatStore.chat[chatIndex].data[0].uuid
   await chatStore.syncChat({ roomId: currentChatRoom.value!.roomId } as Chat.ChatRoom, lastId, () => {
     loadingms && loadingms.destroy()
-    // 加载更多消息后，重新初始化 lastToolResponseId
+    // Reinitialize lastToolResponseId after loading more messages.
     initLastToolResponseId()
     nextTick(() => scrollTo(event.target.scrollHeight - scrollPosition))
   }, () => {
@@ -883,10 +883,10 @@ async function loadMoreMessage(event: any) {
 const handleLoadMoreMessage = debounce(loadMoreMessage, 300)
 const handleSyncChat
   = debounce(() => {
-    // 直接刷 极小概率不请求
+    // Direct refresh may skip requests in rare cases.
     chatStore.syncChat({ roomId: Number(uuid) } as Chat.ChatRoom, undefined, () => {
       firstLoading.value = false
-      // 初始化 lastToolResponseId 从历史记录中
+      // Initialize lastToolResponseId from history.
       initLastToolResponseId()
       const scrollRef = document.querySelector('#scrollRef')
       if (scrollRef)
@@ -936,9 +936,9 @@ async function handleToggleUsingContext() {
     ms.warning(t('chat.turnOffContext'))
 }
 
-// 可优化部分
-// 搜索选项计算，这里使用value作为索引项，所以当出现重复value时渲染异常(多项同时出现选中效果)
-// 理想状态下其实应该是key作为索引项,但官方的renderOption会出现问题，所以就需要value反renderLabel实现
+// Areas for optimization.
+// Search option calculation uses value as key, causing duplicate-value render issues.
+// Ideally key should be used, but renderOption has issues, so value maps back to label.
 const searchOptions = computed(() => {
   if (prompt.value.startsWith('/')) {
     return promptTemplate.value.filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
@@ -953,7 +953,7 @@ const searchOptions = computed(() => {
   }
 })
 
-// value反渲染key
+// Map value back to key label.
 function renderOption(option: { label: string }) {
   for (const i of promptTemplate.value) {
     if (i.value === option.label) {
@@ -1045,16 +1045,16 @@ async function handleSyncChatModel(chatModel: string) {
   await chatStore.setChatModel(chatModel)
   const newToolsEnabled = currentChatRoom.value?.toolsEnabled ?? false
   if (previousToolsEnabled !== newToolsEnabled) {
-    // 检查当前房间是否有历史对话
+    // Check whether the current room has history.
     const hasHistory = dataSources.value.length > 0
 
-    // 如果没有历史对话，不弹窗提示，直接清空 lastToolResponseId
+    // If no history, skip modal and clear lastToolResponseId.
     if (!hasHistory) {
       lastToolResponseId.value = ''
       return
     }
 
-    // 有历史对话，弹出对话框询问是否新开会话
+    // If history exists, prompt to start a new session.
     const d = dialog.warning({
       title: '切换模型提示',
       content: '检测到工具调用功能状态已变化，为避免混用，是否新开一个会话？',
@@ -1077,7 +1077,7 @@ async function handleSyncChatModel(chatModel: string) {
       },
       onNegativeClick: async () => {
         try {
-          // 用户选择不切换模型，回退到之前的模型
+          // User chose not to switch; revert to the previous model.
           if (previousModel) {
             await chatStore.setChatModel(previousModel)
           }
@@ -1122,7 +1122,7 @@ function handleFinish(options: { file: UploadFileInfo, event?: ProgressEvent }) 
         return
       }
 
-      // 检查响应数据结构
+      // Validate response data shape.
       if (responseData && responseData.status === 'Success' && responseData.data?.fileKey) {
         const fileInfo = {
           fileKey: responseData.data.fileKey,
@@ -1151,12 +1151,12 @@ const uploadHeaders = computed(() => {
   }
 })
 
-// 支持的图片类型
+// Supported image types.
 const VALID_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
-// 粘贴图片
+// Paste image.
 async function handlePasteImage(event: ClipboardEvent) {
-  // 检查图片上传功能是否开启
+  // Check if image upload is enabled.
   if (!currentChatRoom.value?.imageUploadEnabled) {
     ms.warning(t('chat.imageUploadDisabled') || '图片上传功能已关闭', {
       duration: 2000,
@@ -1168,7 +1168,7 @@ async function handlePasteImage(event: ClipboardEvent) {
   if (!items || items.length === 0)
     return
 
-  // 查找图片类型的剪贴板项
+  // Find image clipboard items.
   const imageItem = Array.from(items).find(item => item.type.includes('image'))
   if (!imageItem)
     return
@@ -1183,7 +1183,7 @@ async function handlePasteImage(event: ClipboardEvent) {
     return
   }
 
-  // 检查文件类型
+  // Validate file type.
   if (!VALID_IMAGE_TYPES.includes(file.type)) {
     ms.warning(t('chat.invalidImageType') || '不支持的图片格式，仅支持 PNG、JPEG、WEBP', {
       duration: 2000,
@@ -1192,11 +1192,11 @@ async function handlePasteImage(event: ClipboardEvent) {
   }
 
   try {
-    // 创建 FormData
+    // Create FormData.
     const formData = new FormData()
     formData.append('file', file)
 
-    // 上传图片
+    // Upload image.
     const response = await fetch('/api/upload-image', {
       method: 'POST',
       headers: uploadHeaders.value,
@@ -1246,10 +1246,10 @@ watch(() => chatStore.active, () => {
   handleSyncChat()
 })
 
-// 监听 dataSources 变化，自动更新 lastToolResponseId
-// 使用 immediate: false 避免初始化时重复调用（handleSyncChat 回调中已调用）
+// Watch dataSources to update lastToolResponseId automatically.
+// Use immediate: false to avoid duplicate init calls (handleSyncChat already runs).
 watch(() => dataSources.value.length, () => {
-  // 只在数据源长度变化时更新（历史记录加载完成）
+  // Update only when data length changes (history loaded).
   nextTick(() => {
     initLastToolResponseId()
   })

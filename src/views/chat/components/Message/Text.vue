@@ -33,11 +33,11 @@ const currentImageIndex = ref(0) // 当前图片索引
 
 // Open image preview with multi-image support
 function openImagePreview(url: string, name: string, _imageType: 'upload' | 'tool' = 'upload', index?: number) {
-  // 收集所有图片
+  // Collect all images.
   const allImages: string[] = []
   const allNames: string[] = []
 
-  // 添加用户上传的图片
+  // Add user-uploaded images.
   if (props.images && props.images.length > 0) {
     props.images.forEach((v, _i) => {
       allImages.push(getImageUrl(v))
@@ -45,7 +45,7 @@ function openImagePreview(url: string, name: string, _imageType: 'upload' | 'too
     })
   }
 
-  // 添加AI生成的图片
+  // Add AI-generated images.
   if (props.toolImages && props.toolImages.length > 0) {
     props.toolImages.forEach((v, _i) => {
       allImages.push(getImageUrl(v))
@@ -56,12 +56,12 @@ function openImagePreview(url: string, name: string, _imageType: 'upload' | 'too
   previewImages.value = allImages
   previewImageNames.value = allNames
 
-  // 确定当前图片索引
+  // Determine the current image index.
   if (index !== undefined) {
     currentImageIndex.value = index
   }
   else {
-    // 根据URL找到索引
+    // Find index by URL.
     const foundIndex = allImages.findIndex(img => img === url)
     currentImageIndex.value = foundIndex >= 0 ? foundIndex : 0
   }
@@ -74,11 +74,11 @@ function getImageUrl(v: string): string {
   if (v.startsWith('data:image/')) {
     return v
   }
-  // 如果已经是完整的URL（http/https），直接返回
+  // If already a full URL (http/https), return as-is.
   if (v.startsWith('http://') || v.startsWith('https://')) {
     return v
   }
-  // 否则使用本地路径
+  // Otherwise use the local path.
   return `/uploads/${v}`
 }
 
