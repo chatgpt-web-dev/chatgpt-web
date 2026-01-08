@@ -37,6 +37,7 @@ const show = computed({
 })
 const loading = ref(false)
 const showModal = ref(false)
+const saving = ref(false)
 
 const importLoading = ref(false)
 const exportLoading = ref(false)
@@ -97,24 +98,37 @@ const inputStatus = computed (() => tempPromptKey.value.trim().length < 1 || tem
 
 // Prompt template operations.
 async function addPromptTemplate() {
+  if (saving.value)
+    return
+  saving.value = true
   for (const i of promptList.value) {
     if (i.title === tempPromptKey.value) {
       message.error(t('store.addRepeatTitleTips'))
+      saving.value = false
       return
     }
     if (i.value === tempPromptValue.value) {
       message.error(t('store.addRepeatContentTips', { msg: tempPromptKey.value }))
+      saving.value = false
       return
     }
   }
-  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
-  const data = (await fetchUpsertUserPrompt(userPrompt)).data
-  promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id } as never)
-  message.success(t('common.addSuccess'))
-  changeShowModal('add')
+  try {
+    const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+    const data = (await fetchUpsertUserPrompt(userPrompt)).data
+    promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id } as never)
+    message.success(t('common.addSuccess'))
+    changeShowModal('add')
+  }
+  finally {
+    saving.value = false
+  }
 }
 
 async function modifyPromptTemplate() {
+  if (saving.value)
+    return
+  saving.value = true
   let index = 0
 
   // Extract the item to edit by temporary index.
@@ -130,19 +144,26 @@ async function modifyPromptTemplate() {
   for (const i of tempList) {
     if (i.title === tempPromptKey.value) {
       message.error(t('store.editRepeatTitleTips'))
+      saving.value = false
       return
     }
     if (i.value === tempPromptValue.value) {
       message.error(t('store.editRepeatContentTips', { msg: i.title }))
+      saving.value = false
       return
     }
   }
-  const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
-  userPrompt._id = tempModifiedItem.value._id
-  const data = (await fetchUpsertUserPrompt(userPrompt)).data
-  promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
-  message.success(t('common.editSuccess'))
-  changeShowModal('modify')
+  try {
+    const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+    userPrompt._id = tempModifiedItem.value._id
+    const data = (await fetchUpsertUserPrompt(userPrompt)).data
+    promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
+    message.success(t('common.editSuccess'))
+    changeShowModal('modify')
+  }
+  finally {
+    saving.value = false
+  }
 }
 
 async function deletePromptTemplate(row: DataProps) {
@@ -536,7 +557,8 @@ async function handleGetUserPromptList() {
       <NButton
         block
         type="primary"
-        :disabled="inputStatus"
+        :disabled="inputStatus || saving"
+        :loading="saving"
         @click="() => { modalMode === 'add' ? addPromptTemplate() : modifyPromptTemplate() }"
       >
         {{ t('common.confirm') }}

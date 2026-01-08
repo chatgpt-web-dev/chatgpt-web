@@ -13,6 +13,7 @@ const { isMobile } = useBasicLayout()
 const loading = ref(false)
 const showModal = ref(false)
 const modalMode = ref<'add' | 'edit'>('add')
+const saving = ref(false)
 
 const promptList = ref<BuiltInPrompt[]>([])
 const editingId = ref<string | undefined>(undefined)
@@ -50,6 +51,9 @@ async function handleGetBuiltInPrompts() {
 }
 
 async function handleSavePrompt() {
+  if (saving.value)
+    return
+  saving.value = true
   const title = tempPromptKey.value.trim()
   const value = tempPromptValue.value.trim()
   // Compare against non-editing rows to avoid title/content collisions.
@@ -57,30 +61,37 @@ async function handleSavePrompt() {
   const existingTitle = list.find(item => item.title === title)
   if (existingTitle) {
     message.error(t(modalMode.value === 'add' ? 'store.addRepeatTitleTips' : 'store.editRepeatTitleTips'))
+    saving.value = false
     return
   }
   const existingValue = list.find(item => item.value === value)
   if (existingValue) {
     message.error(t(modalMode.value === 'add' ? 'store.addRepeatContentTips' : 'store.editRepeatContentTips', { msg: existingValue.title }))
+    saving.value = false
     return
   }
 
-  const builtInPrompt = new BuiltInPrompt(title, value)
-  if (editingId.value)
-    builtInPrompt._id = editingId.value
+  try {
+    const builtInPrompt = new BuiltInPrompt(title, value)
+    if (editingId.value)
+      builtInPrompt._id = editingId.value
 
-  const data = (await fetchUpsertBuiltInPrompt(builtInPrompt)).data
-  if (editingId.value) {
-    const index = promptList.value.findIndex(item => item._id === editingId.value)
-    if (index !== -1)
-      promptList.value.splice(index, 1, { ...builtInPrompt, _id: data._id })
-    message.success(t('common.editSuccess'))
+    const data = (await fetchUpsertBuiltInPrompt(builtInPrompt)).data
+    if (editingId.value) {
+      const index = promptList.value.findIndex(item => item._id === editingId.value)
+      if (index !== -1)
+        promptList.value.splice(index, 1, { ...builtInPrompt, _id: data._id })
+      message.success(t('common.editSuccess'))
+    }
+    else {
+      promptList.value.unshift({ ...builtInPrompt, _id: data._id })
+      message.success(t('common.addSuccess'))
+    }
+    showModal.value = false
   }
-  else {
-    promptList.value.unshift({ ...builtInPrompt, _id: data._id })
-    message.success(t('common.addSuccess'))
+  finally {
+    saving.value = false
   }
-  showModal.value = false
 }
 
 function handleDeletePrompt(row: BuiltInPrompt) {
@@ -195,7 +206,7 @@ onMounted(async () => {
         </div>
         <div class="flex items-center space-x-4">
           <span class="shrink-0 w-[100px]" />
-          <NButton type="primary" :disabled="inputDisabled" @click="handleSavePrompt">
+          <NButton type="primary" :disabled="inputDisabled || saving" :loading="saving" @click="handleSavePrompt">
             {{ modalMode === 'add' ? t('common.add') : t('common.save') }}
           </NButton>
         </div>

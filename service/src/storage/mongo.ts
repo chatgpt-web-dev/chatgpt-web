@@ -139,8 +139,32 @@ async function initializeIndexes() {
     // ============================================
     // Index for getUserPromptList: { userId }
     await userPromptCol.createIndex({ userId: 1 }, { name: 'idx_userId' })
+    // Unique per user for prompt title (key).
+    try {
+      await userPromptCol.createIndex({ userId: 1, title: 1 }, { name: 'uidx_userId_title', unique: true })
+    }
+    catch (error: any) {
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
 
     globalThis.console.log('✓ user_prompt collection indexes created')
+
+    // ============================================
+    // built_in_prompt collection indexes
+    // ============================================
+    // Unique prompt title (key).
+    try {
+      await builtInPromptCol.createIndex({ title: 1 }, { name: 'uidx_title', unique: true })
+    }
+    catch (error: any) {
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
+
+    globalThis.console.log('✓ built_in_prompt collection indexes created')
 
     // ============================================
     // key_config collection indexes
