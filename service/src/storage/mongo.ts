@@ -1166,6 +1166,22 @@ export async function getBuiltInPromptList(): Promise<{ data: BuiltInPrompt[], t
   return { data, total }
 }
 
+export async function upsertBuiltInPrompt(builtInPrompt: BuiltInPrompt): Promise<BuiltInPrompt> {
+  if (builtInPrompt._id === undefined) {
+    const doc = await builtInPromptCol.insertOne(builtInPrompt)
+    builtInPrompt._id = doc.insertedId
+  }
+  else {
+    await builtInPromptCol.replaceOne({ _id: builtInPrompt._id }, builtInPrompt, { upsert: true })
+  }
+  return builtInPrompt
+}
+
+export async function deleteBuiltInPrompt(id: string) {
+  const query = { _id: new ObjectId(id) }
+  await builtInPromptCol.deleteOne(query)
+}
+
 export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
   if (userPrompt._id === undefined) {
     const doc = await userPromptCol.insertOne(userPrompt)

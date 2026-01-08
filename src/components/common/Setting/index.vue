@@ -7,6 +7,7 @@ import About from './About.vue'
 import Advanced from './Advanced.vue'
 import Announcement from './Anonuncement.vue'
 import Audit from './Audit.vue'
+import BuiltInPrompt from './BuiltInPrompt.vue'
 import General from './General.vue'
 import Gift from './Gift.vue'
 import Key from './Keys.vue'
@@ -118,6 +119,13 @@ const show = computed({
             <span class="ml-2">{{ t('setting.keysConfig') }}</span>
           </template>
           <Key />
+        </NTabPane>
+        <NTabPane v-if="userStore.userInfo.root" name="BuiltInPromptConfig" tab="BuiltInPromptConfig">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri:chat-quote-line" />
+            <span class="ml-2">{{ t('setting.builtInPromptConfig') }}</span>
+          </template>
+          <BuiltInPrompt />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SiteConfig" tab="SiteConfig">
           <template #tab>

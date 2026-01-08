@@ -217,6 +217,8 @@
     "accessTokenExpiredTime": "만료된 시간",
     "userConfig": "사용자",
     "keysConfig": "키 관리자",
+    "builtInPromptConfig": "내장 프롬프트",
+    "builtInPromptDeleteConfirm": "이 내장 프롬프트를 삭제하시겠습니까?",
     "userRoles": "사용자 역할",
     "status": "상태",
     "chatModels": "채팅 모델",

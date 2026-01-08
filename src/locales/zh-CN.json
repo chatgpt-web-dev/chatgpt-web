@@ -217,6 +217,8 @@
     "accessTokenExpiredTime": "过期时间",
     "userConfig": "用户管理",
     "keysConfig": "Keys 管理",
+    "builtInPromptConfig": "内置提示词",
+    "builtInPromptDeleteConfirm": "确定删除该内置提示词吗？",
     "userRoles": "用户权限",
     "status": "状态",
     "chatModels": "对话模型",

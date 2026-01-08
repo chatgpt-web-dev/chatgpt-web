@@ -217,6 +217,8 @@
     "accessTokenExpiredTime": "Expired Time",
     "userConfig": "Users",
     "keysConfig": "Keys Manager",
+    "builtInPromptConfig": "Built-in Prompts",
+    "builtInPromptDeleteConfirm": "Are you sure to delete this built-in prompt?",
     "userRoles": "User Role",
     "status": "Status",
     "chatModels": "Chat Models",

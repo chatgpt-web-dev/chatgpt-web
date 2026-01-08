@@ -21,6 +21,7 @@
 ## Coding Style & Naming Conventions
 - Indentation: 2 spaces (see `src/` for examples).
 - TypeScript + Vue SFCs; prefer PascalCase for Vue components (e.g., `ChatHeader.vue`).
+- Code comments must be written in English.
 - ESLint is the source of truth; run `pnpm lint:fix` before commit.
 - Commit hooks are managed by Husky (`pnpm bootstrap`).
 

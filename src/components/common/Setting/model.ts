@@ -138,6 +138,16 @@ export class UserPrompt {
   }
 }
 
+export class BuiltInPrompt {
+  _id?: string
+  title: string
+  value: string
+  constructor(title: string, value: string) {
+    this.title = title
+    this.value = value
+  }
+}
+
 export type APIMODEL = 'ChatGPTAPI' | 'VLLM' | 'FastDeploy' | 'ResponsesAPI'
 
 export const apiModelOptions = ['ChatGPTAPI', 'VLLM', 'FastDeploy', 'ResponsesAPI'].map((model: string) => {

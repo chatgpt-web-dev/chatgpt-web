@@ -1,4 +1,4 @@
-import type { AnnounceConfig, AuditConfig, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
+import type { AnnounceConfig, AuditConfig, BuiltInPrompt, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
 import type { SettingsState } from '@/store/modules/user/helper'
 import { useUserStore } from '@/store'
 import { get, post } from '@/utils/request'
@@ -561,6 +561,12 @@ export function fetchUserPromptList<T = any>() {
   })
 }
 
+export function fetchBuiltInPromptList<T = any>() {
+  return get<T>({
+    url: '/prompt-built-in-list',
+  })
+}
+
 export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
   return post<T>({
     url: '/prompt-upsert',
@@ -568,9 +574,23 @@ export function fetchUpsertUserPrompt<T = any>(userPrompt: UserPrompt) {
   })
 }
 
+export function fetchUpsertBuiltInPrompt<T = any>(builtInPrompt: BuiltInPrompt) {
+  return post<T>({
+    url: '/prompt-built-in-upsert',
+    data: builtInPrompt,
+  })
+}
+
 export function fetchDeleteUserPrompt<T = any>(id: string) {
   return post<T>({
     url: '/prompt-delete',
+    data: { id },
+  })
+}
+
+export function fetchDeleteBuiltInPrompt<T = any>(id: string) {
+  return post<T>({
+    url: '/prompt-built-in-delete',
     data: { id },
   })
 }
