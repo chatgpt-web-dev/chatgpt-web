@@ -285,6 +285,7 @@
     "siderButton": "Prompt Store",
     "local": "Local",
     "online": "Online",
+    "type": "Type",
     "title": "Title",
     "description": "Description",
     "clearStoreConfirm": "Whether to clear the data?",

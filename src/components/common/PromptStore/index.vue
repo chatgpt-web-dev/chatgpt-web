@@ -318,7 +318,7 @@ const pagination = computed(() => {
 function createColumns(): DataTableColumns<DataProps> {
   return [
     {
-      title: 'type',
+      title: t('store.type'),
       key: 'type',
       width: 100,
       align: 'center',

@@ -285,6 +285,7 @@
     "siderButton": "プロンプトストア",
     "local": "ローカル",
     "online": "オンライン",
+    "type": "タイプ",
     "title": "タイトル",
     "description": "説明",
     "clearStoreConfirm": "データをクリアしますか？",

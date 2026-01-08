@@ -285,6 +285,7 @@
     "siderButton": "提示词商店",
     "local": "本地",
     "online": "在线",
+    "type": "类型",
     "title": "标题",
     "description": "描述",
     "clearStoreConfirm": "是否清空数据？",

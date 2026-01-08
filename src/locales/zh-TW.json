@@ -285,6 +285,7 @@
     "siderButton": "提示詞商店",
     "local": "本機",
     "online": "線上",
+    "type": "類型",
     "title": "標題",
     "description": "描述",
     "clearStoreConfirm": "是否清除資料？",
