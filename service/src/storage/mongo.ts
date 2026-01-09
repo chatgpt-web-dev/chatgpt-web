@@ -139,8 +139,32 @@ async function initializeIndexes() {
     // ============================================
     // Index for getUserPromptList: { userId }
     await userPromptCol.createIndex({ userId: 1 }, { name: 'idx_userId' })
+    // Unique per user for prompt title (key).
+    try {
+      await userPromptCol.createIndex({ userId: 1, title: 1 }, { name: 'uidx_userId_title', unique: true })
+    }
+    catch (error: any) {
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
 
     globalThis.console.log('✓ user_prompt collection indexes created')
+
+    // ============================================
+    // built_in_prompt collection indexes
+    // ============================================
+    // Unique prompt title (key).
+    try {
+      await builtInPromptCol.createIndex({ title: 1 }, { name: 'uidx_title', unique: true })
+    }
+    catch (error: any) {
+      if (!error.message?.includes('E11000') && !error.message?.includes('duplicate key')) {
+        throw error
+      }
+    }
+
+    globalThis.console.log('✓ built_in_prompt collection indexes created')
 
     // ============================================
     // key_config collection indexes
@@ -1161,9 +1185,25 @@ export async function updateApiKeyStatus(id: string, status: Status) {
 
 export async function getBuiltInPromptList(): Promise<{ data: BuiltInPrompt[], total: number }> {
   const total = await builtInPromptCol.countDocuments()
-  const cursor = builtInPromptCol.find().sort({ _id: -1 })
+  const cursor = builtInPromptCol.find().sort({ order: 1, _id: -1 })
   const data = await cursor.toArray()
   return { data, total }
+}
+
+export async function upsertBuiltInPrompt(builtInPrompt: BuiltInPrompt): Promise<BuiltInPrompt> {
+  if (builtInPrompt._id === undefined) {
+    const doc = await builtInPromptCol.insertOne(builtInPrompt)
+    builtInPrompt._id = doc.insertedId
+  }
+  else {
+    await builtInPromptCol.replaceOne({ _id: builtInPrompt._id }, builtInPrompt, { upsert: true })
+  }
+  return builtInPrompt
+}
+
+export async function deleteBuiltInPrompt(id: string) {
+  const query = { _id: new ObjectId(id) }
+  await builtInPromptCol.deleteOne(query)
 }
 
 export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserPrompt> {
@@ -1179,7 +1219,7 @@ export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserProm
 export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[], total: number }> {
   const query = { userId }
   const total = await userPromptCol.countDocuments(query)
-  const cursor = userPromptCol.find(query).sort({ _id: -1 })
+  const cursor = userPromptCol.find(query).sort({ order: 1, _id: -1 })
   const data = await cursor.toArray()
   return { data, total }
 }

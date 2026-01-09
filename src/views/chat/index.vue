@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { MessageReactive, UploadFileInfo } from 'naive-ui'
+import type { AutoCompleteProps, MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { h } from 'vue'
 import {
@@ -12,6 +12,7 @@ import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
 import { debounce } from '@/utils/functions/debounce'
+import { compareRank } from '@/utils/lexorank'
 import { Message } from './components'
 import HeaderComponent from './components/Header/index.vue'
 import { useChat } from './hooks/useChat'
@@ -939,14 +940,37 @@ async function handleToggleUsingContext() {
 // Areas for optimization.
 // Search option calculation uses value as key, causing duplicate-value render issues.
 // Ideally key should be used, but renderOption has issues, so value maps back to label.
+const promptTemplateSorted = computed(() => {
+  const sortedPrompts = [...promptTemplate.value].sort((a: { order?: string }, b: { order?: string }) => {
+    return compareRank(a.order, b.order)
+  })
+  const userPrompts = sortedPrompts.filter((item: { type?: string }) => item.type !== 'built-in')
+  const builtInPrompts = sortedPrompts.filter((item: { type?: string }) => item.type === 'built-in')
+  return [...userPrompts, ...builtInPrompts]
+})
+
+const promptValueById = computed(() => {
+  const map = new Map<string, string>()
+  promptTemplateSorted.value.forEach((item: { _id?: string, value?: string }) => {
+    if (item._id)
+      map.set(item._id, item.value ?? '')
+  })
+  return map
+})
+
 const searchOptions = computed(() => {
+  const promptOptions = promptTemplateSorted.value
   if (prompt.value.startsWith('/')) {
-    return promptTemplate.value.filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any }) => {
-      return {
-        label: obj.value,
-        value: obj.value,
-      }
-    })
+    return promptOptions
+      .filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase()))
+      .map((obj: { value: any, _id?: string, type?: 'built-in' | 'user-defined', title?: string }) => {
+        return {
+          label: obj.value,
+          value: obj._id ?? '',
+          title: obj.title,
+          type: obj.type ?? 'user-defined',
+        }
+      })
   }
   else {
     return []
@@ -954,17 +978,25 @@ const searchOptions = computed(() => {
 })
 
 // Map value back to key label.
-function renderOption(option: { label: string }) {
-  for (const i of promptTemplate.value) {
-    if (i.value === option.label) {
-      return [
-        h(PromptTypeTag, { type: i.type }),
-        h('span', { style: { marginLeft: '8px' } }),
-        i.title,
-      ]
-    }
+function renderOption(option: { label: string, title?: string, type?: 'built-in' | 'user-defined' }) {
+  if (option.title) {
+    return [
+      h(PromptTypeTag, { type: option.type ?? 'user-defined' }),
+      h('span', { style: { marginLeft: '8px' } }),
+      option.title,
+    ]
   }
   return []
+}
+
+type AutoCompleteOnSelect = NonNullable<AutoCompleteProps['onSelect']> extends Array<infer T>
+  ? T
+  : NonNullable<AutoCompleteProps['onSelect']>
+
+const handlePromptSelect: AutoCompleteOnSelect = (value) => {
+  const selectedValue = promptValueById.value.get(String(value))
+  if (selectedValue !== undefined)
+    prompt.value = selectedValue
 }
 
 const placeholder = computed(() => {
@@ -1442,7 +1474,7 @@ onUnmounted(() => {
             />
           </div>
           <div class="flex items-center justify-between space-x-2">
-            <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption">
+            <NAutoComplete v-model:value="prompt" :options="searchOptions" :render-label="renderOption" @select="handlePromptSelect">
               <template #default="{ handleInput, handleBlur, handleFocus }">
                 <NInput
                   ref="inputRef"

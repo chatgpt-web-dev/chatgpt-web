@@ -344,6 +344,7 @@ export class BuiltInPrompt {
   _id: ObjectId
   title: string
   value: string
+  order?: string
   constructor(title: string, value: string) {
     this.title = title
     this.value = value
@@ -355,6 +356,7 @@ export class UserPrompt {
   userId: string
   title: string
   value: string
+  order?: string
   constructor(userId: string, title: string, value: string) {
     this.userId = userId
     this.title = title

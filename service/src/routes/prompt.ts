@@ -1,13 +1,16 @@
-import type { UserPrompt } from '../storage/model'
+import type { BuiltInPrompt, UserPrompt } from '../storage/model'
 import Router from 'express'
 import { ObjectId } from 'mongodb'
 import { auth } from '../middleware/auth'
+import { rootAuth } from '../middleware/rootAuth'
 import {
   clearUserPrompt,
+  deleteBuiltInPrompt,
   deleteUserPrompt,
   getBuiltInPromptList,
   getUserPromptList,
   importUserPrompt,
+  upsertBuiltInPrompt,
   upsertUserPrompt,
 } from '../storage/mongo'
 
@@ -25,6 +28,7 @@ router.get('/prompt-list', auth, async (req, res) => {
         _id: p._id,
         title: p.title,
         value: p.value,
+        order: p.order,
         type: 'user-defined',
       })
     })
@@ -37,6 +41,7 @@ router.get('/prompt-list', auth, async (req, res) => {
         _id: p._id,
         title: p.title,
         value: p.value,
+        order: p.order,
         type: 'built-in',
       })
     })
@@ -61,6 +66,21 @@ router.get('/prompt-list', auth, async (req, res) => {
   }
 })
 
+// Admin-only endpoints for managing built-in prompts.
+router.get('/prompt-built-in-list', rootAuth, async (req, res) => {
+  try {
+    const builtInPrompts = await getBuiltInPromptList()
+    res.send({
+      status: 'Success',
+      message: null,
+      data: builtInPrompts,
+    })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 router.post('/prompt-upsert', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
@@ -76,10 +96,34 @@ router.post('/prompt-upsert', auth, async (req, res) => {
   }
 })
 
+router.post('/prompt-built-in-upsert', rootAuth, async (req, res) => {
+  try {
+    const builtInPrompt = req.body as BuiltInPrompt
+    if (builtInPrompt._id !== undefined)
+      builtInPrompt._id = new ObjectId(builtInPrompt._id)
+    const newBuiltInPrompt = await upsertBuiltInPrompt(builtInPrompt)
+    res.send({ status: 'Success', message: '成功 | Successfully', data: { _id: newBuiltInPrompt._id.toHexString() } })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
 router.post('/prompt-delete', auth, async (req, res) => {
   try {
     const { id } = req.body as { id: string }
     await deleteUserPrompt(id)
+    res.send({ status: 'Success', message: '成功 | Successfully' })
+  }
+  catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/prompt-built-in-delete', rootAuth, async (req, res) => {
+  try {
+    const { id } = req.body as { id: string }
+    await deleteBuiltInPrompt(id)
     res.send({ status: 'Success', message: '成功 | Successfully' })
   }
   catch (error) {
