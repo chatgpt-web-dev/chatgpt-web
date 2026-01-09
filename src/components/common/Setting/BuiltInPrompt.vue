@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { DataTableColumns } from 'naive-ui'
-import { NButton } from 'naive-ui'
+import { NButton, NTooltip } from 'naive-ui'
 import { fetchBuiltInPromptList, fetchDeleteBuiltInPrompt, fetchUpsertBuiltInPrompt } from '@/api'
 import { BuiltInPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
+import { rankBetween } from '@/utils/lexorank'
+import { SvgIcon } from '..'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -14,13 +16,84 @@ const loading = ref(false)
 const showModal = ref(false)
 const modalMode = ref<'add' | 'edit'>('add')
 const saving = ref(false)
+const ordering = ref(false)
 
 const promptList = ref<BuiltInPrompt[]>([])
+const draggingId = ref<string | null>(null)
 const editingId = ref<string | undefined>(undefined)
 const tempPromptKey = ref('')
 const tempPromptValue = ref('')
 
 const inputDisabled = computed(() => tempPromptKey.value.trim().length < 1 || tempPromptValue.value.trim().length < 1)
+
+function getPrevRank(list: BuiltInPrompt[], startIndex: number) {
+  for (let i = startIndex - 1; i >= 0; i--) {
+    if (list[i].order)
+      return list[i].order
+  }
+  return null
+}
+
+function getNextRank(list: BuiltInPrompt[], startIndex: number) {
+  for (let i = startIndex + 1; i < list.length; i++) {
+    if (list[i].order)
+      return list[i].order
+  }
+  return null
+}
+
+async function updatePromptOrder(item: BuiltInPrompt) {
+  if (ordering.value)
+    return
+  ordering.value = true
+  try {
+    const builtInPrompt = new BuiltInPrompt(item.title, item.value)
+    builtInPrompt._id = item._id
+    builtInPrompt.order = item.order
+    await fetchUpsertBuiltInPrompt(builtInPrompt)
+  }
+  finally {
+    ordering.value = false
+  }
+}
+
+async function ensurePromptOrder() {
+  const updates: BuiltInPrompt[] = []
+  let lastRank: string | null = null
+  for (let i = 0; i < promptList.value.length; i++) {
+    const item = promptList.value[i]
+    if (item.order) {
+      lastRank = item.order
+      continue
+    }
+    let nextRank: string | null = null
+    for (let j = i + 1; j < promptList.value.length; j++) {
+      const next = promptList.value[j]
+      if (next.order) {
+        nextRank = next.order
+        break
+      }
+    }
+    const rank = rankBetween(lastRank, nextRank)
+    item.order = rank
+    lastRank = rank
+    updates.push(item)
+  }
+  if (!updates.length || ordering.value)
+    return
+  ordering.value = true
+  try {
+    await Promise.all(updates.map((item) => {
+      const builtInPrompt = new BuiltInPrompt(item.title, item.value)
+      builtInPrompt._id = item._id
+      builtInPrompt.order = item.order
+      return fetchUpsertBuiltInPrompt(builtInPrompt)
+    }))
+  }
+  finally {
+    ordering.value = false
+  }
+}
 
 function openModal(mode: 'add' | 'edit', row?: BuiltInPrompt) {
   modalMode.value = mode
@@ -44,6 +117,7 @@ async function handleGetBuiltInPrompts() {
   try {
     const data = (await fetchBuiltInPromptList()).data
     promptList.value = data.data || []
+    await ensurePromptOrder()
   }
   finally {
     loading.value = false
@@ -73,8 +147,13 @@ async function handleSavePrompt() {
 
   try {
     const builtInPrompt = new BuiltInPrompt(title, value)
-    if (editingId.value)
+    if (editingId.value) {
       builtInPrompt._id = editingId.value
+      builtInPrompt.order = promptList.value.find(item => item._id === editingId.value)?.order
+    }
+    else {
+      builtInPrompt.order = rankBetween(null, promptList.value[0]?.order ?? null)
+    }
 
     const data = (await fetchUpsertBuiltInPrompt(builtInPrompt)).data
     if (editingId.value) {
@@ -130,6 +209,77 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
       className: 'whitespace-pre-line',
     },
     {
+      title: t('store.sort'),
+      key: 'sort',
+      width: 120,
+      align: 'center',
+      render(row) {
+        const disabled = ordering.value
+        return h('div', { class: 'flex items-center justify-center gap-1' }, {
+          default: () => [
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    draggable: true,
+                    disabled,
+                    onDragstart: (event: DragEvent) => {
+                      draggingId.value = row._id as string
+                      event.dataTransfer?.setData('text/plain', row._id as string)
+                    },
+                    onDragend: () => {
+                      draggingId.value = null
+                    },
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:reorder-horizontal' }) },
+                ),
+                default: () => t('store.drag'),
+              },
+            ),
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    disabled,
+                    onClick: () => moveToTop(row),
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-top' }) },
+                ),
+                default: () => t('store.moveTop'),
+              },
+            ),
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    disabled,
+                    onClick: () => moveToBottom(row),
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-bottom' }) },
+                ),
+                default: () => t('store.moveBottom'),
+              },
+            ),
+          ],
+        })
+      },
+    },
+    {
       title: t('common.action'),
       key: 'actions',
       width: 120,
@@ -163,6 +313,65 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
 
 const columns = createColumns()
 
+function movePrompt(sourceId: string, targetId: string) {
+  const sourceIndex = promptList.value.findIndex(item => item._id === sourceId)
+  const targetIndex = promptList.value.findIndex(item => item._id === targetId)
+  if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex)
+    return
+  const [moved] = promptList.value.splice(sourceIndex, 1)
+  promptList.value.splice(targetIndex, 0, moved)
+}
+
+async function handleDrop(target: BuiltInPrompt) {
+  if (!draggingId.value)
+    return
+  const sourceId = draggingId.value
+  draggingId.value = null
+  movePrompt(sourceId, target._id as string)
+  const movedIndex = promptList.value.findIndex(item => item._id === sourceId)
+  if (movedIndex === -1)
+    return
+  const prevRank = getPrevRank(promptList.value, movedIndex)
+  const nextRank = getNextRank(promptList.value, movedIndex)
+  const moved = promptList.value[movedIndex]
+  moved.order = rankBetween(prevRank, nextRank)
+  await updatePromptOrder(moved)
+}
+
+async function moveToTop(row: BuiltInPrompt) {
+  const index = promptList.value.findIndex(item => item._id === row._id)
+  if (index <= 0)
+    return
+  const [moved] = promptList.value.splice(index, 1)
+  promptList.value.unshift(moved)
+  const nextRank = promptList.value[1]?.order ?? null
+  moved.order = rankBetween(null, nextRank)
+  await updatePromptOrder(moved)
+}
+
+async function moveToBottom(row: BuiltInPrompt) {
+  const index = promptList.value.findIndex(item => item._id === row._id)
+  if (index === -1 || index === promptList.value.length - 1)
+    return
+  const [moved] = promptList.value.splice(index, 1)
+  promptList.value.push(moved)
+  const prevRank = promptList.value[promptList.value.length - 2]?.order ?? null
+  moved.order = rankBetween(prevRank, null)
+  await updatePromptOrder(moved)
+}
+
+function rowProps(row: BuiltInPrompt) {
+  return {
+    onDragover: (event: DragEvent) => {
+      event.preventDefault()
+    },
+    onDrop: (event: DragEvent) => {
+      event.preventDefault()
+      handleDrop(row)
+    },
+  }
+}
+
 onMounted(async () => {
   await handleGetBuiltInPrompts()
 })
@@ -182,6 +391,7 @@ onMounted(async () => {
           :row-key="(rowData) => rowData._id"
           :columns="columns"
           :data="promptList"
+          :row-props="rowProps"
           :max-height="444"
           striped
         />

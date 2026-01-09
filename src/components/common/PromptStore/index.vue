@@ -1,10 +1,11 @@
 <script setup lang='ts'>
 import type { DataTableColumns } from 'naive-ui'
-import { NButton } from 'naive-ui'
+import { NButton, NTooltip } from 'naive-ui'
 import { fetchClearUserPrompt, fetchDeleteUserPrompt, fetchImportUserPrompt, fetchUpsertUserPrompt, fetchUserPromptList } from '@/api'
 import { UserPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStoreWithout, usePromptStore } from '@/store'
+import { rankBetween } from '@/utils/lexorank'
 import { SvgIcon } from '..'
 import PromptRecommend from '../../../assets/recommend.json'
 
@@ -19,6 +20,7 @@ interface DataProps {
   title: string
   value: string
   type: 'built-in' | 'user-defined'
+  order?: string
 }
 
 interface Props {
@@ -37,6 +39,7 @@ const show = computed({
 })
 const loading = ref(false)
 const showModal = ref(false)
+const ordering = ref(false)
 const saving = ref(false)
 
 const importLoading = ref(false)
@@ -96,6 +99,89 @@ function setDownloadURL(url: string) {
 // Control input button state.
 const inputStatus = computed (() => tempPromptKey.value.trim().length < 1 || tempPromptValue.value.trim().length < 1)
 
+function getFirstUserIndex(list: DataProps[]) {
+  return list.findIndex(item => item.type !== 'built-in')
+}
+
+function getLastUserIndex(list: DataProps[]) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    if (list[i].type !== 'built-in')
+      return i
+  }
+  return -1
+}
+
+function getPrevUserRank(list: DataProps[], startIndex: number) {
+  for (let i = startIndex - 1; i >= 0; i--) {
+    if (list[i].type !== 'built-in')
+      return list[i].order ?? null
+  }
+  return null
+}
+
+function getNextUserRank(list: DataProps[], startIndex: number) {
+  for (let i = startIndex + 1; i < list.length; i++) {
+    if (list[i].type !== 'built-in')
+      return list[i].order ?? null
+  }
+  return null
+}
+
+async function updatePromptOrder(item: DataProps) {
+  if (ordering.value)
+    return
+  ordering.value = true
+  try {
+    const userPrompt = new UserPrompt(item.title, item.value)
+    userPrompt._id = item._id
+    userPrompt.order = item.order
+    await fetchUpsertUserPrompt(userPrompt)
+  }
+  finally {
+    ordering.value = false
+  }
+}
+
+async function ensurePromptOrder() {
+  const updates: DataProps[] = []
+  let lastRank: string | null = null
+  for (let i = 0; i < promptList.value.length; i++) {
+    const item: DataProps = promptList.value[i]
+    if (item.type === 'built-in')
+      continue
+    if (item.order) {
+      lastRank = item.order
+      continue
+    }
+    let nextRank: string | null = null
+    for (let j = i + 1; j < promptList.value.length; j++) {
+      const next: DataProps = promptList.value[j]
+      if (next.type !== 'built-in' && next.order) {
+        nextRank = next.order
+        break
+      }
+    }
+    const rank = rankBetween(lastRank, nextRank)
+    item.order = rank
+    lastRank = rank
+    updates.push(item)
+  }
+  if (!updates.length || ordering.value)
+    return
+  ordering.value = true
+  try {
+    await Promise.all(updates.map((item) => {
+      const userPrompt = new UserPrompt(item.title, item.value)
+      userPrompt._id = item._id
+      userPrompt.order = item.order
+      return fetchUpsertUserPrompt(userPrompt)
+    }))
+  }
+  finally {
+    ordering.value = false
+  }
+}
+
 // Prompt template operations.
 async function addPromptTemplate() {
   if (saving.value)
@@ -115,8 +201,12 @@ async function addPromptTemplate() {
   }
   try {
     const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
+    const firstUserIndex = getFirstUserIndex(promptList.value)
+    const firstRank = firstUserIndex === -1 ? null : promptList.value[firstUserIndex].order ?? null
+    userPrompt.order = rankBetween(null, firstRank)
     const data = (await fetchUpsertUserPrompt(userPrompt)).data
-    promptList.value.unshift({ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id } as never)
+    const insertIndex = firstUserIndex === -1 ? 0 : firstUserIndex
+    promptList.value.splice(insertIndex, 0, { title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id, order: userPrompt.order } as never)
     message.success(t('common.addSuccess'))
     changeShowModal('add')
   }
@@ -156,8 +246,9 @@ async function modifyPromptTemplate() {
   try {
     const userPrompt = new UserPrompt(tempPromptKey.value, tempPromptValue.value)
     userPrompt._id = tempModifiedItem.value._id
+    userPrompt.order = tempModifiedItem.value.order
     const data = (await fetchUpsertUserPrompt(userPrompt)).data
-    promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id }, ...tempList] as never
+    promptList.value = [{ title: tempPromptKey.value, value: tempPromptValue.value, _id: data._id, order: userPrompt.order }, ...tempList] as never
     message.success(t('common.editSuccess'))
     changeShowModal('modify')
   }
@@ -225,13 +316,20 @@ async function importPromptTemplate(from = 'online') {
           break
         }
       }
-      if (safe)
+      if (safe) {
         newPromptList.unshift({ title: i[title], value: i[value] } as never)
+      }
     }
     await fetchImportUserPrompt(newPromptList as never)
 
-    newPromptList.forEach((p: UserPrompt) => {
-      promptList.value.unshift(p)
+    const firstUserIndex = getFirstUserIndex(promptList.value)
+    let firstRank = firstUserIndex === -1 ? null : promptList.value[firstUserIndex].order ?? null
+    newPromptList.forEach((p: DataProps) => {
+      const nextRank = rankBetween(null, firstRank)
+      p.order = nextRank
+      firstRank = nextRank
+      const insertIndex = firstUserIndex === -1 ? 0 : firstUserIndex
+      promptList.value.splice(insertIndex, 0, p)
     })
 
     await handleGetUserPromptList()
@@ -302,6 +400,7 @@ function renderTemplate() {
       value: item.value,
       _id: item._id,
       type: item.type,
+      order: item.order,
     }
   })
 }
@@ -313,6 +412,13 @@ const pagination = computed(() => {
     pageSlot,
   }
 })
+
+const draggingId = ref<string | null>(null)
+const isSearchActive = computed(() => searchValue.value.trim().length > 0)
+
+function canReorder(row: DataProps) {
+  return row.type !== 'built-in' && !isSearchActive.value
+}
 
 // Table-related.
 function createColumns(): DataTableColumns<DataProps> {
@@ -340,6 +446,79 @@ function createColumns(): DataTableColumns<DataProps> {
         },
       },
       className: 'whitespace-pre-line',
+    },
+    {
+      title: t('store.sort'),
+      key: 'sort',
+      width: 120,
+      align: 'center',
+      render(row) {
+        if (!canReorder(row))
+          return ''
+        const disabled = ordering.value || isSearchActive.value
+        return h('div', { class: 'flex items-center justify-center gap-1' }, {
+          default: () => [
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    draggable: true,
+                    disabled,
+                    onDragstart: (event: DragEvent) => {
+                      draggingId.value = row._id as string
+                      event.dataTransfer?.setData('text/plain', row._id as string)
+                    },
+                    onDragend: () => {
+                      draggingId.value = null
+                    },
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:reorder-horizontal' }) },
+                ),
+                default: () => t('store.drag'),
+              },
+            ),
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    disabled,
+                    onClick: () => moveToTop(row),
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-top' }) },
+                ),
+                default: () => t('store.moveTop'),
+              },
+            ),
+            h(
+              NTooltip,
+              null,
+              {
+                trigger: () => h(
+                  NButton,
+                  {
+                    tertiary: true,
+                    size: 'small',
+                    disabled,
+                    onClick: () => moveToBottom(row),
+                  },
+                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-bottom' }) },
+                ),
+                default: () => t('store.moveBottom'),
+              },
+            ),
+          ],
+        })
+      },
     },
     {
       title: t('common.action'),
@@ -404,6 +583,92 @@ const dataSource = computed(() => {
   return data
 })
 
+function movePrompt(sourceId: string, targetId: string) {
+  const sourceIndex = promptList.value.findIndex((item: DataProps) => item._id === sourceId)
+  const targetIndex = promptList.value.findIndex((item: DataProps) => item._id === targetId)
+  if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex)
+    return
+  const [moved] = promptList.value.splice(sourceIndex, 1)
+  promptList.value.splice(targetIndex, 0, moved)
+}
+
+function handleMobileDragOver(event: DragEvent, item: DataProps) {
+  if (canReorder(item))
+    event.preventDefault()
+}
+
+function handleMobileDragStart(event: DragEvent, item: DataProps) {
+  draggingId.value = item._id as string
+  event.dataTransfer?.setData('text/plain', item._id as string)
+}
+
+function handleMobileDragEnd() {
+  draggingId.value = null
+}
+
+async function handleDrop(target: DataProps) {
+  if (!draggingId.value || !canReorder(target))
+    return
+  const sourceId = draggingId.value
+  draggingId.value = null
+  movePrompt(sourceId, target._id as string)
+  const movedIndex = promptList.value.findIndex((item: DataProps) => item._id === sourceId)
+  if (movedIndex === -1)
+    return
+  const prevRank = getPrevUserRank(promptList.value, movedIndex)
+  const nextRank = getNextUserRank(promptList.value, movedIndex)
+  const moved = promptList.value[movedIndex]
+  moved.order = rankBetween(prevRank, nextRank)
+  await updatePromptOrder(moved)
+}
+
+async function moveToTop(row: DataProps) {
+  if (!row._id || !canReorder(row))
+    return
+  const index = promptList.value.findIndex((item: DataProps) => item._id === row._id)
+  const firstIndex = getFirstUserIndex(promptList.value)
+  if (index === -1 || firstIndex === -1 || index === firstIndex)
+    return
+  const [moved] = promptList.value.splice(index, 1)
+  const nextFirstIndex = getFirstUserIndex(promptList.value)
+  const insertIndex = nextFirstIndex === -1 ? 0 : nextFirstIndex
+  promptList.value.splice(insertIndex, 0, moved)
+  const firstRank = promptList.value[insertIndex + 1]?.order ?? null
+  moved.order = rankBetween(null, firstRank)
+  await updatePromptOrder(moved)
+}
+
+async function moveToBottom(row: DataProps) {
+  if (!row._id || !canReorder(row))
+    return
+  const index = promptList.value.findIndex((item: DataProps) => item._id === row._id)
+  const lastUserIndex = getLastUserIndex(promptList.value)
+  if (index === -1 || lastUserIndex === -1 || index === lastUserIndex)
+    return
+  const [moved] = promptList.value.splice(index, 1)
+  const nextLastUserIndex = getLastUserIndex(promptList.value)
+  const insertIndex = nextLastUserIndex === -1 ? 0 : nextLastUserIndex + 1
+  promptList.value.splice(insertIndex, 0, moved)
+  const prevRank = promptList.value[insertIndex - 1]?.order ?? null
+  moved.order = rankBetween(prevRank, null)
+  await updatePromptOrder(moved)
+}
+
+function rowProps(row: DataProps) {
+  if (!canReorder(row)) {
+    return {}
+  }
+  return {
+    onDragover: (event: DragEvent) => {
+      event.preventDefault()
+    },
+    onDrop: (event: DragEvent) => {
+      event.preventDefault()
+      handleDrop(row)
+    },
+  }
+}
+
 async function handleGetUserPromptList() {
   if (loading.value)
     return
@@ -413,6 +678,7 @@ async function handleGetUserPromptList() {
   data.data.forEach((d: UserPrompt) => {
     promptList.value.push(d)
   })
+  await ensurePromptOrder()
   loading.value = false
 }
 </script>
@@ -467,11 +733,17 @@ async function handleGetUserPromptList() {
             :columns="columns"
             :data="dataSource"
             :pagination="pagination"
+            :row-props="rowProps"
             :bordered="false"
             :loading="loading"
           />
           <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
-            <NListItem v-for="(item, index) of dataSource" :key="index">
+            <NListItem
+              v-for="(item, index) of dataSource"
+              :key="index"
+              @dragover="handleMobileDragOver($event, item)"
+              @drop="() => handleDrop(item)"
+            >
               <NThing :title="item.title" :description="item.value" description-class="text-xs">
                 <template #description>
                   <NEllipsis
@@ -485,6 +757,49 @@ async function handleGetUserPromptList() {
               </NThing>>
               <template #suffix>
                 <div v-if="item.type !== 'built-in'" class="flex flex-col items-center gap-2">
+                  <div class="flex items-center gap-1">
+                    <NTooltip>
+                      <template #trigger>
+                        <NButton
+                          tertiary
+                          size="small"
+                          :disabled="ordering || isSearchActive"
+                          draggable="true"
+                          @dragstart="handleMobileDragStart($event, item)"
+                          @dragend="handleMobileDragEnd"
+                        >
+                          <SvgIcon icon="mdi:reorder-horizontal" />
+                        </NButton>
+                      </template>
+                      {{ t('store.drag') }}
+                    </NTooltip>
+                    <NTooltip>
+                      <template #trigger>
+                        <NButton
+                          tertiary
+                          size="small"
+                          :disabled="ordering || isSearchActive"
+                          @click="moveToTop(item)"
+                        >
+                          <SvgIcon icon="mdi:format-vertical-align-top" />
+                        </NButton>
+                      </template>
+                      {{ t('store.moveTop') }}
+                    </NTooltip>
+                    <NTooltip>
+                      <template #trigger>
+                        <NButton
+                          tertiary
+                          size="small"
+                          :disabled="ordering || isSearchActive"
+                          @click="moveToBottom(item)"
+                        >
+                          <SvgIcon icon="mdi:format-vertical-align-bottom" />
+                        </NButton>
+                      </template>
+                      {{ t('store.moveBottom') }}
+                    </NTooltip>
+                  </div>
                   <NButton tertiary size="small" type="info" @click="changeShowModal('modify', item)">
                     {{ t('common.edit') }}
                   </NButton>

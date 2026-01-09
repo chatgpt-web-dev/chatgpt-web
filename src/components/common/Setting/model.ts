@@ -132,6 +132,7 @@ export class UserPrompt {
   title: string
   value: string
   type?: 'built-in' | 'user-defined'
+  order?: string
   constructor(title: string, value: string) {
     this.title = title
     this.value = value
@@ -142,6 +143,7 @@ export class BuiltInPrompt {
   _id?: string
   title: string
   value: string
+  order?: string
   constructor(title: string, value: string) {
     this.title = title
     this.value = value

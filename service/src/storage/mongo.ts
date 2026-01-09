@@ -1185,7 +1185,7 @@ export async function updateApiKeyStatus(id: string, status: Status) {
 
 export async function getBuiltInPromptList(): Promise<{ data: BuiltInPrompt[], total: number }> {
   const total = await builtInPromptCol.countDocuments()
-  const cursor = builtInPromptCol.find().sort({ _id: -1 })
+  const cursor = builtInPromptCol.find().sort({ order: 1, _id: -1 })
   const data = await cursor.toArray()
   return { data, total }
 }
@@ -1219,7 +1219,7 @@ export async function upsertUserPrompt(userPrompt: UserPrompt): Promise<UserProm
 export async function getUserPromptList(userId: string): Promise<{ data: UserPrompt[], total: number }> {
   const query = { userId }
   const total = await userPromptCol.countDocuments(query)
-  const cursor = userPromptCol.find(query).sort({ _id: -1 })
+  const cursor = userPromptCol.find(query).sort({ order: 1, _id: -1 })
   const data = await cursor.toArray()
   return { data, total }
 }
