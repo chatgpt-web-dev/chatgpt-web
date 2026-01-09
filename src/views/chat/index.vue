@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { MessageReactive, UploadFileInfo } from 'naive-ui'
+import type { AutoCompleteProps, MessageReactive, UploadFileInfo } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { h } from 'vue'
 import {
@@ -949,18 +949,28 @@ const promptTemplateSorted = computed(() => {
   return [...userPrompts, ...builtInPrompts]
 })
 
+const promptValueById = computed(() => {
+  const map = new Map<string, string>()
+  promptTemplateSorted.value.forEach((item: { _id?: string, value?: string }) => {
+    if (item._id)
+      map.set(item._id, item.value ?? '')
+  })
+  return map
+})
+
 const searchOptions = computed(() => {
   const promptOptions = promptTemplateSorted.value
   if (prompt.value.startsWith('/')) {
-    return promptOptions.filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase())).map((obj: { value: any, _id?: string, type?: string, title?: string }) => {
-      return {
-        label: obj.value,
-        value: obj._id,
-        inputValue: obj.value,
-        title: obj.title,
-        type: obj.type,
-      }
-    })
+    return promptOptions
+      .filter((item: { title: string }) => item.title.toLowerCase().includes(prompt.value.substring(1).toLowerCase()))
+      .map((obj: { value: any, _id?: string, type?: 'built-in' | 'user-defined', title?: string }) => {
+        return {
+          label: obj.value,
+          value: obj._id ?? '',
+          title: obj.title,
+          type: obj.type ?? 'user-defined',
+        }
+      })
   }
   else {
     return []
@@ -968,10 +978,10 @@ const searchOptions = computed(() => {
 })
 
 // Map value back to key label.
-function renderOption(option: { label: string, title?: string, type?: string }) {
+function renderOption(option: { label: string, title?: string, type?: 'built-in' | 'user-defined' }) {
   if (option.title) {
     return [
-      h(PromptTypeTag, { type: option.type }),
+      h(PromptTypeTag, { type: option.type ?? 'user-defined' }),
       h('span', { style: { marginLeft: '8px' } }),
       option.title,
     ]
@@ -979,9 +989,14 @@ function renderOption(option: { label: string, title?: string, type?: string }) 
   return []
 }
 
-function handlePromptSelect(_value: string, option: { inputValue?: string }) {
-  if (option?.inputValue)
-    prompt.value = option.inputValue
+type AutoCompleteOnSelect = NonNullable<AutoCompleteProps['onSelect']> extends Array<infer T>
+  ? T
+  : NonNullable<AutoCompleteProps['onSelect']>
+
+const handlePromptSelect: AutoCompleteOnSelect = (value) => {
+  const selectedValue = promptValueById.value.get(String(value))
+  if (selectedValue !== undefined)
+    prompt.value = selectedValue
 }
 
 const placeholder = computed(() => {
