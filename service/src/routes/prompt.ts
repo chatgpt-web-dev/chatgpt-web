@@ -28,6 +28,7 @@ router.get('/prompt-list', auth, async (req, res) => {
         _id: p._id,
         title: p.title,
         value: p.value,
+        order: p.order,
         type: 'user-defined',
       })
     })
@@ -40,6 +41,7 @@ router.get('/prompt-list', auth, async (req, res) => {
         _id: p._id,
         title: p.title,
         value: p.value,
+        order: p.order,
         type: 'built-in',
       })
     })
