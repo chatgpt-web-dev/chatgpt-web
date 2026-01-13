@@ -328,6 +328,7 @@ export class KeyConfig {
   toolsEnabled?: boolean
   imageUploadEnabled?: boolean
   defaultThinkEnabled?: boolean
+  defaultSearchEnabled?: boolean
   inputFidelity?: 'low' | 'medium' | 'high'
   quality?: 'low' | 'medium' | 'high'
   imageModel?: 'gpt-image-1' | 'gpt-image-1.5'

@@ -119,7 +119,16 @@ router.post('/room-create', auth, async (req, res) => {
       ? keys.find(key => key.chatModel === actualModelName && !key.toolsEnabled && !key.imageUploadEnabled)
       : undefined
     const defaultThinkEnabled = selectedKey?.defaultThinkEnabled || fallbackKey?.defaultThinkEnabled || false
-    const room = await createChatRoom(userId, title, roomId, resolvedChatModel || '', user.config?.maxContextCount, defaultThinkEnabled)
+    const defaultSearchEnabled = selectedKey?.defaultSearchEnabled || fallbackKey?.defaultSearchEnabled || false
+    const room = await createChatRoom(
+      userId,
+      title,
+      roomId,
+      resolvedChatModel || '',
+      user.config?.maxContextCount,
+      defaultThinkEnabled,
+      defaultSearchEnabled,
+    )
     // Set imageUploadEnabled based on chatModel.
     if (user && room.chatModel) {
       // Parse model name, supporting "modelName|keyId".
@@ -144,6 +153,7 @@ router.post('/room-create', auth, async (req, res) => {
       await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
       await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
       room.thinkEnabled = defaultThinkEnabled
+      room.searchEnabled = defaultSearchEnabled
       room.imageUploadEnabled = imageUploadEnabled || false
       room.toolsEnabled = toolsEnabled || false
     }

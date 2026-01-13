@@ -221,6 +221,7 @@
       "new": "新建模型",
       "apiKeyRequired": "必须填写 API Key",
       "defaultThinkEnabled": "默认深度思考",
+      "defaultSearchEnabled": "默认联网搜索",
       "total": "共 {count} 条。",
       "table": {
         "key": "Key",

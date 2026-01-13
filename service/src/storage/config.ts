@@ -160,6 +160,9 @@ export async function getApiKeys() {
     if (key.defaultThinkEnabled == null) {
       key.defaultThinkEnabled = false
     }
+    if (key.defaultSearchEnabled == null) {
+      key.defaultSearchEnabled = false
+    }
   })
   return result
 }

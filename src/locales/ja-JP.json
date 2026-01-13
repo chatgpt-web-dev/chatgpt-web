@@ -221,6 +221,7 @@
       "new": "モデル追加",
       "apiKeyRequired": "APIキーは必須です",
       "defaultThinkEnabled": "既定の思考",
+      "defaultSearchEnabled": "既定のウェブ検索",
       "total": "合計 {count} 件。",
       "table": {
         "key": "キー",

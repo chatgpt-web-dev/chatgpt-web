@@ -221,6 +221,7 @@
       "new": "新增模型",
       "apiKeyRequired": "必須填寫 API Key",
       "defaultThinkEnabled": "預設深度思考",
+      "defaultSearchEnabled": "預設聯網搜尋",
       "total": "共 {count} 筆。",
       "table": {
         "key": "Key",

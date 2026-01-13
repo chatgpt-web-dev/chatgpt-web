@@ -221,6 +221,7 @@
       "new": "New Model",
       "apiKeyRequired": "API key is required",
       "defaultThinkEnabled": "Default Think",
+      "defaultSearchEnabled": "Default Web Search",
       "total": "Total is {count}.",
       "table": {
         "key": "Key",

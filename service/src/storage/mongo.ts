@@ -362,6 +362,7 @@ export async function createChatRoom(
   chatModel: string,
   maxContextCount: number,
   thinkEnabled = false,
+  searchEnabled = true,
 ) {
   const config = await getCacheConfig()
   if (!chatModel) {
@@ -370,7 +371,7 @@ export async function createChatRoom(
   if (maxContextCount === undefined) {
     maxContextCount = 10
   }
-  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, true, thinkEnabled, false)
+  const room = new ChatRoom(userId, title, roomId, chatModel, true, maxContextCount, searchEnabled, thinkEnabled, false)
   // After room creation, set imageUploadEnabled based on chatModel.
   // Initialize as false here; the room-create API will set it dynamically.
   room.imageUploadEnabled = false

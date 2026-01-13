@@ -221,6 +221,7 @@
       "new": "모델 추가",
       "apiKeyRequired": "API 키를 입력해야 합니다",
       "defaultThinkEnabled": "기본 사고",
+      "defaultSearchEnabled": "기본 웹 검색",
       "total": "총 {count}개.",
       "table": {
         "key": "키",
