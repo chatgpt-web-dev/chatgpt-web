@@ -216,7 +216,23 @@
     "searchTest": "検索テスト",
     "accessTokenExpiredTime": "有効期限",
     "userConfig": "ユーザー",
-    "keysConfig": "キー管理",
+    "model": {
+      "management": "モデル管理",
+      "new": "モデル追加",
+      "apiKeyRequired": "APIキーは必須です",
+      "defaultThinkEnabled": "既定の思考",
+      "total": "合計 {count} 件。",
+      "table": {
+        "key": "キー",
+        "apiModel": "APIモデル",
+        "baseUrl": "Base URL",
+        "chatModel": "チャットモデル",
+        "alias": "モデル別名",
+        "userRoles": "ユーザーロール",
+        "remark": "備考",
+        "action": "操作"
+      }
+    },
     "builtInPromptConfig": "組み込みプロンプト",
     "builtInPromptDeleteConfirm": "この組み込みプロンプトを削除しますか？",
     "userRoles": "ユーザーロール",

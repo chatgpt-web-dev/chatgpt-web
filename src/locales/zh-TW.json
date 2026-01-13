@@ -188,7 +188,7 @@
     "registerMails": "允許的信箱後綴",
     "registerReviewTip": "僅允許這些信箱後綴註冊本網站",
     "apiBaseUrl": "介面位址",
-    "apiModel": "介面類型",
+    "apiModel": "API 類型",
     "accessToken": "Access Token",
     "loginEnabled": "註冊登入",
     "loginSalt": "登入混淆鹽",
@@ -216,7 +216,23 @@
     "searchTest": "測試搜尋",
     "accessTokenExpiredTime": "過期時間",
     "userConfig": "用戶管理",
-    "keysConfig": "Keys 管理",
+    "model": {
+      "management": "模型管理",
+      "new": "新增模型",
+      "apiKeyRequired": "必須填寫 API Key",
+      "defaultThinkEnabled": "預設深度思考",
+      "total": "共 {count} 筆。",
+      "table": {
+        "key": "Key",
+        "apiModel": "API 類型",
+        "baseUrl": "Base URL",
+        "chatModel": "對話模型",
+        "alias": "模型別名",
+        "userRoles": "用戶角色",
+        "remark": "備註",
+        "action": "操作"
+      }
+    },
     "builtInPromptConfig": "內建提示詞",
     "builtInPromptDeleteConfirm": "確定刪除這條內建提示詞嗎？",
     "userRoles": "用戶權限",

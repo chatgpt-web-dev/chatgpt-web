@@ -91,44 +91,59 @@ router.post('/room-create', auth, async (req, res) => {
   try {
     const userId = req.headers.userId as string
     const user = await getUserById(userId)
-    const { title, roomId } = req.body as { title: string, roomId: number }
-    const room = await createChatRoom(userId, title, roomId, user.config?.chatModel, user.config?.maxContextCount)
+    const { title, roomId, chatModel, modelId } = req.body as {
+      title: string
+      roomId: number
+      chatModel?: string
+      modelId?: string
+    }
+    const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
+    let selectedKey = modelId ? keys.find(key => key._id.toString() === modelId) : undefined
+    let resolvedChatModel = chatModel || user.config?.chatModel
+    if (selectedKey) {
+      resolvedChatModel = `${selectedKey.chatModel}|${selectedKey._id.toString()}`
+    }
+    let actualModelName = resolvedChatModel || ''
+    let specifiedKeyId: string | undefined
+    if (!selectedKey && resolvedChatModel && resolvedChatModel.includes('|')) {
+      const parts = resolvedChatModel.split('|')
+      actualModelName = parts[0]
+      specifiedKeyId = parts[1]
+      selectedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
+    }
+    else if (selectedKey) {
+      actualModelName = selectedKey.chatModel
+      specifiedKeyId = selectedKey._id.toString()
+    }
+    const fallbackKey = !specifiedKeyId
+      ? keys.find(key => key.chatModel === actualModelName && !key.toolsEnabled && !key.imageUploadEnabled)
+      : undefined
+    const defaultThinkEnabled = selectedKey?.defaultThinkEnabled || fallbackKey?.defaultThinkEnabled || false
+    const room = await createChatRoom(userId, title, roomId, resolvedChatModel || '', user.config?.maxContextCount, defaultThinkEnabled)
     // Set imageUploadEnabled based on chatModel.
     if (user && room.chatModel) {
       // Parse model name, supporting "modelName|keyId".
-      let actualModelName = room.chatModel
-      let specifiedKeyId: string | undefined
+      actualModelName = room.chatModel
+      specifiedKeyId = undefined
       if (room.chatModel.includes('|')) {
         const parts = room.chatModel.split('|')
         actualModelName = parts[0]
         specifiedKeyId = parts[1]
       }
 
-      const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
       let imageUploadEnabled = false
       let toolsEnabled = false
-      if (specifiedKeyId) {
-        // Use the specified keyId configuration.
-        const specifiedKey = keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
-        if (specifiedKey) {
-          imageUploadEnabled = specifiedKey.imageUploadEnabled || false
-          toolsEnabled = specifiedKey.toolsEnabled || false
-        }
-      }
-      else {
-        // Fall back to the default logic when keyId is not specified.
-        imageUploadEnabled = false
-        toolsEnabled = false
+      const specifiedKey = specifiedKeyId
+        ? keys.find(key => key._id.toString() === specifiedKeyId && key.chatModel === actualModelName)
+        : selectedKey
+      if (specifiedKey) {
+        imageUploadEnabled = specifiedKey.imageUploadEnabled || false
+        toolsEnabled = specifiedKey.toolsEnabled || false
       }
 
       await updateRoomImageUploadEnabled(userId, roomId, imageUploadEnabled || false)
       await updateRoomToolsEnabled(userId, roomId, toolsEnabled || false)
-      if (toolsEnabled) {
-        await updateRoomThinkEnabled(userId, roomId, false)
-        await updateRoomSearchEnabled(userId, roomId, false)
-        room.thinkEnabled = false
-        room.searchEnabled = false
-      }
+      room.thinkEnabled = defaultThinkEnabled
       room.imageUploadEnabled = imageUploadEnabled || false
       room.toolsEnabled = toolsEnabled || false
     }

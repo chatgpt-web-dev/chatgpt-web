@@ -216,7 +216,23 @@
     "searchTest": "검색 테스트",
     "accessTokenExpiredTime": "만료된 시간",
     "userConfig": "사용자",
-    "keysConfig": "키 관리자",
+    "model": {
+      "management": "모델 관리",
+      "new": "모델 추가",
+      "apiKeyRequired": "API 키를 입력해야 합니다",
+      "defaultThinkEnabled": "기본 사고",
+      "total": "총 {count}개.",
+      "table": {
+        "key": "키",
+        "apiModel": "API 모델",
+        "baseUrl": "Base URL",
+        "chatModel": "채팅 모델",
+        "alias": "모델 별칭",
+        "userRoles": "사용자 역할",
+        "remark": "비고",
+        "action": "작업"
+      }
+    },
     "builtInPromptConfig": "내장 프롬프트",
     "builtInPromptDeleteConfirm": "이 내장 프롬프트를 삭제하시겠습니까?",
     "userRoles": "사용자 역할",
