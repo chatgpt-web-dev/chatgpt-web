@@ -157,6 +157,12 @@ export async function getApiKeys() {
     if (key.chatModel == null || key.chatModel === '') {
       key.chatModel = config.siteConfig.chatModels.split(',')[0] || ''
     }
+    if (key.defaultThinkEnabled == null) {
+      key.defaultThinkEnabled = false
+    }
+    if (key.defaultSearchEnabled == null) {
+      key.defaultSearchEnabled = false
+    }
   })
   return result
 }

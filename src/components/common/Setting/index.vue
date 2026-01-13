@@ -116,7 +116,7 @@ const show = computed({
         <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
           <template #tab>
             <SvgIcon class="text-lg" icon="ri-key-2-line" />
-            <span class="ml-2">{{ t('setting.keysConfig') }}</span>
+            <span class="ml-2">{{ t('setting.model.management') }}</span>
           </template>
           <Key />
         </NTabPane>

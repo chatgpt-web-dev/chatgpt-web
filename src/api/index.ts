@@ -340,10 +340,10 @@ export function fetchGetChatRoomsCount<T = any>(page: number, size: number, user
   })
 }
 
-export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string) {
+export function fetchCreateChatRoom<T = any>(title: string, roomId: number, chatModel?: string, modelId?: string) {
   return post<T>({
     url: '/room-create',
-    data: { title, roomId, chatModel },
+    data: { title, roomId, chatModel, modelId },
   })
 }
 

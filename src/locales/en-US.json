@@ -216,7 +216,24 @@
     "searchTest": "Test Search",
     "accessTokenExpiredTime": "Expired Time",
     "userConfig": "Users",
-    "keysConfig": "Keys Manager",
+    "model": {
+      "management": "Model Management",
+      "new": "New Model",
+      "apiKeyRequired": "API key is required",
+      "defaultThinkEnabled": "Default Think",
+      "defaultSearchEnabled": "Default Web Search",
+      "total": "Total is {count}.",
+      "table": {
+        "key": "Key",
+        "apiModel": "API Model",
+        "baseUrl": "Base URL",
+        "chatModel": "Chat Model",
+        "alias": "Model Alias",
+        "userRoles": "User Roles",
+        "remark": "Remark",
+        "action": "Actions"
+      }
+    },
     "builtInPromptConfig": "Built-in Prompts",
     "builtInPromptDeleteConfirm": "Are you sure to delete this built-in prompt?",
     "userRoles": "User Role",

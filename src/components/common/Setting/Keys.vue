@@ -22,7 +22,7 @@ const keys = ref([])
 function createColumns(): DataTableColumns {
   return [
     {
-      title: 'Key',
+      title: () => t('setting.model.table.key'),
       key: 'key',
       resizable: true,
       width: 120,
@@ -31,17 +31,17 @@ function createColumns(): DataTableColumns {
       ellipsis: true,
     },
     {
-      title: 'Api Model',
+      title: () => t('setting.model.table.apiModel'),
       key: 'keyModel',
       width: 150,
     },
     {
-      title: 'Base url',
+      title: () => t('setting.model.table.baseUrl'),
       key: 'baseUrl',
       width: 150,
     },
     {
-      title: 'Chat Model',
+      title: () => t('setting.model.table.chatModel'),
       key: 'chatModel',
       width: 200,
       render(row: any) {
@@ -49,7 +49,7 @@ function createColumns(): DataTableColumns {
       },
     },
     {
-      title: 'Model Alias',
+      title: () => t('setting.model.table.alias'),
       key: 'modelAlias',
       width: 150,
       render(row: any) {
@@ -57,7 +57,7 @@ function createColumns(): DataTableColumns {
       },
     },
     {
-      title: 'User Roles',
+      title: () => t('setting.model.table.userRoles'),
       key: 'userRoles',
       width: 180,
       render(row: any) {
@@ -80,12 +80,12 @@ function createColumns(): DataTableColumns {
       },
     },
     {
-      title: 'Remark',
+      title: () => t('setting.model.table.remark'),
       key: 'remark',
       width: 150,
     },
     {
-      title: 'Action',
+      title: () => t('setting.model.table.action'),
       key: '_id',
       width: 220,
       fixed: 'right',
@@ -131,7 +131,7 @@ const pagination = reactive({
   pageCount: 1,
   itemCount: 1,
   prefix({ itemCount }: { itemCount: number | undefined }) {
-    return `Total is ${itemCount}.`
+    return t('setting.model.total', { count: itemCount ?? 0 })
   },
   showSizePicker: true,
   pageSizes: [100],
@@ -171,7 +171,7 @@ async function handleUpdateApiKeyStatus(id: string, status: Status) {
     negativeText: t('common.no'),
     onPositiveClick: async () => {
       await fetchUpdateApiKeyStatus(id, status)
-      ms.info('OK')
+      ms.info(t('common.success'))
       await handleGetKeys(pagination.page)
     },
   })
@@ -179,7 +179,7 @@ async function handleUpdateApiKeyStatus(id: string, status: Status) {
 
 async function handleUpdateKeyConfig() {
   if (!keyConfig.value.key) {
-    ms.error('Api key is required')
+    ms.error(t('setting.model.apiKeyRequired'))
     return
   }
   handleSaving.value = true
@@ -215,7 +215,7 @@ onMounted(async () => {
       <NSpace vertical :size="12">
         <NSpace>
           <NButton @click="handleNewKey()">
-            New Key
+            {{ t('setting.model.new') }}
           </NButton>
         </NSpace>
         <NDataTable
@@ -374,6 +374,26 @@ onMounted(async () => {
                 :round="false"
                 :value="keyConfig.imageUploadEnabled || false"
                 @update:value="(val) => { keyConfig.imageUploadEnabled = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.model.defaultThinkEnabled') }}</span>
+            <div class="flex-1">
+              <NSwitch
+                :round="false"
+                :value="keyConfig.defaultThinkEnabled || false"
+                @update:value="(val) => { keyConfig.defaultThinkEnabled = val }"
+              />
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="shrink-0 w-[100px]">{{ t('setting.model.defaultSearchEnabled') }}</span>
+            <div class="flex-1">
+              <NSwitch
+                :round="false"
+                :value="keyConfig.defaultSearchEnabled || false"
+                @update:value="(val) => { keyConfig.defaultSearchEnabled = val }"
               />
             </div>
           </div>

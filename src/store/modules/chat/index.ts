@@ -46,10 +46,13 @@ export const useChatStore = defineStore('chat-store', () => {
   })
 
   // Actions
-  const addNewChatRoom = async () => {
+  const addNewChatRoom = async (chatModelOverride?: string) => {
     const title = 'New Chat'
     const roomId = Date.now()
-    const result = await fetchCreateChatRoom(title, roomId)
+    const userStore = useUserStore()
+    const chatModel = chatModelOverride || userStore.userInfo.config.chatModel
+    const modelId = chatModel && chatModel.includes('|') ? chatModel.split('|')[1] : undefined
+    const result = await fetchCreateChatRoom(title, roomId, chatModel, modelId)
 
     state.chatRooms.unshift({
       title,
@@ -182,15 +185,6 @@ export const useChatStore = defineStore('chat-store', () => {
     // Update toolsEnabled state (from API).
     if (result.data?.toolsEnabled !== undefined) {
       state.chatRooms[index].toolsEnabled = result.data.toolsEnabled
-      // If toolsEnabled is true, disable searchEnabled and thinkEnabled.
-      if (result.data.toolsEnabled) {
-        if (state.chatRooms[index].searchEnabled) {
-          await setChatSearchEnabled(false)
-        }
-        if (state.chatRooms[index].thinkEnabled) {
-          await setChatThinkEnabled(false)
-        }
-      }
     }
     // Update imageUploadEnabled state (from API).
     if (result.data?.imageUploadEnabled !== undefined) {

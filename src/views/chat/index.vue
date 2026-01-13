@@ -1099,7 +1099,7 @@ async function handleSyncChatModel(chatModel: string) {
           if (previousModel) {
             await chatStore.setChatModel(previousModel)
           }
-          await chatStore.addNewChatRoom()
+          await chatStore.addNewChatRoom(chatModel)
           await chatStore.setChatModel(chatModel)
           lastToolResponseId.value = ''
         }
