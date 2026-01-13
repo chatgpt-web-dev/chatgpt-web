@@ -46,11 +46,11 @@ export const useChatStore = defineStore('chat-store', () => {
   })
 
   // Actions
-  const addNewChatRoom = async () => {
+  const addNewChatRoom = async (chatModelOverride?: string) => {
     const title = 'New Chat'
     const roomId = Date.now()
     const userStore = useUserStore()
-    const chatModel = userStore.userInfo.config.chatModel
+    const chatModel = chatModelOverride || userStore.userInfo.config.chatModel
     const modelId = chatModel && chatModel.includes('|') ? chatModel.split('|')[1] : undefined
     const result = await fetchCreateChatRoom(title, roomId, chatModel, modelId)
 
