@@ -457,6 +457,9 @@ async function onRegenerate(index: number) {
 
   if (requestOptions.options)
     options = { ...requestOptions.options }
+  const uploadFileKeys = Array.isArray(dataSources.value[index]?.images)
+    ? [...dataSources.value[index].images]
+    : []
 
   loading.value = true
   const chatUuid = dataSources.value[index].uuid
@@ -490,6 +493,7 @@ async function onRegenerate(index: number) {
         uuid: chatUuid || Date.now(),
         regenerate: true,
         prompt: message,
+        uploadFileKeys,
         options,
         tools: currentChatRoom.value?.toolsEnabled ? [{ type: 'image_generation' }] : undefined,
         previousResponseId: currentChatRoom.value?.toolsEnabled && lastToolResponseId.value ? lastToolResponseId.value : undefined,
