@@ -1,8 +1,8 @@
 <script lang="ts" setup>
+import type { Component } from 'vue'
 import type { Language, Theme } from '@/store/modules/app/helper'
 import type { UserInfo } from '@/store/modules/user/helper'
 import { decode_redeemcard, fetchClearAllChat, fetchUpdateUserChatModel, fetchUpdateUserMaxContextCount } from '@/api'
-import { SvgIcon } from '@/components/common'
 import { UserConfig } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAppStore, useAuthStore, useUserStore } from '@/store'
@@ -46,21 +46,21 @@ const language = computed({
   },
 })
 
-const themeOptions: { label: string, key: Theme, icon: string }[] = [
+const themeOptions: { label: string, key: Theme, icon: Component }[] = [
   {
     label: 'Auto',
     key: 'auto',
-    icon: 'ri:contrast-line',
+    icon: IconRiContrastLine,
   },
   {
     label: 'Light',
     key: 'light',
-    icon: 'ri:sun-foggy-line',
+    icon: IconRiSunFoggyLine,
   },
   {
     label: 'Dark',
     key: 'dark',
-    icon: 'ri:moon-foggy-line',
+    icon: IconRiMoonFoggyLine,
   },
 ]
 
@@ -244,7 +244,7 @@ function handleImportButtonClick(): void {
         <div class="flex flex-wrap items-center gap-4">
           <NButton size="small" @click="exportData">
             <template #icon>
-              <SvgIcon icon="ri:download-2-fill" />
+              <IconRiDownload2Fill />
             </template>
             {{ t('common.export') }}
           </NButton>
@@ -252,7 +252,7 @@ function handleImportButtonClick(): void {
           <input id="fileInput" type="file" style="display:none" @change="importData">
           <NButton size="small" @click="handleImportButtonClick">
             <template #icon>
-              <SvgIcon icon="ri:upload-2-fill" />
+              <IconRiUpload2Fill />
             </template>
             {{ t('common.import') }}
           </NButton>
@@ -261,7 +261,7 @@ function handleImportButtonClick(): void {
             <template #trigger>
               <NButton size="small">
                 <template #icon>
-                  <SvgIcon icon="ri:close-circle-line" />
+                  <IconRiCloseCircleLine />
                 </template>
                 {{ t('common.clear') }}
               </NButton>
@@ -280,7 +280,7 @@ function handleImportButtonClick(): void {
               @click="appStore.setTheme(item.key)"
             >
               <template #icon>
-                <SvgIcon :icon="item.icon" />
+                <component :is="item.icon" />
               </template>
             </NButton>
           </template>

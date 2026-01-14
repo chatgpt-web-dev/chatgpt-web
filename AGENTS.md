@@ -25,6 +25,13 @@
 - ESLint is the source of truth; run `pnpm lint:fix` before commit.
 - Commit hooks are managed by Husky (`pnpm bootstrap`).
 
+## Icons (unplugin-icons)
+- Use `Icon*` components (e.g., `<IconRiDownload2Line />`) in templates; they are auto-imported.
+- In script/render functions, `Icon*` components are also auto-imported via `unplugin-auto-import`; avoid manual `~icons/...` imports.
+- If an icon name fails, switch to a valid icon in the same collection (e.g., `ri`), then rerun the app.
+- Loader note: `@iconify/utils` uses `searchForIcon()` with `getPossibleIconNames()`, so numeric names like `settings4-line` can resolve to `settings-4-line` at load time.
+- Rule: always use the `Icon*` component form (e.g., `<IconRiSettings4Line />`) for icons going forward.
+
 ## i18n Keys & Usage
 - Locale files live in `src/locales/` (`en-US.json`, `zh-CN.json`, `zh-TW.json`, `ko-KR.json`).
 - `en-US.json` is the canonical schema; add new keys there first, then mirror them in other locales.

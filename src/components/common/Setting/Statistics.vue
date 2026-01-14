@@ -5,7 +5,6 @@ import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title
 import dayjs from 'dayjs'
 import { Bar } from 'vue-chartjs'
 import { fetchGetUsers, fetchUserStatistics, fetchUserStatisticsByModel } from '@/api'
-import { SvgIcon } from '@/components/common'
 import { useUserStore } from '@/store'
 
 const { t } = useI18n()
@@ -331,12 +330,12 @@ onUnmounted(() => {
             >
               <template #icon>
                 <NIcon>
-                  <SvgIcon icon="ri:download-line" />
+                  <IconRiDownloadLine />
                 </NIcon>
               </template>
               {{ t('common.export') }}
               <NIcon class="ml-1">
-                <SvgIcon icon="ri:arrow-down-s-line" />
+                <IconRiArrowDownSLine />
               </NIcon>
             </NButton>
           </NDropdown>
@@ -348,7 +347,7 @@ onUnmounted(() => {
               <NStatistic :label="t('setting.statisticsPrompt')">
                 <template #prefix>
                   <NIcon>
-                    <SvgIcon class="text-lg" icon="ri-chat-upload-line" />
+                    <IconRiChatUploadLine class="text-lg" />
                   </NIcon>
                 </template>
                 <NNumberAnimation :duration="1000" :to="summary.promptTokens" />
@@ -358,7 +357,7 @@ onUnmounted(() => {
               <NStatistic :label="t('setting.statisticsCompletion')">
                 <template #prefix>
                   <NIcon>
-                    <SvgIcon class="text-lg" icon="ri-chat-download-line" />
+                    <IconRiChatDownloadLine class="text-lg" />
                   </NIcon>
                 </template>
                 <NNumberAnimation :duration="1000" :to="summary.completionTokens" />
@@ -368,7 +367,7 @@ onUnmounted(() => {
               <NStatistic :label="t('setting.statisticsTotal')">
                 <template #prefix>
                   <NIcon>
-                    <SvgIcon class="text-lg" icon="ri-question-answer-line" />
+                    <IconRiQuestionAnswerLine class="text-lg" />
                   </NIcon>
                 </template>
                 <NNumberAnimation :duration="1000" :to="summary.totalTokens" />

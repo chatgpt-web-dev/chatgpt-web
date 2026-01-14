@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import { SvgIcon } from '@/components/common'
 import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStore, useUserStore } from '@/store'
@@ -60,7 +59,7 @@ const show = computed({
       <NTabs v-model:value="active" type="line" animated>
         <NTabPane name="General" tab="General">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:file-user-line" />
+            <IconRiFileUserLine class="text-lg" />
             <span class="ml-2">{{ t('setting.general') }}</span>
           </template>
           <div class="min-h-[100px]">
@@ -69,21 +68,21 @@ const show = computed({
         </NTabPane>
         <NTabPane name="PasswordConfig" tab="PasswordConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <IconRiKey2Line class="text-lg" />
             <span class="ml-2">{{ t('setting.passwordConfig') }}</span>
           </template>
           <Password />
         </NTabPane>
         <NTabPane name="TwoFAConfig" tab="TwoFAConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <IconRiKey2Line class="text-lg" />
             <span class="ml-2">{{ t('setting.twoFAConfig') }}</span>
           </template>
           <TwoFA />
         </NTabPane>
         <NTabPane name="Advanced" tab="Advanced">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:equalizer-line" />
+            <IconRiEqualizerLine class="text-lg" />
             <span class="ml-2">{{ t('setting.advanced') }}</span>
           </template>
           <div class="min-h-[100px]">
@@ -92,7 +91,7 @@ const show = computed({
         </NTabPane>
         <NTabPane name="Statistics" tab="Statistics">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:bar-chart-box-line" />
+            <IconRiBarChartBoxLine class="text-lg" />
             <span class="ml-2">{{ t('setting.statistics') }}</span>
           </template>
           <div class="min-h-[100px]">
@@ -101,77 +100,77 @@ const show = computed({
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="Config" tab="Config">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:list-settings-line" />
+            <IconRiListSettingsLine class="text-lg" />
             <span class="ml-2">{{ t('setting.config') }}</span>
           </template>
           <About />
         </NTabPane>
         <NTabPane v-if="showChatRecordTab" name="ChatRecord" tab="ChatRecord">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ic:outline-chat" />
+            <IconIcOutlineChat class="text-lg" />
             <span class="ml-2">{{ t('setting.chatRecord') }}</span>
           </template>
           <ChatRecord />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="KeysConfig" tab="KeysConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri-key-2-line" />
+            <IconRiKey2Line class="text-lg" />
             <span class="ml-2">{{ t('setting.model.management') }}</span>
           </template>
           <Key />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="BuiltInPromptConfig" tab="BuiltInPromptConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:chat-quote-line" />
+            <IconRiChatQuoteLine class="text-lg" />
             <span class="ml-2">{{ t('setting.builtInPromptConfig') }}</span>
           </template>
           <BuiltInPrompt />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SiteConfig" tab="SiteConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:settings-line" />
+            <IconRiSettingsLine class="text-lg" />
             <span class="ml-2">{{ t('setting.siteConfig') }}</span>
           </template>
           <Site />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="AnnounceConfig" tab="AnnounceConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:settings-line" />
+            <IconRiSettingsLine class="text-lg" />
             <span class="ml-2">{{ t('setting.announceConfig') }}</span>
           </template>
           <Announcement />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="MailConfig" tab="MailConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:mail-line" />
+            <IconRiMailLine class="text-lg" />
             <span class="ml-2">{{ t('setting.mailConfig') }}</span>
           </template>
           <Mail />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="AuditConfig" tab="AuditConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri:settings-line" />
+            <IconRiSettingsLine class="text-lg" />
             <span class="ml-2">{{ t('setting.auditConfig') }}</span>
           </template>
           <Audit />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="SearchConfig" tab="SearchConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="mdi:web" />
+            <IconMdiWeb class="text-lg" />
             <span class="ml-2">{{ t('setting.searchConfig') }}</span>
           </template>
           <Search />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="UserConfig" tab="UserConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="ri-user-5-line" />
+            <IconRiUser5Line class="text-lg" />
             <span class="ml-2">{{ t('setting.userConfig') }}</span>
           </template>
           <User />
         </NTabPane>
         <NTabPane v-if="userStore.userInfo.root" name="GiftCardConfig" tab="GiftCardConfig">
           <template #tab>
-            <SvgIcon class="text-lg" icon="mdi-gift" />
+            <IconMdiGift class="text-lg" />
             <span class="ml-2">{{ t('setting.uploadgifts') }}</span>
           </template>
           <Gift />

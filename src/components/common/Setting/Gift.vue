@@ -2,7 +2,6 @@
 import type { UploadFileInfo } from 'naive-ui'
 import type { GiftCard } from './model'
 import { fetchUpdateGiftCards } from '@/api'
-import { SvgIcon } from '@/components/common'
 
 const { t } = useI18n()
 
@@ -121,7 +120,7 @@ async function uploadGiftCards() {
         <NUploadDragger>
           <div style="margin-bottom: 12px">
             <NIcon size="48" :depth="3">
-              <SvgIcon icon="mage:box-upload" />
+              <IconMageBoxUpload />
             </NIcon>
           </div>
           <NText style="font-size: 16px">

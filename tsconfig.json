@@ -17,7 +17,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["vite/client", "node", "naive-ui/volar"]
+    "types": ["vite/client", "node", "naive-ui/volar", "unplugin-icons/types"]
   },
   "exclude": ["node_modules", "dist", "service"]
 }

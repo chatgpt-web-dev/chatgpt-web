@@ -6,7 +6,6 @@ import { UserPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStoreWithout, usePromptStore } from '@/store'
 import { rankBetween } from '@/utils/lexorank'
-import { SvgIcon } from '..'
 import PromptRecommend from '../../../assets/recommend.json'
 
 const props = defineProps<Props>()
@@ -477,7 +476,7 @@ function createColumns(): DataTableColumns<DataProps> {
                       draggingId.value = null
                     },
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:reorder-horizontal' }) },
+                  { default: () => h(IconMdiReorderHorizontal) },
                 ),
                 default: () => t('store.drag'),
               },
@@ -494,7 +493,7 @@ function createColumns(): DataTableColumns<DataProps> {
                     disabled,
                     onClick: () => moveToTop(row),
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-top' }) },
+                  { default: () => h(IconMdiFormatVerticalAlignTop) },
                 ),
                 default: () => t('store.moveTop'),
               },
@@ -511,7 +510,7 @@ function createColumns(): DataTableColumns<DataProps> {
                     disabled,
                     onClick: () => moveToBottom(row),
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-bottom' }) },
+                  { default: () => h(IconMdiFormatVerticalAlignBottom) },
                 ),
                 default: () => t('store.moveBottom'),
               },
@@ -768,7 +767,7 @@ async function handleGetUserPromptList() {
                           @dragstart="handleMobileDragStart($event, item)"
                           @dragend="handleMobileDragEnd"
                         >
-                          <SvgIcon icon="mdi:reorder-horizontal" />
+                          <IconMdiReorderHorizontal />
                         </NButton>
                       </template>
                       {{ t('store.drag') }}
@@ -781,7 +780,7 @@ async function handleGetUserPromptList() {
                           :disabled="ordering || isSearchActive"
                           @click="moveToTop(item)"
                         >
-                          <SvgIcon icon="mdi:format-vertical-align-top" />
+                          <IconMdiFormatVerticalAlignTop />
                         </NButton>
                       </template>
                       {{ t('store.moveTop') }}
@@ -794,7 +793,7 @@ async function handleGetUserPromptList() {
                           :disabled="ordering || isSearchActive"
                           @click="moveToBottom(item)"
                         >
-                          <SvgIcon icon="mdi:format-vertical-align-bottom" />
+                          <IconMdiFormatVerticalAlignBottom />
                         </NButton>
                       </template>
                       {{ t('store.moveBottom') }}
@@ -848,11 +847,11 @@ async function handleGetUserPromptList() {
                       :href="info.url"
                       target="_blank"
                     >
-                      <SvgIcon class="text-xl" icon="ri:link" />
+                      <IconRiLink class="text-xl" />
                     </a>
                   </NButton>
                   <NButton text @click="setDownloadURL(info.downloadUrl) ">
-                    <SvgIcon class="text-xl" icon="ri:add-fill" />
+                    <IconRiAddFill class="text-xl" />
                   </NButton>
                 </div>
               </template>
