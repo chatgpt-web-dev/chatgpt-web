@@ -21,7 +21,6 @@
     "yes": "是",
     "no": "否",
     "confirm": "确定",
-    "download": "下载",
     "noData": "暂无数据",
     "wrong": "好像出错了，请稍后再试。",
     "success": "操作成功",
@@ -300,8 +299,6 @@
   },
   "store": {
     "siderButton": "提示词商店",
-    "local": "本地",
-    "online": "在线",
     "type": "类型",
     "sort": "排序",
     "drag": "拖动排序",
@@ -318,8 +315,6 @@
     "importError": "键值不匹配",
     "importRepeatTitle": "标题重复跳过：{msg}",
     "importRepeatContent": "内容重复跳过：{msg}",
-    "onlineImportWarning": "注意：请检查 JSON 文件来源！",
-    "downloadError": "请检查网络状态与 JSON 文件有效性",
     "builtIn": "平台预置",
     "userDefined": "用户自定义"
   }

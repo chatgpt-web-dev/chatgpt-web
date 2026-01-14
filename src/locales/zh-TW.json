@@ -21,7 +21,6 @@
     "yes": "是",
     "no": "否",
     "confirm": "確認",
-    "download": "下載",
     "noData": "目前無資料",
     "wrong": "發生錯誤，請稍後再試。",
     "success": "操作成功",
@@ -300,8 +299,6 @@
   },
   "store": {
     "siderButton": "提示詞商店",
-    "local": "本機",
-    "online": "線上",
     "type": "類型",
     "sort": "排序",
     "drag": "拖動排序",
@@ -318,8 +315,6 @@
     "importError": "鍵值不符合",
     "importRepeatTitle": "因標題重複跳過：{msg}",
     "importRepeatContent": "因內容重複跳過：{msg}",
-    "onlineImportWarning": "注意：請檢查 JSON 檔案來源！",
-    "downloadError": "請檢查網路狀態與 JSON 檔案有效性",
     "builtIn": "平台預置",
     "userDefined": "用戶自定義"
   }

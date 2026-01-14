@@ -21,7 +21,6 @@
     "yes": "はい",
     "no": "いいえ",
     "confirm": "確認",
-    "download": "ダウンロード",
     "noData": "データなし",
     "wrong": "問題が発生しました。後でもう一度お試しください。",
     "success": "成功",
@@ -300,8 +299,6 @@
   },
   "store": {
     "siderButton": "プロンプトストア",
-    "local": "ローカル",
-    "online": "オンライン",
     "type": "タイプ",
     "sort": "並べ替え",
     "drag": "ドラッグで並べ替え",
@@ -318,8 +315,6 @@
     "importError": "キー値が一致しません",
     "importRepeatTitle": "タイトルが重複してスキップされました: {msg}",
     "importRepeatContent": "内容が重複してスキップされました: {msg}",
-    "onlineImportWarning": "注意: JSONファイルのソースを確認してください！",
-    "downloadError": "ネットワーク状態とJSONファイルの有効性を確認してください",
     "builtIn": "組み込み",
     "userDefined": "ユーザー定義"
   }
