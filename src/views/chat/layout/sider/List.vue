@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { fetchRenameChatRoom } from '@/api'
-import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAppStore, useChatStore } from '@/store'
 import { useAuthStoreWithout } from '@/store/modules/auth'
@@ -65,7 +64,7 @@ function isActive(uuid: number) {
       <div class="flex flex-col gap-2 text-sm">
         <template v-if="!dataSources.length">
           <div class="flex flex-col items-center mt-4 text-center text-neutral-300">
-            <SvgIcon icon="ri:inbox-line" class="mb-2 text-3xl" />
+            <IconRiInboxLine class="mb-2 text-3xl" />
             <span>{{ t('common.noData') }}</span>
           </div>
         </template>
@@ -77,7 +76,7 @@ function isActive(uuid: number) {
               @click="handleSelect(item)"
             >
               <span>
-                <SvgIcon icon="ri:message-3-line" />
+                <IconRiMessage3Line />
               </span>
               <div class="relative flex-1 overflow-hidden break-all text-ellipsis whitespace-nowrap">
                 <NInput
@@ -90,17 +89,17 @@ function isActive(uuid: number) {
               <div v-if="isActive(item.roomId)" class="absolute z-10 flex visible right-1">
                 <template v-if="item.isEdit">
                   <button class="p-1" @click="handleEdit(item, false)">
-                    <SvgIcon icon="ri:save-line" />
+                    <IconRiSaveLine />
                   </button>
                 </template>
                 <template v-else>
                   <button class="p-1">
-                    <SvgIcon icon="ri:edit-line" @click.stop="handleEdit(item, true)" />
+                    <IconRiEditLine @click.stop="handleEdit(item, true)" />
                   </button>
                   <NPopconfirm placement="bottom" @positive-click="handleDeleteDebounce(index, $event)">
                     <template #trigger>
                       <button class="p-1">
-                        <SvgIcon icon="ri:delete-bin-line" />
+                        <IconRiDeleteBinLine />
                       </button>
                     </template>
                     {{ t('chat.deleteHistoryConfirm') }}

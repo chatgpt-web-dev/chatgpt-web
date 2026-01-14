@@ -7,6 +7,17 @@
 export {}
 declare global {
   const EffectScope: typeof import('vue').EffectScope
+  const IconIcOutlineCode: typeof import('~icons/ic/outline-code').default
+  const IconIcOutlineCodeOff: typeof import('~icons/ic/outline-code-off').default
+  const IconMdiFormatVerticalAlignBottom: typeof import('~icons/mdi/format-vertical-align-bottom').default
+  const IconMdiFormatVerticalAlignTop: typeof import('~icons/mdi/format-vertical-align-top').default
+  const IconMdiReorderHorizontal: typeof import('~icons/mdi/reorder-horizontal').default
+  const IconRiContrastLine: typeof import('~icons/ri/contrast-line').default
+  const IconRiDeleteBinLine: typeof import('~icons/ri/delete-bin-line').default
+  const IconRiExternalLinkLine: typeof import('~icons/ri/external-link-line').default
+  const IconRiFileCopy2Line: typeof import('~icons/ri/file-copy2-line').default
+  const IconRiMoonFoggyLine: typeof import('~icons/ri/moon-foggy-line').default
+  const IconRiSunFoggyLine: typeof import('~icons/ri/sun-foggy-line').default
   const acceptHMRUpdate: typeof import('pinia').acceptHMRUpdate
   const computed: typeof import('vue').computed
   const createApp: typeof import('vue').createApp

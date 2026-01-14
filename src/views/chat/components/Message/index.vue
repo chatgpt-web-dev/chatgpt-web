@@ -1,7 +1,5 @@
 <script setup lang='ts'>
-import { SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useIconRender } from '@/hooks/useIconRender'
 import { useAppStore } from '@/store'
 import { copyToClip } from '@/utils/copy'
 import AvatarComponent from './Avatar.vue'
@@ -52,8 +50,6 @@ interface Emit {
 
 const { isMobile } = useBasicLayout()
 
-const { iconRender } = useIconRender()
-
 const message = useMessage()
 
 const textRef = ref<HTMLElement>()
@@ -72,12 +68,12 @@ const options = computed(() => {
     {
       label: t('chat.copy'),
       key: 'copyText',
-      icon: iconRender({ icon: 'ri:file-copy-2-line' }),
+      icon: () => h(IconRiFileCopy2Line),
     },
     {
       label: t('common.delete'),
       key: 'delete',
-      icon: iconRender({ icon: 'ri:delete-bin-line' }),
+      icon: () => h(IconRiDeleteBinLine),
     },
   ]
 
@@ -85,7 +81,7 @@ const options = computed(() => {
     common.unshift({
       label: asRawText.value ? t('chat.preview') : t('chat.showRawText'),
       key: 'toggleRenderType',
-      icon: iconRender({ icon: asRawText.value ? 'ic:outline-code-off' : 'ic:outline-code' }),
+      icon: () => h(asRawText.value ? IconIcOutlineCodeOff : IconIcOutlineCode),
     })
   }
 
@@ -180,7 +176,7 @@ function isEventTargetValid(event: any) {
         :class="[inversion ? 'ml-2' : 'mr-2']"
       >
         <button class="focus:outline-hidden" style="opacity: 0.5;" @click="fastDelMsg">
-          <SvgIcon class="text-lg" icon="ri:delete-bin-line" />
+          <IconRiDeleteBinLine class="text-lg" />
         </button>
       </div>
     </div>
@@ -265,7 +261,7 @@ function isEventTargetValid(event: any) {
             class="mb-2 transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-300"
             @click="handleRegenerate"
           >
-            <SvgIcon icon="ri:restart-line" />
+            <IconRiRestartLine />
           </button>
           <NDropdown
             :trigger="isMobile ? 'click' : 'hover'"
@@ -274,7 +270,7 @@ function isEventTargetValid(event: any) {
             @select="handleSelect"
           >
             <button class="transition text-neutral-300 hover:text-neutral-800 dark:hover:text-neutral-200">
-              <SvgIcon icon="ri:more-2-fill" />
+              <IconRiMore2Fill />
             </button>
           </NDropdown>
         </div>

@@ -5,7 +5,6 @@ import { fetchBuiltInPromptList, fetchDeleteBuiltInPrompt, fetchUpsertBuiltInPro
 import { BuiltInPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { rankBetween } from '@/utils/lexorank'
-import { SvgIcon } from '..'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -236,7 +235,7 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
                       draggingId.value = null
                     },
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:reorder-horizontal' }) },
+                  { default: () => h(IconMdiReorderHorizontal) },
                 ),
                 default: () => t('store.drag'),
               },
@@ -253,7 +252,7 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
                     disabled,
                     onClick: () => moveToTop(row),
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-top' }) },
+                  { default: () => h(IconMdiFormatVerticalAlignTop) },
                 ),
                 default: () => t('store.moveTop'),
               },
@@ -270,7 +269,7 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
                     disabled,
                     onClick: () => moveToBottom(row),
                   },
-                  { default: () => h(SvgIcon, { icon: 'mdi:format-vertical-align-bottom' }) },
+                  { default: () => h(IconMdiFormatVerticalAlignBottom) },
                 ),
                 default: () => t('store.moveBottom'),
               },

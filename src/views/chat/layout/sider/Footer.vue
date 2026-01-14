@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { HoverButton, SvgIcon, UserAvatar } from '@/components/common'
+import { HoverButton, UserAvatar } from '@/components/common'
 import { useAuthStore } from '@/store'
 
 const { t } = useI18n()
@@ -22,13 +22,13 @@ async function handleLogout() {
     </div>
     <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" :tooltip="t('common.logOut')" @click="handleLogout">
       <span class="text-xl text-[#4f555e] dark:text-white">
-        <SvgIcon icon="uil:exit" />
+        <IconUilExit />
       </span>
     </HoverButton>
 
     <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" :tooltip="t('setting.setting')" @click="show = true">
       <span class="text-xl text-[#4f555e] dark:text-white">
-        <SvgIcon icon="ri:settings-4-line" />
+        <IconRiSettings4Line />
       </span>
     </HoverButton>
     <Setting v-if="show" v-model:visible="show" />

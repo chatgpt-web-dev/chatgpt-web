@@ -3,6 +3,8 @@ import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
+import IconsResolver from 'unplugin-icons/resolver'
+import Icons from 'unplugin-icons/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv } from 'vite'
@@ -36,11 +38,24 @@ export default defineConfig(({ mode }) => {
             ],
           },
         ],
+        resolvers: [
+          IconsResolver({
+            prefix: 'Icon',
+            enabledCollections: ['ri', 'mdi', 'ic', 'mage', 'uil'],
+          }),
+        ],
+      }),
+      Icons({
+        compiler: 'vue3',
       }),
       Components({
         dirs: [],
         resolvers: [
           NaiveUiResolver(),
+          IconsResolver({
+            prefix: 'Icon',
+            enabledCollections: ['ri', 'mdi', 'ic', 'mage', 'uil'],
+          }),
         ],
       }),
     ],

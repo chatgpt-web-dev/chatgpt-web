@@ -7,7 +7,7 @@ import {
   fetchChatResponseoHistory,
   fetchChatStopResponding,
 } from '@/api'
-import { HoverButton, PromptTypeTag, SvgIcon } from '@/components/common'
+import { HoverButton, PromptTypeTag } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import IconPrompt from '@/icons/Prompt.vue'
 import { useAuthStore, useChatStore, usePromptStore, useUserStore } from '@/store'
@@ -1049,8 +1049,7 @@ function renderChatModelLabel(option: { label: string, value: string }, _selecte
   if (isExternalModel(option.value)) {
     return h('span', { style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
       option.label,
-      h(SvgIcon, {
-        icon: 'ri:external-link-line',
+      h(IconRiExternalLinkLine, {
         style: { fontSize: '14px', color: 'var(--n-text-color-secondary)' },
       }),
     ])
@@ -1317,7 +1316,7 @@ onUnmounted(() => {
           <NSpin :show="firstLoading">
             <template v-if="!dataSources.length">
               <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
-                <SvgIcon icon="ri:bubble-chart-fill" class="mr-2 text-3xl" />
+                <IconRiBubbleChartFill class="mr-2 text-3xl" />
                 <span>Aha~</span>
               </div>
             </template>
@@ -1351,7 +1350,7 @@ onUnmounted(() => {
                 <div class="sticky bottom-0 left-0 flex justify-center">
                   <NButton v-if="loading" type="warning" @click="handleStop">
                     <template #icon>
-                      <SvgIcon icon="ri:stop-circle-line" />
+                      <IconRiStopCircleLine />
                     </template>
                     Stop Responding
                   </NButton>
@@ -1377,7 +1376,7 @@ onUnmounted(() => {
               >
               <HoverButton @click="handleDeleteUploadFile">
                 <span class="text-xl text-[#4f555e] dark:text-white">
-                  <SvgIcon icon="ri:delete-back-2-fill" />
+                  <IconRiDeleteBack2Fill />
                 </span>
               </HoverButton>
             </NSpace>
@@ -1398,18 +1397,18 @@ onUnmounted(() => {
                 @finish="handleFinish"
               >
                 <span class="text-xl text-[#4f555e] dark:text-white">
-                  <SvgIcon icon="ri:image-edit-line" />
+                  <IconRiImageEditLine />
                 </span>
               </NUpload>
             </div>
             <HoverButton @click="handleClear">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="ri:delete-bin-line" />
+                <IconRiDeleteBinLine />
               </span>
             </HoverButton>
             <HoverButton v-if="!isMobile" @click="handleExport">
               <span class="text-xl text-[#4f555e] dark:text-white">
-                <SvgIcon icon="ri:download-2-line" />
+                <IconRiDownload2Line />
               </span>
             </HoverButton>
             <HoverButton v-if="!isMobile" @click="showPrompt = true">
@@ -1433,7 +1432,7 @@ onUnmounted(() => {
               @click="handleToggleSearchEnabled"
             >
               <span class="text-xl flex items-center">
-                <SvgIcon icon="mdi:web" />
+                <IconMdiWeb />
                 <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
               </span>
             </HoverButton>
@@ -1445,7 +1444,7 @@ onUnmounted(() => {
               @click="handleToggleThinkEnabled"
             >
               <span class="text-xl flex items-center">
-                <SvgIcon icon="mdi:lightbulb-outline" />
+                <IconMdiLightbulbOutline />
                 <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
@@ -1457,7 +1456,7 @@ onUnmounted(() => {
               @click="handleToggleUsingContext"
             >
               <span class="text-xl flex items-center">
-                <SvgIcon icon="ri:chat-history-line" />
+                <IconRiChatHistoryLine />
                 <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
               </span>
             </HoverButton>
@@ -1494,7 +1493,7 @@ onUnmounted(() => {
             <NButton type="primary" :disabled="buttonDisabled" @click="handleSubmit">
               <template #icon>
                 <span class="dark:text-black">
-                  <SvgIcon icon="ri:send-plane-fill" />
+                  <IconRiSendPlaneFill />
                 </span>
               </template>
             </NButton>
