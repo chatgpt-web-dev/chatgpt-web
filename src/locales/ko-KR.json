@@ -21,7 +21,6 @@
     "yes": "예",
     "no": "아니오",
     "confirm": "확인",
-    "download": "다운로드",
     "noData": "데이터 없음",
     "wrong": "문제가 발생했습니다, 나중에 다시 시도하세요.",
     "success": "성공",
@@ -300,8 +299,6 @@
   },
   "store": {
     "siderButton": "프롬프트 스토어",
-    "local": "로컬",
-    "online": "온라인",
     "type": "유형",
     "sort": "정렬",
     "drag": "드래그하여 정렬",
@@ -318,8 +315,6 @@
     "importError": "키 값 불일치",
     "importRepeatTitle": "제목 중복 건너뛰기: {msg}",
     "importRepeatContent": "중복 콘텐츠 건너뛰기: {msg}",
-    "onlineImportWarning": "참고: JSON 파일 소스를 확인하세요!",
-    "downloadError": "네트워크 상태와 JSON 파일 유효성을 확인하세요",
     "builtIn": "내장",
     "userDefined": "사용자 정의"
   }

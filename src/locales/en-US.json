@@ -21,7 +21,6 @@
     "yes": "Yes",
     "no": "No",
     "confirm": "Confirm",
-    "download": "Download",
     "noData": "No Data",
     "wrong": "Something went wrong, please try again later.",
     "success": "Success",
@@ -300,8 +299,6 @@
   },
   "store": {
     "siderButton": "Prompt Store",
-    "local": "Local",
-    "online": "Online",
     "type": "Type",
     "sort": "Sort",
     "drag": "Drag to reorder",
@@ -318,8 +315,6 @@
     "importError": "Key value mismatch",
     "importRepeatTitle": "Title repeatedly skipped: {msg}",
     "importRepeatContent": "Content is repeatedly skipped: {msg}",
-    "onlineImportWarning": "Note: Please check the JSON file source!",
-    "downloadError": "Please check the network status and JSON file validity",
     "builtIn": "Built-in",
     "userDefined": "User defined"
   }

@@ -120,6 +120,9 @@ onMounted(async () => {
       <main class="flex flex-col flex-1 min-h-0">
         <div class="p-4">
           <NButton dashed block :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled" @click="handleAdd">
+            <template #icon>
+              <IconRiChatNewLine />
+            </template>
             {{ t('chat.newChatButton') }}
           </NButton>
         </div>
@@ -128,6 +131,9 @@ onMounted(async () => {
         </div>
         <div class="p-4">
           <NButton block @click="show = true">
+            <template #icon>
+              <IconRiStore2Line />
+            </template>
             {{ t('store.siderButton') }}
           </NButton>
         </div>

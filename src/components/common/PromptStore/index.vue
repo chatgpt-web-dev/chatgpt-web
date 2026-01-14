@@ -6,7 +6,6 @@ import { UserPrompt } from '@/components/common/Setting/model'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStoreWithout, usePromptStore } from '@/store'
 import { rankBetween } from '@/utils/lexorank'
-import PromptRecommend from '../../../assets/recommend.json'
 
 const props = defineProps<Props>()
 
@@ -41,7 +40,6 @@ const showModal = ref(false)
 const ordering = ref(false)
 const saving = ref(false)
 
-const importLoading = ref(false)
 const exportLoading = ref(false)
 
 const searchValue = ref<string>('')
@@ -52,10 +50,6 @@ const promptStore = usePromptStore()
 
 // Mobile responsiveness.
 const { isMobile } = useBasicLayout()
-
-// Recommended prompt list for online import; customize via assets/recommend.json.
-const promptRecommendList = PromptRecommend
-// const promptList = ref<UserPrompt[]>([])
 
 const promptList = ref<any>(promptStore.promptList)
 
@@ -86,13 +80,6 @@ function changeShowModal(mode: 'add' | 'modify' | 'local_import', selected?: Dat
   }
   showModal.value = !showModal.value
   modalMode.value = mode
-}
-
-// Online import.
-const downloadURL = ref('')
-const downloadDisabled = computed(() => downloadURL.value.trim().length < 1)
-function setDownloadURL(url: string) {
-  downloadURL.value = url
 }
 
 // Control input button state.
@@ -362,35 +349,6 @@ function exportPromptTemplate() {
   exportLoading.value = false
 }
 
-// Template online import.
-async function downloadPromptTemplate() {
-  try {
-    importLoading.value = true
-    const response = await fetch(downloadURL.value)
-    const jsonData = await response.json()
-    if ('key' in jsonData[0] && 'value' in jsonData[0])
-      tempPromptValue.value = JSON.stringify(jsonData)
-    if ('act' in jsonData[0] && 'prompt' in jsonData[0]) {
-      const newJsonData = jsonData.map((item: { act: string, prompt: string }) => {
-        return {
-          key: item.act,
-          value: item.prompt,
-        }
-      })
-      tempPromptValue.value = JSON.stringify(newJsonData)
-    }
-    await importPromptTemplate()
-    downloadURL.value = ''
-  }
-  catch {
-    message.error(t('store.downloadError'))
-    downloadURL.value = ''
-  }
-  finally {
-    importLoading.value = false
-  }
-}
-
 // Mobile responsiveness.
 function renderTemplate() {
   return promptList.value.map((item: UserPrompt) => {
@@ -403,14 +361,6 @@ function renderTemplate() {
     }
   })
 }
-
-const pagination = computed(() => {
-  const [pageSize, pageSlot] = isMobile.value ? [6, 5] : [7, 15]
-  return {
-    pageSize,
-    pageSlot,
-  }
-})
 
 const draggingId = ref<string | null>(null)
 const isSearchActive = computed(() => searchValue.value.trim().length > 0)
@@ -683,182 +633,129 @@ async function handleGetUserPromptList() {
 </script>
 
 <template>
-  <NModal v-model:show="show" style="width: 90%; max-width: 900px;" preset="card">
+  <NModal v-model:show="show" style="width: 95%; max-width: 1100px;" preset="card">
     <div class="space-y-4">
-      <NTabs type="segment">
-        <NTabPane name="local" :tab="t('store.local')">
-          <div
-            class="flex gap-3 mb-4"
-            :class="[isMobile ? 'flex-col' : 'flex-row justify-between']"
+      <div
+        class="flex gap-3 mb-4"
+        :class="[isMobile ? 'flex-col' : 'flex-row justify-between']"
+      >
+        <div class="flex items-center space-x-4">
+          <NButton
+            type="primary"
+            size="small"
+            @click="changeShowModal('add')"
           >
-            <div class="flex items-center space-x-4">
-              <NButton
-                type="primary"
-                size="small"
-                @click="changeShowModal('add')"
-              >
-                {{ t('common.add') }}
+            {{ t('common.add') }}
+          </NButton>
+          <NButton
+            size="small"
+            @click="changeShowModal('local_import')"
+          >
+            {{ t('common.import') }}
+          </NButton>
+          <NButton
+            size="small"
+            :loading="exportLoading"
+            @click="exportPromptTemplate()"
+          >
+            {{ t('common.export') }}
+          </NButton>
+          <NPopconfirm @positive-click="clearPromptTemplate">
+            <template #trigger>
+              <NButton size="small">
+                {{ t('common.clear') }}
               </NButton>
-              <NButton
-                size="small"
-                @click="changeShowModal('local_import')"
+            </template>
+            {{ t('store.clearStoreConfirm') }}
+          </NPopconfirm>
+        </div>
+        <div class="flex items-center">
+          <NInput v-model:value="searchValue" style="width: 100%" />
+        </div>
+      </div>
+      <NDataTable
+        v-if="!isMobile"
+        remote
+        :max-height="520"
+        :columns="columns"
+        :data="dataSource"
+        :row-props="rowProps"
+        :bordered="false"
+        :loading="loading"
+      />
+      <NList v-if="isMobile" style="max-height: 520px; overflow-y: auto;">
+        <NListItem
+          v-for="(item, index) of dataSource"
+          :key="index"
+          @dragover="handleMobileDragOver($event, item)"
+          @drop="() => handleDrop(item)"
+        >
+          <NThing :title="item.title" :description="item.value" description-class="text-xs">
+            <template #description>
+              <NEllipsis
+                class="max-w-240 whitespace-pre-line"
+                :tooltip="{ contentClass: 'whitespace-pre-line text-xs max-h-100 max-w-90', scrollable: true }"
+                :line-clamp="3"
               >
-                {{ t('common.import') }}
-              </NButton>
-              <NButton
-                size="small"
-                :loading="exportLoading"
-                @click="exportPromptTemplate()"
-              >
-                {{ t('common.export') }}
-              </NButton>
-              <NPopconfirm @positive-click="clearPromptTemplate">
-                <template #trigger>
-                  <NButton size="small">
-                    {{ t('common.clear') }}
-                  </NButton>
-                </template>
-                {{ t('store.clearStoreConfirm') }}
-              </NPopconfirm>
-            </div>
-            <div class="flex items-center">
-              <NInput v-model:value="searchValue" style="width: 100%" />
-            </div>
-          </div>
-          <NDataTable
-            v-if="!isMobile"
-            remote
-            :max-height="400"
-            :columns="columns"
-            :data="dataSource"
-            :pagination="pagination"
-            :row-props="rowProps"
-            :bordered="false"
-            :loading="loading"
-          />
-          <NList v-if="isMobile" style="max-height: 400px; overflow-y: auto;">
-            <NListItem
-              v-for="(item, index) of dataSource"
-              :key="index"
-              @dragover="handleMobileDragOver($event, item)"
-              @drop="() => handleDrop(item)"
-            >
-              <NThing :title="item.title" :description="item.value" description-class="text-xs">
-                <template #description>
-                  <NEllipsis
-                    class="max-w-240 whitespace-pre-line"
-                    :tooltip="{ contentClass: 'whitespace-pre-line text-xs max-h-100 max-w-90', scrollable: true }"
-                    :line-clamp="3"
-                  >
-                    {{ item.value }}
-                  </NEllipsis>
-                </template>
-              </NThing>>
-              <template #suffix>
-                <div v-if="item.type !== 'built-in'" class="flex flex-col items-center gap-2">
-                  <div class="flex items-center gap-1">
-                    <NTooltip>
-                      <template #trigger>
-                        <NButton
-                          tertiary
-                          size="small"
-                          :disabled="ordering || isSearchActive"
-                          draggable="true"
-                          @dragstart="handleMobileDragStart($event, item)"
-                          @dragend="handleMobileDragEnd"
-                        >
-                          <IconMdiReorderHorizontal />
-                        </NButton>
-                      </template>
-                      {{ t('store.drag') }}
-                    </NTooltip>
-                    <NTooltip>
-                      <template #trigger>
-                        <NButton
-                          tertiary
-                          size="small"
-                          :disabled="ordering || isSearchActive"
-                          @click="moveToTop(item)"
-                        >
-                          <IconMdiFormatVerticalAlignTop />
-                        </NButton>
-                      </template>
-                      {{ t('store.moveTop') }}
-                    </NTooltip>
-                    <NTooltip>
-                      <template #trigger>
-                        <NButton
-                          tertiary
-                          size="small"
-                          :disabled="ordering || isSearchActive"
-                          @click="moveToBottom(item)"
-                        >
-                          <IconMdiFormatVerticalAlignBottom />
-                        </NButton>
-                      </template>
-                      {{ t('store.moveBottom') }}
-                    </NTooltip>
-                  </div>
-                  <NButton tertiary size="small" type="info" @click="changeShowModal('modify', item)">
-                    {{ t('common.edit') }}
-                  </NButton>
-                  <NButton tertiary size="small" type="error" @click="deletePromptTemplate(item)">
-                    {{ t('common.delete') }}
-                  </NButton>
-                </div>
-              </template>
-            </NListItem>
-          </NList>
-        </NTabPane>
-        <NTabPane name="download" :tab="t('store.online')">
-          <p class="mb-4">
-            {{ t('store.onlineImportWarning') }}
-          </p>
-          <div class="flex items-center gap-4">
-            <NInput v-model:value="downloadURL" placeholder="" />
-            <NButton
-              strong
-              secondary
-              :disabled="downloadDisabled"
-              :loading="importLoading"
-              @click="downloadPromptTemplate()"
-            >
-              {{ t('common.download') }}
-            </NButton>
-          </div>
-          <NDivider />
-          <div class="max-h-[360px] overflow-y-auto space-y-4">
-            <NCard
-              v-for="info in promptRecommendList"
-              :key="info.title" :title="info.title"
-              :bordered="true"
-              embedded
-            >
-              <p
-                class="overflow-hidden text-ellipsis whitespace-nowrap"
-                :title="info.desc"
-              >
-                {{ info.desc }}
-              </p>
-              <template #footer>
-                <div class="flex items-center justify-end space-x-4">
-                  <NButton text>
-                    <a
-                      :href="info.url"
-                      target="_blank"
+                {{ item.value }}
+              </NEllipsis>
+            </template>
+          </NThing>>
+          <template #suffix>
+            <div v-if="item.type !== 'built-in'" class="flex flex-col items-center gap-2">
+              <div class="flex items-center gap-1">
+                <NTooltip>
+                  <template #trigger>
+                    <NButton
+                      tertiary
+                      size="small"
+                      :disabled="ordering || isSearchActive"
+                      draggable="true"
+                      @dragstart="handleMobileDragStart($event, item)"
+                      @dragend="handleMobileDragEnd"
                     >
-                      <IconRiLink class="text-xl" />
-                    </a>
-                  </NButton>
-                  <NButton text @click="setDownloadURL(info.downloadUrl) ">
-                    <IconRiAddFill class="text-xl" />
-                  </NButton>
-                </div>
-              </template>
-            </NCard>
-          </div>
-        </NTabPane>
-      </NTabs>
+                      <IconMdiReorderHorizontal />
+                    </NButton>
+                  </template>
+                  {{ t('store.drag') }}
+                </NTooltip>
+                <NTooltip>
+                  <template #trigger>
+                    <NButton
+                      tertiary
+                      size="small"
+                      :disabled="ordering || isSearchActive"
+                      @click="moveToTop(item)"
+                    >
+                      <IconMdiFormatVerticalAlignTop />
+                    </NButton>
+                  </template>
+                  {{ t('store.moveTop') }}
+                </NTooltip>
+                <NTooltip>
+                  <template #trigger>
+                    <NButton
+                      tertiary
+                      size="small"
+                      :disabled="ordering || isSearchActive"
+                      @click="moveToBottom(item)"
+                    >
+                      <IconMdiFormatVerticalAlignBottom />
+                    </NButton>
+                  </template>
+                  {{ t('store.moveBottom') }}
+                </NTooltip>
+              </div>
+              <NButton tertiary size="small" type="info" @click="changeShowModal('modify', item)">
+                {{ t('common.edit') }}
+              </NButton>
+              <NButton tertiary size="small" type="error" @click="deletePromptTemplate(item)">
+                {{ t('common.delete') }}
+              </NButton>
+            </div>
+          </template>
+        </NListItem>
+      </NList>
     </div>
   </NModal>
 
