@@ -220,6 +220,13 @@ async function chatReplyProcess(options: RequestOptions) {
         else
           searchQuery = ''
 
+        // Enforce query length to satisfy Tavily limits.
+        // Error: Query is too long. Max query length is 400 characters.
+        const maxSearchQueryLength = 300
+        searchQuery = searchQuery.replace(/\s+/g, ' ').trim()
+        if (searchQuery.length > maxSearchQueryLength)
+          searchQuery = searchQuery.slice(0, maxSearchQueryLength).trim()
+
         if (searchQuery) {
           await updateChatSearchQuery(messageId, searchQuery)
 

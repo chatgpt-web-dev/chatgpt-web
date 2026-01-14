@@ -211,7 +211,7 @@
     "systemMessageWithSearchResult": "검색 결과가 포함된 대화 시스템 프롬프트",
     "systemMessageGetSearchQuery": "검색 쿼리어를 가져오는 시스템 프롬프트",
     "systemMessageWithSearchResultPlaceholder": "검색 결과가 포함된 시스템 메시지 템플릿, {'{current_time}'}를 현재 시간의 플레이스홀더로 사용",
-    "systemMessageGetSearchQueryPlaceholder": "검색 쿼리어를 생성하는 시스템 메시지 템플릿, {'{current_time}'}를 현재 시간의 플레이스홀더로 사용, LLM이 <search_query>예시 검색 쿼리어</search_query> 태그에서 쿼리어를 반환하도록 요구, 검색이 필요하지 않으면 빈 <search_query></search_query> 태그를 반환",
+    "systemMessageGetSearchQueryPlaceholder": "검색 쿼리어를 생성하는 시스템 메시지 템플릿, {'{current_time}'}를 현재 시간의 플레이스홀더로 사용, LLM이 <search_query>예시 검색 쿼리어</search_query> 태그에서 쿼리어를 반환하도록 요구, 검색이 필요하지 않으면 빈 <search_query></search_query> 태그를 반환. 반환된 쿼리어는 300자 이하여야 합니다.",
     "searchTest": "검색 테스트",
     "accessTokenExpiredTime": "만료된 시간",
     "userConfig": "사용자",

@@ -211,7 +211,7 @@
     "systemMessageWithSearchResult": "System message for conversations with search results",
     "systemMessageGetSearchQuery": "System message for getting search query",
     "systemMessageWithSearchResultPlaceholder": "System message template when with search results. Use {'{current_time}'} as placeholder for current time.",
-    "systemMessageGetSearchQueryPlaceholder": "System message template for generating search query word. Use {'{current_time}'} as placeholder for current time. Require LLM to return the query word in <search_query>example search query</search_query> tags or return empty <search_query></search_query> tag if not need search.",
+    "systemMessageGetSearchQueryPlaceholder": "System message template for generating search query word. Use {'{current_time}'} as placeholder for current time. Require the LLM to return a query in <search_query>example search query</search_query> tags or return empty <search_query></search_query> tag if not need search. Require the returned query to be no more than 300 characters.",
     "searchTest": "Test Search",
     "accessTokenExpiredTime": "Expired Time",
     "userConfig": "Users",
