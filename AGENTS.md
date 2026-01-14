@@ -15,6 +15,7 @@
 - `pnpm preview`: preview the built frontend locally.
 - `pnpm lint` / `pnpm lint:fix`: run ESLint (and auto-fix) on the frontend.
 - `pnpm type-check`: run `vue-tsc` for frontend type checks.
+- Before committing frontend changes, regenerate `components.d.ts` (for auto-imported components) and include it in the same commit.
 - Backend (run in `service/`): `pnpm install`, `pnpm start` (dev), `pnpm build`, `pnpm prod`.
 - Backend checks (run in `service/`): `pnpm lint`, `pnpm lint:fix`, `pnpm type-check`.
 
