@@ -211,7 +211,7 @@
     "systemMessageWithSearchResult": "検索結果付き会話のシステムメッセージ",
     "systemMessageGetSearchQuery": "検索クエリ取得用システムメッセージ",
     "systemMessageWithSearchResultPlaceholder": "検索結果付き時のシステムメッセージテンプレート。{'{current_time}'} を現在時刻のプレースホルダーとして使用してください。",
-    "systemMessageGetSearchQueryPlaceholder": "検索クエリ語を生成するためのシステムメッセージテンプレート。{'{current_time}'} を現在時刻のプレースホルダーとして使用してください。LLMに <search_query>example search query</search_query> タグでクエリ語を返させるか、検索不要なら空の <search_query></search_query> タグを返すよう要求します。",
+    "systemMessageGetSearchQueryPlaceholder": "検索クエリ語を生成するためのシステムメッセージテンプレート。{'{current_time}'} を現在時刻のプレースホルダーとして使用してください。LLMに <search_query>example search query</search_query> タグでクエリ語を返させるか、検索不要なら空の <search_query></search_query> タグを返すよう要求します。返されるクエリは 300 文字以内にしてください。",
     "searchTest": "検索テスト",
     "accessTokenExpiredTime": "有効期限",
     "userConfig": "ユーザー",

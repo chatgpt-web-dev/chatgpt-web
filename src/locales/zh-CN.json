@@ -211,7 +211,7 @@
     "systemMessageWithSearchResult": "包含搜索结果时的对话系统提示词",
     "systemMessageGetSearchQuery": "用于获取搜索查询词的系统提示词",
     "systemMessageWithSearchResultPlaceholder": "携带搜索结果时的系统消息模板, 使用 {'{current_time}'} 作为当前时间的占位符",
-    "systemMessageGetSearchQueryPlaceholder": "用于生成搜索查询的系统消息模板, 使用 {'{current_time}'} 作为当前时间的占位符, 要求 LLM 在 <search_query>example search query</search_query> 标签中返回查询词，如果不需要搜索则返回空<search_query></search_query>标签",
+    "systemMessageGetSearchQueryPlaceholder": "用于生成搜索查询的系统消息模板, 使用 {'{current_time}'} 作为当前时间的占位符, 要求 LLM 在 <search_query>example search query</search_query> 标签中返回查询词，如果不需要搜索则返回空<search_query></search_query>标签。要求返回的查询词不超过 300 个字符。",
     "searchTest": "测试搜索",
     "accessTokenExpiredTime": "过期时间",
     "userConfig": "用户管理",
