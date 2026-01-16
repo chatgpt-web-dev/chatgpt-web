@@ -1192,7 +1192,7 @@ const VALID_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 // Paste image.
 async function handlePasteImage(event: ClipboardEvent) {
   // Check if image upload is enabled.
-  if (!currentChatRoom.value?.imageUploadEnabled) {
+  if (currentChatRoom.value?.imageUploadEnabled === false) {
     ms.warning(t('chat.imageUploadDisabled') || '图片上传功能已关闭', {
       duration: 2000,
     })
@@ -1416,13 +1416,14 @@ onUnmounted(() => {
               </span>
             </HoverButton>
           </div>
-          <div class="flex items-center space-x-2">
-            <div v-if="currentChatRoom?.imageUploadEnabled">
+          <div class="flex items-center" :class="[isMobile ? 'flex-wrap gap-2' : 'space-x-2']">
+            <div v-if="currentChatRoom">
               <NUpload
                 action="/api/upload-image"
                 list-type="image"
                 class="flex items-center justify-center h-10 transition hover:bg-neutral-100 dark:hover:bg-[#414755]"
                 style="flex-flow:row nowrap;min-width:2.5em;padding:.5em;border-radius:.5em;"
+                :disabled="currentChatRoom?.imageUploadEnabled === false"
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 :multiple="true"
@@ -1451,7 +1452,7 @@ onUnmounted(() => {
               </span>
             </HoverButton>
             <NSelect
-              style="width: 250px"
+              :style="{ width: isMobile ? '100%' : '250px' }"
               :value="currentChatRoom?.chatModel"
               :options="chatModelOptions"
               :disabled="!!authStore.session?.auth && !authStore.token && !authStore.session?.authProxyEnabled"
