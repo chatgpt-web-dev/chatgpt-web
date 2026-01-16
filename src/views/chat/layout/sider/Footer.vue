@@ -20,14 +20,14 @@ async function handleLogout() {
     <div class="flex-1 shrink-0 overflow-hidden">
       <UserAvatar />
     </div>
-    <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" :tooltip="t('common.logOut')" @click="handleLogout">
-      <span class="text-xl text-[#4f555e] dark:text-white">
+    <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" class="-mr-1" :tooltip="t('common.logOut')" @click="handleLogout">
+      <span class="text-lg font-semibold text-[#4f555e] dark:text-white">
         <IconUilExit />
       </span>
     </HoverButton>
 
-    <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" :tooltip="t('setting.setting')" @click="show = true">
-      <span class="text-xl text-[#4f555e] dark:text-white">
+    <HoverButton v-if="!!authStore.token || !!authStore.session?.authProxyEnabled" class="ml-0.5" :tooltip="t('setting.setting')" @click="show = true">
+      <span class="text-lg font-semibold text-[#4f555e] dark:text-white">
         <IconRiSettings4Line />
       </span>
     </HoverButton>
