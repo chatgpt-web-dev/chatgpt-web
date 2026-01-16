@@ -68,7 +68,7 @@
     "clickTurnOffThink": "Click to disable deep thinking for this chat.",
     "thinkHelp": "After enabling deep thinking, the model will use more computational resources and take longer time to simulate more complex thinking chains for logical reasoning.\nSuitable for complex tasks or high-requirement scenarios, such as mathematical derivations and project planning.\nDaily simple queries do not need to be enabled.",
     "showOnContext": "Include context",
-    "showOffContext": "Not include context",
+    "showOffContext": "Exclude context",
     "maxContextCount": "Maximum number of messages included in the context window",
     "searchEnabled": "Search enabled",
     "searchDisabled": "Search disabled",

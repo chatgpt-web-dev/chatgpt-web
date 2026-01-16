@@ -26,27 +26,29 @@ onMounted(async () => {
 
 <template>
   <div class="flex items-center overflow-hidden">
-    <div class="w-10 h-10 overflow-hidden rounded-full shrink-0">
+    <div class="w-8 h-8 overflow-hidden rounded-full shrink-0">
       <template v-if="isString(userInfo.avatar) && userInfo.avatar.length > 0">
         <NAvatar
-          size="large"
+          size="medium"
           round
           :src="userInfo.avatar"
           :fallback-src="defaultAvatar"
         />
       </template>
       <template v-else>
-        <NAvatar size="large" round :src="defaultAvatar" />
+        <NAvatar size="medium" round :src="defaultAvatar" />
       </template>
     </div>
-    <div class="flex-1 min-w-0 ml-2">
-      <h2 v-if="userInfo.name" class="">
-        {{ userInfo.name }}
-        <NTag v-if="userInfo.roles.length > 0" size="small" :bordered="false" type="success">
-          {{ UserRole[userInfo.roles[0]] }}
-        </NTag>
+    <div class="flex-1 min-w-0 ml-1.5">
+      <h2 v-if="userInfo.name" class="text-sm leading-tight">
+        <span class="block">{{ userInfo.name }}</span>
+        <span v-if="userInfo.roles.length > 0" class="mt-1 inline-flex origin-left scale-90">
+          <NTag size="tiny" class="text-[4px] leading-none" :bordered="false" type="success">
+            {{ UserRole[userInfo.roles[0]] }}
+          </NTag>
+        </span>
       </h2>
-      <p v-if="userInfo.name" class="overflow-hidden text-xs text-gray-500 text-ellipsis whitespace-nowrap">
+      <p v-if="userInfo.name" class="overflow-hidden text-[9px] text-gray-500 text-ellipsis whitespace-nowrap">
         <span
           v-if="isString(userInfo.description) && userInfo.description !== ''"
           v-html="userInfo.description"

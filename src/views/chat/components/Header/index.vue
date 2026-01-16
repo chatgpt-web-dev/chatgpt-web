@@ -7,21 +7,14 @@ defineProps<Props>()
 
 const emit = defineEmits<Emit>()
 
-const { t } = useI18n()
-
 interface Props {
   usingContext?: boolean
   showPrompt: boolean
-  searchEnabled?: boolean
-  thinkEnabled?: boolean
 }
 
 interface Emit {
   (ev: 'export'): void
-  (ev: 'toggleUsingContext'): void
   (ev: 'toggleShowPrompt'): void
-  (ev: 'toggleSearchEnabled'): void
-  (ev: 'toggleThinkEnabled'): void
 }
 
 const appStore = useAppStore()
@@ -42,18 +35,6 @@ function onScrollToTop() {
 
 function handleExport() {
   emit('export')
-}
-
-function toggleUsingContext() {
-  emit('toggleUsingContext')
-}
-
-function toggleSearchEnabled() {
-  emit('toggleSearchEnabled')
-}
-
-function toggleThinkEnabled() {
-  emit('toggleThinkEnabled')
 }
 
 function handleShowPrompt() {
@@ -83,27 +64,9 @@ function handleShowPrompt() {
       </h1>
       <div class="flex items-center space-x-2">
         <HoverButton @click="handleShowPrompt">
-          <span class="text-xl" :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }">
+          <span class="text-xl" :class="{ 'text-[#2f9e44]': usingContext, 'text-[#c92a2a]': !usingContext }">
             <IconPrompt class="w-[20px] m-auto" />
           </span>
-        </HoverButton>
-        <HoverButton :class="{ 'text-[#4b9e5f]': usingContext, 'text-[#a8071a]': !usingContext }" @click="toggleUsingContext">
-          <span class="text-xl">
-            <IconRiChatHistoryLine />
-          </span>
-          <span style="margin-left:.25em">{{ usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
-        </HoverButton>
-        <HoverButton :class="{ 'text-[#4b9e5f]': searchEnabled, 'text-[#a8071a]': !searchEnabled }" @click="toggleSearchEnabled">
-          <span class="text-xl">
-            <IconMdiWeb />
-          </span>
-          <span style="margin-left:.25em">{{ searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
-        </HoverButton>
-        <HoverButton :class="{ 'text-[#4b9e5f]': thinkEnabled, 'text-[#a8071a]': !thinkEnabled }" @click="toggleThinkEnabled">
-          <span class="text-xl">
-            <IconMdiLightbulbOutline />
-          </span>
-          <span style="margin-left:.25em">{{ thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
         </HoverButton>
         <HoverButton @click="handleExport">
           <span class="text-xl text-[#4f555e] dark:text-white">
