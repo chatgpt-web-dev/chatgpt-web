@@ -1300,14 +1300,9 @@ onUnmounted(() => {
   <div class="flex flex-col w-full h-full">
     <HeaderComponent
       v-if="isMobile"
-      :using-context="currentChatRoom?.usingContext"
       :show-prompt="showPrompt"
-      :search-enabled="currentChatRoom?.searchEnabled"
-      :think-enabled="currentChatRoom?.thinkEnabled"
+      :using-context="currentChatRoom?.usingContext"
       @export="handleExport"
-      @toggle-using-context="handleToggleUsingContext"
-      @toggle-search-enabled="handleToggleSearchEnabled"
-      @toggle-think-enabled="handleToggleThinkEnabled"
       @toggle-show-prompt="showPrompt = true"
     />
     <main class="flex-1 overflow-hidden">
@@ -1386,6 +1381,41 @@ onUnmounted(() => {
             </NSpace>
           </div>
 
+          <div
+            v-if="isMobile"
+            class="grid grid-cols-3 justify-items-center gap-[clamp(0.125rem,1vw,0.5rem)]"
+          >
+            <HoverButton
+              class="w-full flex justify-center"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.searchEnabled, 'text-[#c92a2a]': !currentChatRoom?.searchEnabled }"
+              @click="handleToggleSearchEnabled"
+            >
+              <span class="w-full text-[11px] flex items-center justify-center gap-[clamp(0.125rem,0.6vw,0.375rem)] text-center leading-tight">
+                <IconMdiWeb class="text-[12px]" />
+                <span class="text-[11px] font-semibold tracking-tight">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton
+              class="w-full flex justify-center"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.thinkEnabled, 'text-[#c92a2a]': !currentChatRoom?.thinkEnabled }"
+              @click="handleToggleThinkEnabled"
+            >
+              <span class="w-full text-[11px] flex items-center justify-center gap-[clamp(0.125rem,0.6vw,0.375rem)] text-center leading-tight">
+                <IconMdiLightbulbOutline class="text-[12px]" />
+                <span class="text-[11px] font-semibold tracking-tight">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
+              </span>
+            </HoverButton>
+            <HoverButton
+              class="w-full flex justify-center"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.usingContext, 'text-[#c92a2a]': !currentChatRoom?.usingContext }"
+              @click="handleToggleUsingContext"
+            >
+              <span class="w-full text-[11px] flex items-center justify-center gap-[clamp(0.125rem,0.6vw,0.375rem)] text-center leading-tight">
+                <IconRiChatHistoryLine class="text-[12px]" />
+                <span class="text-[11px] font-semibold tracking-tight">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
+              </span>
+            </HoverButton>
+          </div>
           <div class="flex items-center space-x-2">
             <div v-if="currentChatRoom?.imageUploadEnabled">
               <NUpload
@@ -1432,36 +1462,36 @@ onUnmounted(() => {
               v-if="!isMobile"
               :tooltip="currentChatRoom?.searchEnabled ? t('chat.clickTurnOffSearch') : t('chat.clickTurnOnSearch')"
               :tooltip-help="t('chat.searchHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatRoom?.searchEnabled, 'text-[#a8071a]': !currentChatRoom?.searchEnabled }"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.searchEnabled, 'text-[#c92a2a]': !currentChatRoom?.searchEnabled }"
               @click="handleToggleSearchEnabled"
             >
-              <span class="text-xl flex items-center">
-                <IconMdiWeb />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
+              <span class="text-sm flex items-center gap-1">
+                <IconMdiWeb class="text-base" />
+                <span class="text-xs font-bold tracking-wide">{{ currentChatRoom?.searchEnabled ? t('chat.searchEnabled') : t('chat.searchDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
               :tooltip="currentChatRoom?.thinkEnabled ? t('chat.clickTurnOffThink') : t('chat.clickTurnOnThink')"
               :tooltip-help="t('chat.thinkHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatRoom?.thinkEnabled, 'text-[#a8071a]': !currentChatRoom?.thinkEnabled }"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.thinkEnabled, 'text-[#c92a2a]': !currentChatRoom?.thinkEnabled }"
               @click="handleToggleThinkEnabled"
             >
-              <span class="text-xl flex items-center">
-                <IconMdiLightbulbOutline />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
+              <span class="text-sm flex items-center gap-1">
+                <IconMdiLightbulbOutline class="text-base" />
+                <span class="text-xs font-bold tracking-wide">{{ currentChatRoom?.thinkEnabled ? t('chat.thinkEnabled') : t('chat.thinkDisabled') }}</span>
               </span>
             </HoverButton>
             <HoverButton
               v-if="!isMobile"
               :tooltip="currentChatRoom?.usingContext ? t('chat.clickTurnOffContext') : t('chat.clickTurnOnContext')"
               :tooltip-help="t('chat.contextHelp')"
-              :class="{ 'text-[#4b9e5f]': currentChatRoom?.usingContext, 'text-[#a8071a]': !currentChatRoom?.usingContext }"
+              :class="{ 'text-[#2f9e44]': currentChatRoom?.usingContext, 'text-[#c92a2a]': !currentChatRoom?.usingContext }"
               @click="handleToggleUsingContext"
             >
-              <span class="text-xl flex items-center">
-                <IconRiChatHistoryLine />
-                <span class="ml-1 text-sm">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
+              <span class="text-sm flex items-center gap-1">
+                <IconRiChatHistoryLine class="text-base" />
+                <span class="text-xs font-bold tracking-wide">{{ currentChatRoom?.usingContext ? t('chat.showOnContext') : t('chat.showOffContext') }}</span>
               </span>
             </HoverButton>
             <NSlider
