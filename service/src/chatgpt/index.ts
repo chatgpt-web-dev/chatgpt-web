@@ -108,6 +108,7 @@ export async function initApi(key: KeyConfig) {
 }
 
 const processThreads: { userId: string, chatUuid: number, abort: AbortController }[] = []
+const DEFAULT_SYSTEM_MESSAGE = 'You are a helpful assistant. Follow the user\'s instructions carefully. Be concise, accurate, and transparent. Respond in the same language as the user\'s request. Never fabricate facts, sources, or results. If you must make assumptions, state them explicitly. If you are unsure or need more context, say so and ask a clarifying question. Respond in Markdown (LaTeX with $...$).'
 
 async function chatReplyProcess(options: RequestOptions) {
   const globalConfig = await getCacheConfig()
@@ -122,7 +123,8 @@ async function chatReplyProcess(options: RequestOptions) {
   if (key == null || key === undefined)
     throw new Error('没有对应的apikeys配置。请再试一次 | No available apikeys configuration. Please try again.')
 
-  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, systemMessage, chatUuid } = options
+  const { message, uploadFileKeys, parentMessageId, previousResponseId, tools, process, chatUuid } = options
+  const systemMessage = isNotEmptyString(options.room.prompt) ? options.room.prompt : DEFAULT_SYSTEM_MESSAGE
   let instructions = systemMessage
 
   try {

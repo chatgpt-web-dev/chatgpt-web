@@ -3,7 +3,6 @@ import ChatRecord from '@/components/common/Setting/ChatRecord.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStore, useUserStore } from '@/store'
 import About from './About.vue'
-import Advanced from './Advanced.vue'
 import Announcement from './Anonuncement.vue'
 import Audit from './Audit.vue'
 import BuiltInPrompt from './BuiltInPrompt.vue'
@@ -103,15 +102,6 @@ const show = computed({
           <span class="ml-2">{{ t('setting.twoFAConfig') }}</span>
         </template>
         <TwoFA />
-      </NTabPane>
-      <NTabPane name="Advanced" tab="Advanced">
-        <template #tab>
-          <IconRiEqualizerLine class="text-lg" />
-          <span class="ml-2">{{ t('setting.advanced') }}</span>
-        </template>
-        <div class="min-h-[100px]">
-          <Advanced />
-        </div>
       </NTabPane>
       <NTabPane name="Statistics" tab="Statistics">
         <template #tab>

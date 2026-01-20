@@ -249,14 +249,12 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Headers', 'Cache-Control')
 
-  let { roomId, uuid, regenerate, prompt, uploadFileKeys = [], options = {}, systemMessage, tools, previousResponseId } = req.body as RequestProps
+  const { roomId, uuid, regenerate, prompt, uploadFileKeys = [], options = {}, tools, previousResponseId } = req.body as RequestProps
   const userId = req.headers.userId.toString()
   const config = await getCacheConfig()
   const room = await getChatRoom(userId, roomId)
   if (room == null)
     globalThis.console.error(`Unable to get chat room \t ${userId}\t ${roomId}`)
-  if (room != null && isNotEmptyString(room.prompt))
-    systemMessage = room.prompt
   const model = room.chatModel
 
   let lastResponse
@@ -352,7 +350,6 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
             })
           }
         },
-        systemMessage,
         user,
         messageId: message._id.toString(),
         room,

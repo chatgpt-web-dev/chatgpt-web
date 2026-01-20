@@ -2,7 +2,7 @@ import type { TextAuditServiceProvider } from 'src/utils/textAudit'
 import * as process from 'node:process'
 import { ObjectId } from 'mongodb'
 import { isNotEmptyString, isTextAuditServiceProvider } from '../utils/is'
-import { AdvancedConfig, AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SearchConfig, SiteConfig, TextAudioType, UserRole } from './model'
+import { AnnounceConfig, AuditConfig, Config, KeyConfig, MailConfig, SearchConfig, SiteConfig, TextAudioType, UserRole } from './model'
 import { getConfig, getKeys, upsertKey } from './mongo'
 
 let cachedConfig: Config | undefined
@@ -71,12 +71,6 @@ export async function getOriginConfig() {
       getTextAuditServiceOptionFromString(process.env.AUDIT_TEXT_TYPE),
       false,
       '',
-    )
-  }
-
-  if (!config.advancedConfig) {
-    config.advancedConfig = new AdvancedConfig(
-      'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
     )
   }
 

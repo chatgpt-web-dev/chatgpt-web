@@ -16,7 +16,7 @@ import { router as promptRouter } from './routes/prompt'
 import { router as roomRouter } from './routes/room'
 import { router as uploadRouter } from './routes/upload'
 import { clearApiKeyCache, clearConfigCache, getApiKeys, getCacheApiKeys, getCacheConfig, getOriginConfig } from './storage/config'
-import { AdvancedConfig, Status, UserConfig, UserRole } from './storage/model'
+import { Status, UserConfig, UserRole } from './storage/model'
 import {
   createUser,
   disableUser2FA,
@@ -33,7 +33,6 @@ import {
   updateGiftCards,
   updateUser,
   updateUser2FA,
-  updateUserAdvancedConfig,
   updateUserAmount,
   updateUserChatModel,
   updateUserInfo,
@@ -169,7 +168,7 @@ router.post('/session', async (req, res) => {
     // Parse external chat sites list
     const externalChatSites: Array<{ name: string, url: string }> = config.siteConfig.externalChatSites || []
 
-    let userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, roles: UserRole[], config: UserConfig, advanced: AdvancedConfig }
+    let userInfo: { name: string, description: string, avatar: string, userId: string, root: boolean, roles: UserRole[], config: UserConfig }
     if (userId != null) {
       const user = await getUserById(userId)
       if (user === null) {
@@ -254,7 +253,6 @@ router.post('/session', async (req, res) => {
         root: user.roles.includes(UserRole.Admin),
         roles: user.roles,
         config: user.config,
-        advanced: user.advanced,
       }
 
       const keys = (await getCacheApiKeys()).filter(d => hasAnyRole(d.userRoles, user.roles))
@@ -984,46 +982,6 @@ router.post('/search-test', rootAuth, async (req, res) => {
   catch (error: any) {
     console.error('Search test error:', error)
     res.send({ status: 'Fail', message: `搜索测试失败 | Search test failed: ${error.message}`, data: null })
-  }
-})
-
-router.post('/setting-advanced', auth, async (req, res) => {
-  try {
-    const config = req.body as {
-      systemMessage: string
-      sync: boolean
-    }
-    if (config.sync) {
-      if (!isAdmin(req.headers.userId as string)) {
-        res.send({ status: 'Fail', message: '无权限 | No permission', data: null })
-        return
-      }
-      const thisConfig = await getOriginConfig()
-      thisConfig.advancedConfig = new AdvancedConfig(
-        config.systemMessage,
-      )
-      await updateConfig(thisConfig)
-      clearConfigCache()
-    }
-    const userId = req.headers.userId.toString()
-    await updateUserAdvancedConfig(userId, new AdvancedConfig(
-      config.systemMessage,
-    ))
-    res.send({ status: 'Success', message: '操作成功 | Successfully' })
-  }
-  catch (error) {
-    res.send({ status: 'Fail', message: error.message, data: null })
-  }
-})
-
-router.post('/setting-reset-advanced', auth, async (req, res) => {
-  try {
-    const userId = req.headers.userId.toString()
-    await updateUserAdvancedConfig(userId, null)
-    res.send({ status: 'Success', message: '操作成功 | Successfully' })
-  }
-  catch (error) {
-    res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
 
