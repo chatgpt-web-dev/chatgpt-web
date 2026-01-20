@@ -11,7 +11,6 @@ export interface UserInfo {
   root: boolean
   config: UserConfig
   roles: UserRole[]
-  advanced: SettingsState
   limit?: boolean
   useAmount?: number // chat usage amount
   redeemCardNo?: string // add giftcard info
@@ -19,10 +18,6 @@ export interface UserInfo {
 
 export interface UserState {
   userInfo: UserInfo
-}
-
-export interface SettingsState {
-  systemMessage: string
 }
 
 export function defaultSetting(): UserState {
@@ -34,9 +29,6 @@ export function defaultSetting(): UserState {
       root: false,
       config: { chatModel: '' },
       roles: [],
-      advanced: {
-        systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
-      },
       useAmount: 1, // chat usage amount
     },
   }
@@ -48,11 +40,6 @@ export function getLocalState(): UserState {
     if (localSetting.userInfo.config == null) {
       localSetting.userInfo.config = new UserConfig()
       localSetting.userInfo.config.chatModel = ''
-    }
-    if (!localSetting.userInfo.advanced) {
-      localSetting.userInfo.advanced = {
-        systemMessage: 'You are a large language model. Follow the user\'s instructions carefully. Respond using markdown (latex start with $).',
-      }
     }
   }
   return { ...defaultSetting(), ...localSetting }

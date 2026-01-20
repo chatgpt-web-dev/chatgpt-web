@@ -1,6 +1,5 @@
 import type { Collection, Filter, WithId } from 'mongodb'
 import type {
-  AdvancedConfig,
   BuiltInPrompt,
   ChatOptions,
   Config,
@@ -744,10 +743,6 @@ export async function updateUserMaxContextCount(userId: string, maxContextCount:
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { 'config.maxContextCount': maxContextCount } })
 }
 
-export async function updateUserAdvancedConfig(userId: string, config: AdvancedConfig) {
-  await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { advanced: config } })
-}
-
 export async function updateUser2FA(userId: string, secretKey: string) {
   await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { secretKey, updateTime: new Date().toLocaleString() } })
 }
@@ -809,8 +804,6 @@ async function initUserInfo(userInfo: WithId<UserInfo>) {
       userInfo.roles.push(UserRole.Admin)
     userInfo.roles.push(UserRole.User)
   }
-  if (!userInfo.advanced)
-    userInfo.advanced = (await getCacheConfig()).advancedConfig
 }
 
 export async function verifyUser(email: string, status: Status) {

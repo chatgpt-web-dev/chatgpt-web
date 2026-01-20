@@ -46,7 +46,6 @@ export interface RequestOptions {
   previousResponseId?: string
   tools?: Array<ImageGenerationTool>
   process?: (chunk: ResponseChunk) => void
-  systemMessage?: string
   user: UserInfo
   messageId: string
   room: ChatRoom

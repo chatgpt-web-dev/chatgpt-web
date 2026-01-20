@@ -1,6 +1,4 @@
 import type { AnnounceConfig, AuditConfig, BuiltInPrompt, ConfigState, GiftCard, KeyConfig, MailConfig, SearchConfig, SiteConfig, Status, UserInfo, UserPassword, UserPrompt } from '@/components/common/Setting/model'
-import type { SettingsState } from '@/store/modules/user/helper'
-import { useUserStore } from '@/store'
 import { get, post } from '@/utils/request'
 import fetchService from '@/utils/request/fetchService'
 
@@ -45,8 +43,6 @@ export function fetchChatAPIProcessSSE(
   },
   handlers: SSEEventHandlers,
 ): Promise<void> {
-  const userStore = useUserStore()
-
   const data: Record<string, any> = {
     roomId: params.roomId,
     uuid: params.uuid,
@@ -54,7 +50,6 @@ export function fetchChatAPIProcessSSE(
     prompt: params.prompt,
     uploadFileKeys: params.uploadFileKeys,
     options: params.options,
-    systemMessage: userStore.userInfo.advanced.systemMessage,
   }
 
   if (params.tools && params.tools.length > 0) {
@@ -493,19 +488,6 @@ export function fetchUpdateAnnounce<T = any>(announce: AnnounceConfig) {
   })
 }
 
-export function fetchUpdateAdvanced<T = any>(sync: boolean, advanced: SettingsState) {
-  const data = { sync, ...advanced }
-  return post<T>({
-    url: '/setting-advanced',
-    data,
-  })
-}
-
-export function fetchResetAdvanced<T = any>() {
-  return post<T>({
-    url: '/setting-reset-advanced',
-  })
-}
 export function fetchUpdateSite<T = any>(config: SiteConfig) {
   return post<T>({
     url: '/setting-site',

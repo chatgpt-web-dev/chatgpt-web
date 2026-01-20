@@ -14,7 +14,6 @@ export interface RequestProps {
   prompt: string
   uploadFileKeys?: string[]
   options?: ChatContext
-  systemMessage: string
   tools?: ImageGenerationTool[]
   previousResponseId?: string
 }

@@ -1,5 +1,5 @@
 import type { UserInfo, UserState } from './helper'
-import { fetchResetAdvanced, fetchUpdateAdvanced, fetchUpdateUserAmt, fetchUpdateUserInfo, fetchUserAmt } from '@/api'
+import { fetchUpdateUserAmt, fetchUpdateUserInfo, fetchUserAmt } from '@/api'
 import { defaultSetting, getLocalState, setLocalState } from './helper'
 
 export const useUserStore = defineStore('user-store', {
@@ -15,10 +15,6 @@ export const useUserStore = defineStore('user-store', {
           await fetchUpdateUserAmt(userInfo.useAmount)
       }
     },
-    async updateSetting(sync: boolean) {
-      await fetchUpdateAdvanced(sync, this.userInfo.advanced)
-      this.recordState()
-    },
     // Read on page load; default to 10 when empty.
     async readUserAmt() {
       const data = (await fetchUserAmt()).data
@@ -26,11 +22,6 @@ export const useUserStore = defineStore('user-store', {
       this.userInfo.useAmount = data?.amount ?? 10
     },
 
-    async resetSetting() {
-      await fetchResetAdvanced()
-      this.userInfo.advanced = { ...defaultSetting().userInfo.advanced }
-      this.recordState()
-    },
     resetUserInfo() {
       this.userInfo = { ...defaultSetting().userInfo }
       this.recordState()

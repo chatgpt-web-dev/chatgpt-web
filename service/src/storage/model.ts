@@ -51,7 +51,6 @@ export class UserInfo {
   roles?: UserRole[]
   remark?: string
   secretKey?: string // 2fa
-  advanced?: AdvancedConfig
   useAmount?: number // chat usage amount
   limit_switch?: boolean // chat amount limit switch
   constructor(email: string, password: string) {
@@ -242,7 +241,6 @@ export class Config {
     public mailConfig?: MailConfig,
     public auditConfig?: AuditConfig,
     public searchConfig?: SearchConfig,
-    public advancedConfig?: AdvancedConfig,
     public announceConfig?: AnnounceConfig,
   ) { }
 }
@@ -299,12 +297,6 @@ export class AuditConfig {
     public textType: TextAudioType,
     public customizeEnabled: boolean,
     public sensitiveWords: string,
-  ) { }
-}
-
-export class AdvancedConfig {
-  constructor(
-    public systemMessage: string,
   ) { }
 }
 
