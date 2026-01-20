@@ -1014,7 +1014,7 @@ const buttonDisabled = computed(() => {
 })
 
 const footerClass = computed(() => {
-  let classes = ['p-4']
+  let classes = ['p-2']
   if (isMobile.value)
     classes = ['sticky', 'left-0', 'bottom-0', 'right-0', 'p-2', 'pr-3', 'overflow-hidden']
   return classes
@@ -1310,7 +1310,7 @@ onUnmounted(() => {
         <div
           id="image-wrapper"
           class="w-full max-w-(--breakpoint-xl) m-auto dark:bg-[#101014]"
-          :class="[isMobile ? 'p-2' : 'p-4']"
+          :class="[isMobile ? 'p-2' : 'p-2']"
         >
           <NSpin :show="firstLoading">
             <template v-if="!dataSources.length">

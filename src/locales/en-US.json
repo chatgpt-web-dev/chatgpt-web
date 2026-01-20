@@ -112,10 +112,11 @@
   },
   "setting": {
     "overRide": "Enable Override",
-    "uploadgifts": "Upload Redemption Code",
+    "uploadGifts": "Upload Redemption Code",
     "announceConfig": "Announcement",
     "announceEnabled": "Open Announcement",
     "announceWords": "Announcement Content",
+    "announceWordsPlaceholder": "Enter announcement content",
     "globalAmount": "Global Usage Amount for New User",
     "limit_switch": "Open Usage Limitation",
     "usageCountLimit": "Enable Usage Count Limit",

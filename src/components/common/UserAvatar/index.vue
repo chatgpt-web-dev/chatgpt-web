@@ -41,7 +41,7 @@ onMounted(async () => {
     </div>
     <div class="flex-1 min-w-0 ml-1.5">
       <h2 v-if="userInfo.name" class="text-sm leading-tight">
-        <span class="block">{{ userInfo.name }}</span>
+        <span class="block" :title="userInfo.name">{{ userInfo.name }}</span>
         <span v-if="userInfo.roles.length > 0" class="mt-1 inline-flex origin-left scale-90">
           <NTag size="tiny" class="text-[4px] leading-none" :bordered="false" type="success">
             {{ UserRole[userInfo.roles[0]] }}

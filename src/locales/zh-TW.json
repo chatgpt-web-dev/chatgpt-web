@@ -112,10 +112,11 @@
   },
   "setting": {
     "overRide": "開啟覆寫",
-    "uploadgifts": "上傳兌換碼",
+    "uploadGifts": "上傳兌換碼",
     "announceConfig": "網站公告",
     "announceEnabled": "開啟公告",
     "announceWords": "公告內容",
+    "announceWordsPlaceholder": "輸入公告內容",
     "globalAmount": "新用戶全域次數設定",
     "limit_switch": "開啟次數限制",
     "usageCountLimit": "使用次數限制",

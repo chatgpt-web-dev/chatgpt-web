@@ -112,10 +112,11 @@
   },
   "setting": {
     "overRide": "덮어쓰기 활성화",
-    "uploadgifts": "교환 코드 업로드",
+    "uploadGifts": "교환 코드 업로드",
     "announceConfig": "공지",
     "announceEnabled": "공지 활성화",
     "announceWords": "공지 내용",
+    "announceWordsPlaceholder": "공지 내용을 입력",
     "globalAmount": "신규 사용자 전역 횟수 설정",
     "limit_switch": "오픈 횟수 제한",
     "usageCountLimit": "사용 횟수 제한",

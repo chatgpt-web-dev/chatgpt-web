@@ -112,10 +112,11 @@
   },
   "setting": {
     "overRide": "上書きを有効化",
-    "uploadgifts": "交換コードをアップロード",
+    "uploadGifts": "交換コードをアップロード",
     "announceConfig": "お知らせ",
     "announceEnabled": "お知らせを開く",
     "announceWords": "お知らせ内容",
+    "announceWordsPlaceholder": "お知らせ内容を入力",
     "globalAmount": "新規ユーザーのグローバル利用量",
     "limit_switch": "利用制限を開く",
     "usageCountLimit": "利用回数制限を有効化",

@@ -42,33 +42,35 @@ onMounted(() => {
 
 <template>
   <NSpin :show="loading">
-    <div class="space-y-6">
-      <div class="flex items-center space-x-4">
-        <span class="shrink-0 w-[100px]">{{ t('setting.announceEnabled') }}</span>
-        <div class="flex-1">
-          <NSwitch
-            :round="false" :value="config && config.enabled"
-            @update:value="(val) => { if (config) config.enabled = val }"
-          />
+    <div class="p-4 space-y-5 min-h-[200px]">
+      <div class="space-y-6">
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.announceEnabled') }}</span>
+          <div class="flex-1">
+            <NSwitch
+              :round="false" :value="config && config.enabled"
+              @update:value="(val) => { if (config) config.enabled = val }"
+            />
+          </div>
         </div>
-      </div>
-      <div class="flex items-center space-x-4">
-        <span class="shrink-0 w-[100px]">{{ t('setting.announceWords') }}</span>
-        <div class="flex-1">
-          <NInput
-            :value="config && config.announceWords"
-            placeholder="输入公告内容 | Set AnnouncementWords"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 10 }"
-            @input="(val) => { if (config) config.announceWords = val }"
-          />
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]">{{ t('setting.announceWords') }}</span>
+          <div class="flex-1">
+            <NInput
+              :value="config && config.announceWords"
+              :placeholder="t('setting.announceWordsPlaceholder')"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 10 }"
+              @input="(val) => { if (config) config.announceWords = val }"
+            />
+          </div>
         </div>
-      </div>
-      <span class="shrink-0 w-[100px]" />
-      <div class="flex flex-wrap items-center gap-4">
-        <NButton :loading="saving" type="primary" @click="updateAnnouncement()">
-          {{ t('common.save') }}
-        </NButton>
+        <div class="flex items-center space-x-4">
+          <span class="shrink-0 w-[100px]" />
+          <NButton :loading="saving" type="primary" @click="updateAnnouncement()">
+            {{ t('common.save') }}
+          </NButton>
+        </div>
       </div>
     </div>
   </NSpin>
