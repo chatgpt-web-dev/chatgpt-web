@@ -112,10 +112,11 @@
   },
   "setting": {
     "overRide": "开启覆写",
-    "uploadgifts": "上传兑换码",
+    "uploadGifts": "上传兑换码",
     "announceConfig": "网站公告",
     "announceEnabled": "公告开关",
     "announceWords": "公告内容",
+    "announceWordsPlaceholder": "输入公告内容",
     "globalAmount": "新用户全局次数设置",
     "limit_switch": "打开次数限制",
     "usageCountLimit": "使用次数限制",

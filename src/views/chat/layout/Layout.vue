@@ -16,7 +16,7 @@ const collapsed = computed(() => appStore.siderCollapsed)
 const getMobileClass = computed(() => {
   if (isMobile.value)
     return ['rounded-none', 'shadow-none']
-  return ['border', 'rounded-md', 'shadow-md', 'dark:border-neutral-800']
+  return ['border', 'rounded-3xl', 'shadow-md', 'dark:border-neutral-800']
 })
 
 const getContainerClass = computed(() => {
@@ -28,7 +28,7 @@ const getContainerClass = computed(() => {
 </script>
 
 <template>
-  <div class="h-full dark:bg-[#24272e] transition-all" :class="[isMobile ? 'p-0' : 'p-4']">
+  <div class="h-full dark:bg-[#24272e] transition-all" :class="[isMobile ? 'p-0' : 'p-1']">
     <div class="h-full overflow-hidden" :class="getMobileClass">
       <NLayout class="z-40 transition" :class="getContainerClass" has-sider>
         <Sider />

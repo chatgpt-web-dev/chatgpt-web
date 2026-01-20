@@ -153,7 +153,7 @@ async function uploadGiftCards() {
       </div>
       <div class="flex-1">
         <NButton type="primary" :loading="handleSaving" size="large" @click="uploadGiftCards()">
-          {{ t('setting.uploadgifts') }}
+          {{ t('setting.uploadGifts') }}
         </NButton>
       </div>
     </div>
