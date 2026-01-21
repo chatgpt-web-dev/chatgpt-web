@@ -7,12 +7,11 @@
     </radialGradient>
   </defs>
   <circle cx="128" cy="128" r="128" fill="url(#avatarBg)"/>
-  <g fill="none" stroke="#1E90FF" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="128" cy="92" r="48" stroke-width="16"/>
-    <path d="M116 150c2 4 22 4 24 0" stroke-width="16"/>
-    <path d="M44 246c14-54 54-90 84-90s70 36 84 90" stroke-width="16"/>
-    <circle cx="110" cy="92" r="4" stroke-width="16"/>
-    <circle cx="146" cy="92" r="4" stroke-width="16"/>
-    <path d="M108 114c12 12 28 12 40 0" stroke-width="14"/>
+  <g fill="none" stroke="#1E90FF" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+    <circle cx="128" cy="96" r="48"/>
+    <circle cx="110" cy="96" r="2"/>
+    <circle cx="146" cy="96" r="2"/>
+    <path d="M116 114c4 4 20 4 24 0"/>
+    <path d="M48 240c12-52 58-88 80-88s68 36 80 88"/>
   </g>
 </svg>
