@@ -32,25 +32,25 @@ function createColumns(): DataTableColumns {
       title: t('setting.user.registerTime'),
       key: 'createTime',
       resizable: true,
-      width: 200,
+      width: 140,
       minWidth: 80,
-      maxWidth: 200,
+      maxWidth: 140,
     },
     {
       title: t('setting.user.verifyTime'),
       key: 'verifyTime',
       resizable: true,
-      width: 200,
+      width: 140,
       minWidth: 80,
-      maxWidth: 200,
+      maxWidth: 140,
     },
     {
       title: t('setting.user.roles'),
       key: 'status',
       resizable: true,
-      width: 200,
+      width: 140,
       minWidth: 80,
-      maxWidth: 200,
+      maxWidth: 140,
       render(row: any) {
         const roles = row.roles.map((role: UserRole) => {
           return h(
@@ -61,6 +61,7 @@ function createColumns(): DataTableColumns {
               },
               type: 'info',
               bordered: false,
+              size: 'small',
             },
             {
               default: () => UserRole[role],
@@ -110,40 +111,27 @@ function createColumns(): DataTableColumns {
     {
       title: t('setting.user.action'),
       key: '_id',
-      width: 220,
+      width: 140,
       fixed: 'right',
       render(row: any) {
         const actions: any[] = []
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            type: 'error',
-            style: {
-              marginRight: '6px',
-            },
-            onClick: () => handleUpdateUserStatus(row._id, Status.Deleted),
-          },
-          { default: () => t('common.delete') },
-        ))
         if (row.status === Status.Normal) {
           actions.push(h(
             NButton,
             {
+              tertiary: true,
               size: 'small',
-              type: 'primary',
-              style: {
-                marginRight: '8px',
-              },
+              type: 'info',
               onClick: () => handleEditUser(row),
             },
-            { default: () => t('setting.user.editUser') },
+            { default: () => [h(IconRiEdit2Line, { class: 'mr-1 text-base' }), t('common.edit')] },
           ))
         }
         if (row.status === Status.PreVerify || row.status === Status.AdminVerify) {
           actions.push(h(
             NButton,
             {
+              tertiary: true,
               size: 'small',
               type: 'info',
               onClick: () => handleUpdateUserStatus(row._id, Status.Normal),
@@ -155,6 +143,7 @@ function createColumns(): DataTableColumns {
           actions.push(h(
             NButton,
             {
+              tertiary: true,
               size: 'small',
               type: 'warning',
               onClick: () => handleDisable2FA(row._id),
@@ -162,7 +151,17 @@ function createColumns(): DataTableColumns {
             { default: () => t('setting.user.disable2FA') },
           ))
         }
-        return actions
+        actions.push(h(
+          NButton,
+          {
+            tertiary: true,
+            size: 'small',
+            type: 'error',
+            onClick: () => handleUpdateUserStatus(row._id, Status.Deleted),
+          },
+          { default: () => [h(IconRiDeleteBinLine, { class: 'mr-1 text-base' }), t('common.delete')] },
+        ))
+        return h('div', { class: 'flex items-center gap-2' }, { default: () => actions })
       },
     },
   ]
@@ -276,39 +275,41 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4 space-y-5 min-h-[200px]">
-    <div class="space-y-6">
-      <NSpace vertical :size="12">
-        <NSpace justify="space-between" align="center">
-          <NSpace>
-            <NInput
-              v-model:value="searchKeyword"
-              :placeholder="t('setting.user.searchUserPlaceholder')"
-              clearable
-              style="width: 280px"
-              @keyup.enter="handleSearch"
-            />
-            <NButton type="primary" @click="handleSearch">
-              {{ t('setting.user.searchUser') }}
-            </NButton>
-          </NSpace>
-          <NButton type="primary" @click="handleNewUser()">
-            {{ t('setting.user.newUser') }}
+  <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
+    <div class="flex h-full min-h-0 flex-col gap-3">
+      <div class="flex items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <NInput
+            v-model:value="searchKeyword"
+            :placeholder="t('setting.user.searchUserPlaceholder')"
+            clearable
+            size="small"
+            style="width: 220px"
+            @keyup.enter="handleSearch"
+          />
+          <NButton type="primary" size="small" @click="handleSearch">
+            <IconRiSearchLine class="mr-1 text-base" />
+            {{ t('setting.user.searchUser') }}
           </NButton>
-        </NSpace>
-        <NDataTable
-          remote
-          :loading="loading"
-          :row-key="(rowData) => rowData._id"
-          :columns="columns"
-          :data="users"
-          :pagination="pagination"
-          :max-height="444"
-          striped
-          :scroll-x="1800"
-          @update:page="handleGetUsers"
-        />
-      </NSpace>
+        </div>
+        <NButton type="primary" size="small" @click="handleNewUser()">
+          <IconRiAddLine class="mr-1 text-base" />
+          {{ t('common.add') }}
+        </NButton>
+      </div>
+      <NDataTable
+        class="flex-1 min-h-0"
+        remote
+        :loading="loading"
+        :row-key="(rowData) => rowData._id"
+        :columns="columns"
+        :data="users"
+        :pagination="pagination"
+        flex-height
+        striped
+        :scroll-x="1800"
+        @update:page="handleGetUsers"
+      />
     </div>
   </div>
 

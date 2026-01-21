@@ -47,10 +47,14 @@
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits (e.g., `feat: add user settings`).
 - Always work on a feature branch; do not commit directly to `main`.
+- If no feature branch exists for the task, create one before making changes.
 - Create or switch to a feature branch before any changes and always confirm the current branch before committing (e.g., `git checkout -b feature/my-change`).
 - New features target the `feature` branch; other changes target `main`.
 - PRs should include a clear description, link related issues, and note any UI changes with screenshots.
 - Commit with signed-off and signed commits: `git commit -s -S -m "feat: ..."`.
+
+## Git Permissions & Operations
+- Direct modification of the `.git` directory is not permitted; use git commands for all branch switches, staging, and commits.
 
 ## Configuration & Environment
 - Backend secrets live in `service/.env` (copy from `service/.env.example`).

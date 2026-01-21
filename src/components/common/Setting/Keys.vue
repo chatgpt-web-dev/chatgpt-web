@@ -22,18 +22,9 @@ const keys = ref([])
 function createColumns(): DataTableColumns {
   return [
     {
-      title: () => t('setting.model.table.key'),
-      key: 'key',
-      resizable: true,
-      width: 120,
-      minWidth: 50,
-      maxWidth: 120,
-      ellipsis: true,
-    },
-    {
       title: () => t('setting.model.table.apiModel'),
       key: 'keyModel',
-      width: 150,
+      width: 90,
     },
     {
       title: () => t('setting.model.table.baseUrl'),
@@ -43,7 +34,7 @@ function createColumns(): DataTableColumns {
     {
       title: () => t('setting.model.table.chatModel'),
       key: 'chatModel',
-      width: 200,
+      width: 140,
       render(row: any) {
         return row.chatModel || '-'
       },
@@ -51,15 +42,24 @@ function createColumns(): DataTableColumns {
     {
       title: () => t('setting.model.table.alias'),
       key: 'modelAlias',
-      width: 150,
+      width: 110,
       render(row: any) {
         return row.modelAlias || '-'
       },
     },
     {
+      title: () => t('setting.model.table.key'),
+      key: 'key',
+      resizable: true,
+      width: 90,
+      minWidth: 50,
+      maxWidth: 90,
+      ellipsis: true,
+    },
+    {
       title: () => t('setting.model.table.userRoles'),
       key: 'userRoles',
-      width: 180,
+      width: 140,
       render(row: any) {
         const tags = row.userRoles.map((userRole: UserRole) => {
           return h(
@@ -70,6 +70,7 @@ function createColumns(): DataTableColumns {
               },
               type: 'info',
               bordered: false,
+              size: 'small',
             },
             {
               default: () => UserRole[userRole],
@@ -82,31 +83,20 @@ function createColumns(): DataTableColumns {
     {
       title: () => t('setting.model.table.remark'),
       key: 'remark',
-      width: 150,
+      width: 120,
     },
     {
       title: () => t('setting.model.table.action'),
       key: '_id',
-      width: 220,
+      width: 140,
       fixed: 'right',
       render(row: any) {
         const actions: any[] = []
-        actions.push(h(
-          NButton,
-          {
-            size: 'small',
-            style: {
-              marginRight: '6px',
-            },
-            type: 'error',
-            onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
-          },
-          { default: () => t('common.delete') },
-        ))
         if (row.status === Status.Normal) {
           actions.push(h(
             NButton,
             {
+              tertiary: true,
               size: 'small',
               style: {
                 marginRight: '6px',
@@ -114,9 +104,19 @@ function createColumns(): DataTableColumns {
               type: 'info',
               onClick: () => handleEditKey(row as KeyConfig),
             },
-            { default: () => t('common.edit') },
+            { default: () => [h(IconRiEdit2Line, { class: 'mr-1 text-base' }), t('common.edit')] },
           ))
         }
+        actions.push(h(
+          NButton,
+          {
+            tertiary: true,
+            size: 'small',
+            type: 'error',
+            onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
+          },
+          { default: () => [h(IconRiDeleteBinLine, { class: 'mr-1 text-base' }), t('common.delete')] },
+        ))
         return actions
       },
     },
@@ -125,41 +125,16 @@ function createColumns(): DataTableColumns {
 
 const columns = createColumns()
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 100,
-  pageCount: 1,
-  itemCount: 1,
-  prefix({ itemCount }: { itemCount: number | undefined }) {
-    return t('setting.model.total', { count: itemCount ?? 0 })
-  },
-  showSizePicker: true,
-  pageSizes: [100],
-  onChange: (page: number) => {
-    pagination.page = page
-    handleGetKeys(pagination.page)
-  },
-  onUpdatePageSize: (pageSize: number) => {
-    pagination.pageSize = pageSize
-    pagination.page = 1
-    handleGetKeys(pagination.page)
-  },
-})
-
-async function handleGetKeys(page: number) {
+async function handleGetKeys() {
   if (loading.value)
     return
   keys.value.length = 0
   loading.value = true
-  const size = pagination.pageSize
-  const data = (await fetchGetKeys(page, size)).data
+  const data = (await fetchGetKeys()).data
   data.keys.forEach((key: never) => {
     keys.value.push(key)
   })
   keyConfig.value = keys.value[0]
-  pagination.page = page
-  pagination.pageCount = data.total / size + (data.total % size === 0 ? 0 : 1)
-  pagination.itemCount = data.total
   loading.value = false
 }
 
@@ -172,7 +147,7 @@ async function handleUpdateApiKeyStatus(id: string, status: Status) {
     onPositiveClick: async () => {
       await fetchUpdateApiKeyStatus(id, status)
       ms.info(t('common.success'))
-      await handleGetKeys(pagination.page)
+      await handleGetKeys()
     },
   })
 }
@@ -185,7 +160,7 @@ async function handleUpdateKeyConfig() {
   handleSaving.value = true
   try {
     await fetchUpsertApiKey(keyConfig.value)
-    await handleGetKeys(pagination.page)
+    await handleGetKeys()
     show.value = false
   }
   catch (error: any) {
@@ -205,31 +180,29 @@ function handleEditKey(key: KeyConfig) {
 }
 
 onMounted(async () => {
-  await handleGetKeys(pagination.page)
+  await handleGetKeys()
 })
 </script>
 
 <template>
-  <div class="p-4 space-y-5 min-h-[300px]">
-    <div class="space-y-6">
-      <NSpace vertical :size="12">
-        <NSpace>
-          <NButton @click="handleNewKey()">
-            {{ t('setting.model.new') }}
-          </NButton>
-        </NSpace>
-        <NDataTable
-          remote
-          :loading="loading"
-          :row-key="(rowData) => rowData._id"
-          :columns="columns"
-          :data="keys"
-          :pagination="pagination"
-          :max-height="444"
-          :scroll-x="1500"
-          striped @update:page="handleGetKeys"
-        />
-      </NSpace>
+  <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
+    <div class="flex h-full min-h-0 flex-col gap-3">
+      <div class="shrink-0 flex items-center justify-end">
+        <NButton size="small" type="primary" @click="handleNewKey()">
+          <IconRiAddLine class="mr-1 text-base" />
+          {{ t('common.add') }}
+        </NButton>
+      </div>
+      <NDataTable
+        class="flex-1 min-h-0"
+        :loading="loading"
+        :row-key="(rowData) => rowData._id"
+        :columns="columns"
+        :data="keys"
+        flex-height
+        :scroll-x="1150"
+        striped
+      />
     </div>
   </div>
 

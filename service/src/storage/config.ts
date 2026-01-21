@@ -140,7 +140,6 @@ export async function getApiKeys() {
   if (result.keys.length <= 0) {
     const defaultModel = config.siteConfig.chatModels.split(',')[0] || ''
     result.keys.push(await upsertKey(new KeyConfig(config.apiKey, 'ChatGPTAPI', defaultModel, [], '')))
-    result.total++
   }
   result.keys.forEach((key) => {
     if (key.userRoles == null || key.userRoles.length <= 0) {
