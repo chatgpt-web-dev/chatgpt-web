@@ -215,7 +215,7 @@
     "userConfig": "Users",
     "model": {
       "management": "Model Management",
-      "new": "New Model",
+      "new": "Create Model",
       "apiKeyRequired": "API key is required",
       "defaultThinkEnabled": "Default Think",
       "defaultSearchEnabled": "Default Web Search",
@@ -232,6 +232,7 @@
       }
     },
     "builtInPromptConfig": "Built-in Prompts",
+    "builtInPromptAdd": "Create Built-in Prompt",
     "builtInPromptDeleteConfirm": "Are you sure to delete this built-in prompt?",
     "userRoles": "User Role",
     "status": "Status",
@@ -275,7 +276,7 @@
     "fastDelMsg": "Fast Delete Message",
     "user": {
       "searchUser": "Search",
-      "newUser": "New User",
+      "newUser": "Create User",
       "searchUserPlaceholder": "Search by email",
       "editUser": "Edit User",
       "deleteUser": "Delete User",

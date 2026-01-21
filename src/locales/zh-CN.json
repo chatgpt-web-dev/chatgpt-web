@@ -215,7 +215,7 @@
     "userConfig": "用户管理",
     "model": {
       "management": "模型管理",
-      "new": "新建模型",
+      "new": "新增模型",
       "apiKeyRequired": "必须填写 API Key",
       "defaultThinkEnabled": "默认深度思考",
       "defaultSearchEnabled": "默认联网搜索",
@@ -232,6 +232,7 @@
       }
     },
     "builtInPromptConfig": "内置提示词",
+    "builtInPromptAdd": "新增内置提示词",
     "builtInPromptDeleteConfirm": "确定删除该内置提示词吗？",
     "userRoles": "用户权限",
     "status": "状态",
@@ -275,7 +276,7 @@
     "fastDelMsg": "快速删除消息",
     "user": {
       "searchUser": "搜索",
-      "newUser": "新建用户",
+      "newUser": "新增用户",
       "searchUserPlaceholder": "按邮箱搜索",
       "editUser": "编辑用户",
       "deleteUser": "删除用户",

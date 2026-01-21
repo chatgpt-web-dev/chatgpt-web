@@ -516,10 +516,9 @@ export function fetchUserStatisticsByModel<T = any>(start?: number, end?: number
   })
 }
 
-export function fetchGetKeys<T = any>(page: number, size: number) {
+export function fetchGetKeys<T = any>() {
   return get<T>({
     url: '/setting-keys',
-    data: { page, size },
   })
 }
 

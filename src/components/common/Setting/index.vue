@@ -78,7 +78,8 @@ const show = computed({
       type="line"
       animated
       :style="{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0 }"
-      :pane-wrapper-style="{ flex: '1 1 auto', minHeight: 0, overflow: 'auto' }"
+      :pane-wrapper-style="{ flex: '1 1 auto', minHeight: 0, height: '100%', overflow: 'auto' }"
+      :pane-style="{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0, height: '100%' }"
     >
       <NTabPane name="General" tab="General">
         <template #tab>

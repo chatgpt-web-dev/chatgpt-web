@@ -232,6 +232,7 @@
       }
     },
     "builtInPromptConfig": "내장 프롬프트",
+    "builtInPromptAdd": "내장 프롬프트 추가",
     "builtInPromptDeleteConfirm": "이 내장 프롬프트를 삭제하시겠습니까?",
     "userRoles": "사용자 역할",
     "status": "상태",
@@ -275,7 +276,7 @@
     "fastDelMsg": "빠르게 메시지 삭제",
     "user": {
       "searchUser": "검색",
-      "newUser": "새 사용자",
+      "newUser": "사용자 추가",
       "searchUserPlaceholder": "이메일로 검색",
       "editUser": "사용자 편집",
       "deleteUser": "사용자 삭제",

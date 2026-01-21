@@ -377,24 +377,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4 space-y-5 min-h-[300px]">
-    <div class="space-y-6">
-      <NSpace vertical :size="12">
-        <NSpace>
-          <NButton @click="openModal('add')">
-            {{ t('common.add') }}
-          </NButton>
-        </NSpace>
-        <NDataTable
-          :loading="loading"
-          :row-key="(rowData) => rowData._id"
-          :columns="columns"
-          :data="promptList"
-          :row-props="rowProps"
-          :max-height="444"
-          striped
-        />
-      </NSpace>
+  <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
+    <div class="flex h-full min-h-0 flex-col gap-2">
+      <div class="flex items-center justify-end shrink-0">
+        <NButton size="small" type="primary" @click="openModal('add')">
+          {{ t('setting.builtInPromptAdd') }}
+        </NButton>
+      </div>
+      <NDataTable
+        class="flex-1 min-h-0"
+        :loading="loading"
+        :row-key="(rowData) => rowData._id"
+        :columns="columns"
+        :data="promptList"
+        :row-props="rowProps"
+        flex-height
+        striped
+      />
     </div>
   </div>
 

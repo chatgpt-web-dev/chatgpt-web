@@ -232,6 +232,7 @@
       }
     },
     "builtInPromptConfig": "組み込みプロンプト",
+    "builtInPromptAdd": "組み込みプロンプトを追加",
     "builtInPromptDeleteConfirm": "この組み込みプロンプトを削除しますか？",
     "userRoles": "ユーザーロール",
     "status": "ステータス",
@@ -275,7 +276,7 @@
     "fastDelMsg": "メッセージを素早く削除",
     "user": {
       "searchUser": "検索",
-      "newUser": "新規ユーザー",
+      "newUser": "ユーザー追加",
       "searchUserPlaceholder": "メールで検索",
       "editUser": "ユーザー編集",
       "deleteUser": "ユーザー削除",

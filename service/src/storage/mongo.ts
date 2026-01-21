@@ -1162,14 +1162,13 @@ export async function getUserStatisticsByModel(start?: number, end?: number): Pr
   return result
 }
 
-export async function getKeys(): Promise<{ keys: KeyConfig[], total: number }> {
+export async function getKeys(): Promise<{ keys: KeyConfig[] }> {
   const query = { status: { $ne: Status.Disabled } }
   const cursor = keyCol.find(query)
-  const total = await keyCol.countDocuments(query)
   const keys = []
   for await (const doc of cursor)
     keys.push(doc)
-  return { keys, total }
+  return { keys }
 }
 
 export async function upsertKey(key: KeyConfig): Promise<KeyConfig> {
