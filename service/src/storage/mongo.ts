@@ -678,7 +678,7 @@ export async function createUser(email: string, password: string, roles?: UserRo
   if (roles && roles.includes(UserRole.Admin))
     userInfo.status = Status.Normal
   // Using `if (status !== null)` check because status.Normal value is 0, so `if (status)` would fail when status is Normal
-  if (status !== null)
+  if (status != null)
     userInfo.status = status
 
   userInfo.roles = roles
