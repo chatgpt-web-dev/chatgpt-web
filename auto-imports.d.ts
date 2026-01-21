@@ -14,6 +14,7 @@ declare global {
   const IconMdiReorderHorizontal: typeof import('~icons/mdi/reorder-horizontal').default
   const IconRiContrastLine: typeof import('~icons/ri/contrast-line').default
   const IconRiDeleteBinLine: typeof import('~icons/ri/delete-bin-line').default
+  const IconRiEdit2Line: typeof import('~icons/ri/edit2-line').default
   const IconRiExternalLinkLine: typeof import('~icons/ri/external-link-line').default
   const IconRiFileCopy2Line: typeof import('~icons/ri/file-copy2-line').default
   const IconRiMoonFoggyLine: typeof import('~icons/ri/moon-foggy-line').default

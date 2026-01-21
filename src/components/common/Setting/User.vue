@@ -111,7 +111,7 @@ function createColumns(): DataTableColumns {
     {
       title: t('setting.user.action'),
       key: '_id',
-      width: 100,
+      width: 140,
       fixed: 'right',
       render(row: any) {
         const actions: any[] = []
@@ -124,7 +124,7 @@ function createColumns(): DataTableColumns {
               type: 'info',
               onClick: () => handleEditUser(row),
             },
-            { default: () => t('common.edit') },
+            { default: () => [h(IconRiEdit2Line, { class: 'mr-1 text-base' }), t('common.edit')] },
           ))
         }
         if (row.status === Status.PreVerify || row.status === Status.AdminVerify) {
@@ -159,7 +159,7 @@ function createColumns(): DataTableColumns {
             type: 'error',
             onClick: () => handleUpdateUserStatus(row._id, Status.Deleted),
           },
-          { default: () => t('common.delete') },
+          { default: () => [h(IconRiDeleteBinLine, { class: 'mr-1 text-base' }), t('common.delete')] },
         ))
         return h('div', { class: 'flex items-center gap-2' }, { default: () => actions })
       },
@@ -276,24 +276,26 @@ onMounted(async () => {
 
 <template>
   <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
-    <div class="flex h-full min-h-0 flex-col gap-1">
+    <div class="flex h-full min-h-0 flex-col gap-3">
       <div class="flex items-center justify-between gap-3 shrink-0">
-        <NInput
-          v-model:value="searchKeyword"
-          :placeholder="t('setting.user.searchUserPlaceholder')"
-          clearable
-          size="small"
-          style="width: 220px"
-          @keyup.enter="handleSearch"
-        />
-        <NButton type="primary" size="small" @click="handleSearch">
-          {{ t('setting.user.searchUser') }}
-        </NButton>
-        <div class="ml-auto">
-          <NButton type="primary" size="small" @click="handleNewUser()">
-            {{ t('setting.user.newUser') }}
+        <div class="flex items-center gap-2">
+          <NInput
+            v-model:value="searchKeyword"
+            :placeholder="t('setting.user.searchUserPlaceholder')"
+            clearable
+            size="small"
+            style="width: 220px"
+            @keyup.enter="handleSearch"
+          />
+          <NButton type="primary" size="small" @click="handleSearch">
+            <IconRiSearchLine class="mr-1 text-base" />
+            {{ t('setting.user.searchUser') }}
           </NButton>
         </div>
+        <NButton type="primary" size="small" @click="handleNewUser()">
+          <IconRiAddLine class="mr-1 text-base" />
+          {{ t('common.add') }}
+        </NButton>
       </div>
       <NDataTable
         class="flex-1 min-h-0"

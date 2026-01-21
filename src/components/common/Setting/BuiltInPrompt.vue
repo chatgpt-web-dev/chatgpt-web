@@ -293,7 +293,7 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
               type: 'info',
               onClick: () => openModal('edit', row),
             },
-            { default: () => t('common.edit') },
+            { default: () => [h(IconRiEdit2Line, { class: 'mr-1 text-base' }), t('common.edit')] },
           ), h(
             NButton,
             {
@@ -302,7 +302,7 @@ function createColumns(): DataTableColumns<BuiltInPrompt> {
               type: 'error',
               onClick: () => handleDeletePrompt(row),
             },
-            { default: () => t('common.delete') },
+            { default: () => [h(IconRiDeleteBinLine, { class: 'mr-1 text-base' }), t('common.delete')] },
           )],
         })
       },
@@ -378,10 +378,11 @@ onMounted(async () => {
 
 <template>
   <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
-    <div class="flex h-full min-h-0 flex-col gap-2">
+    <div class="flex h-full min-h-0 flex-col gap-3">
       <div class="flex items-center justify-end shrink-0">
         <NButton size="small" type="primary" @click="openModal('add')">
-          {{ t('setting.builtInPromptAdd') }}
+          <IconRiAddLine class="mr-1 text-base" />
+          {{ t('common.add') }}
         </NButton>
       </div>
       <NDataTable

@@ -88,7 +88,7 @@ function createColumns(): DataTableColumns {
     {
       title: () => t('setting.model.table.action'),
       key: '_id',
-      width: 100,
+      width: 140,
       fixed: 'right',
       render(row: any) {
         const actions: any[] = []
@@ -104,7 +104,7 @@ function createColumns(): DataTableColumns {
               type: 'info',
               onClick: () => handleEditKey(row as KeyConfig),
             },
-            { default: () => t('common.edit') },
+            { default: () => [h(IconRiEdit2Line, { class: 'mr-1 text-base' }), t('common.edit')] },
           ))
         }
         actions.push(h(
@@ -115,7 +115,7 @@ function createColumns(): DataTableColumns {
             type: 'error',
             onClick: () => handleUpdateApiKeyStatus(row._id as string, Status.Disabled),
           },
-          { default: () => t('common.delete') },
+          { default: () => [h(IconRiDeleteBinLine, { class: 'mr-1 text-base' }), t('common.delete')] },
         ))
         return actions
       },
@@ -186,10 +186,11 @@ onMounted(async () => {
 
 <template>
   <div class="box-border h-full flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-2" style="height: 100%;">
-    <div class="flex h-full min-h-0 flex-col gap-2">
+    <div class="flex h-full min-h-0 flex-col gap-3">
       <div class="shrink-0 flex items-center justify-end">
         <NButton size="small" type="primary" @click="handleNewKey()">
-          {{ t('setting.model.new') }}
+          <IconRiAddLine class="mr-1 text-base" />
+          {{ t('common.add') }}
         </NButton>
       </div>
       <NDataTable
