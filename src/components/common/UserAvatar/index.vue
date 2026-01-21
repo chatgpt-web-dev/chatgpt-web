@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import defaultAvatar from '@/assets/avatar.jpg'
+import defaultAvatar from '@/assets/avatar.svg'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAuthStore, useUserStore } from '@/store'
 import { isString } from '@/utils/is'

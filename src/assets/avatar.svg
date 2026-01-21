@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Default avatar">
+  <defs>
+    <radialGradient id="avatarBg" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#FDFEFF"/>
+      <stop offset="0.6" stop-color="#EAF4FF"/>
+      <stop offset="1" stop-color="#D6E9FF"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="url(#avatarBg)"/>
+  <g fill="none" stroke="#1E90FF" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="128" cy="92" r="48" stroke-width="16"/>
+    <path d="M116 150c2 4 22 4 24 0" stroke-width="16"/>
+    <path d="M44 246c14-54 54-90 84-90s70 36 84 90" stroke-width="16"/>
+    <circle cx="110" cy="92" r="4" stroke-width="16"/>
+    <circle cx="146" cy="92" r="4" stroke-width="16"/>
+    <path d="M108 114c12 12 28 12 40 0" stroke-width="14"/>
+  </g>
+</svg>
