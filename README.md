@@ -656,3 +656,36 @@ A: 一种可能原因是经过 Nginx 反向代理，开启了 buffer，则 Nginx
 
 ## License
 [MIT © github.com/chatgpt-web-dev Contributors](./LICENSE)
+
+
+## 安装
+
+```bash
+pip install package-name
+```
+
+或使用conda:
+
+```bash
+conda install -c conda-forge package-name
+```
+
+## 使用示例
+
+```python
+import package_name
+
+# 基本用法
+result = package_name.do_something()
+print(result)
+```
+
+## 贡献指南
+
+我们欢迎贡献！请查看[CONTRIBUTING.md](CONTRIBUTING.md)了解详情。
+
+1. Fork本仓库
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建Pull Request
