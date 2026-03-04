@@ -538,6 +538,13 @@ search result: <search_result>${searchResultContent}</search_result>`,
       // @ts-expect-error For deepseek-reasoner model only. The reasoning contents of the assistant message, before the final answer.
       const reasoningContent = chunk.choices[0]?.delta?.reasoning_content || ''
       responseReasoning += reasoningContent
+
+      // https://github.com/vllm-project/vllm/pull/33402 Remove deprecated reasoning_content message field
+      // https://github.com/vllm-project/vllm/issues/27755 [RFC]：reasoning_content->reasoning #27755
+      // @ts-expect-error compilable vllm
+      const reasoning = chunk.choices[0]?.delta?.reasoning || ''
+      responseReasoning += reasoning
+
       const content = chunk.choices[0]?.delta?.content || ''
       responseText += content
       responseId = chunk.id
@@ -553,7 +560,7 @@ search result: <search_result>${searchResultContent}</search_result>`,
         finish_reason,
         // Incremental data
         delta: {
-          reasoning: reasoningContent, // reasoning content in this chunk
+          reasoning: reasoningContent || reasoning, // reasoning content in this chunk
           text: content, // text content in this chunk
         },
       }
