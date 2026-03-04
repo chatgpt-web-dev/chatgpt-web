@@ -1049,6 +1049,42 @@ const chatModelOptions = computed(() => {
   return [...baseModels, ...externalOptions]
 })
 
+function getModelBaseValue(value: string): string {
+  return value.includes('|') ? value.split('|')[0] : value
+}
+
+const syncingStaleChatModel = ref(false)
+
+async function syncStaleChatModelIfNeeded() {
+  if (syncingStaleChatModel.value || !currentChatRoom.value?.chatModel)
+    return
+
+  const currentModel = currentChatRoom.value.chatModel
+  if (isExternalModel(currentModel))
+    return
+
+  // If the room model still exists in options, no migration is needed.
+  if (chatModelOptions.value.some(option => option.value === currentModel))
+    return
+
+  // Auto-migrate only when there is a single unambiguous replacement.
+  const candidates = chatModelOptions.value.filter((option) => {
+    if (isExternalModel(option.value))
+      return false
+    return getModelBaseValue(option.value) === getModelBaseValue(currentModel)
+  })
+  if (candidates.length !== 1)
+    return
+
+  syncingStaleChatModel.value = true
+  try {
+    await chatStore.setChatModel(candidates[0].value)
+  }
+  finally {
+    syncingStaleChatModel.value = false
+  }
+}
+
 function renderChatModelLabel(option: { label: string, value: string }, _selected: boolean) {
   if (isExternalModel(option.value)) {
     return h('span', { style: { display: 'flex', alignItems: 'center', gap: '6px' } }, [
@@ -1280,6 +1316,14 @@ onMounted(() => {
 watch(() => chatStore.active, () => {
   handleSyncChat()
 })
+
+watch(
+  [() => currentChatRoom.value?.roomId, () => currentChatRoom.value?.chatModel, chatModelOptions],
+  () => {
+    void syncStaleChatModelIfNeeded()
+  },
+  { immediate: true },
+)
 
 // Watch dataSources to update lastToolResponseId automatically.
 // Use immediate: false to avoid duplicate init calls (handleSyncChat already runs).
